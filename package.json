@@ -13,10 +13,10 @@
     "pods": "cd ios && bundle exec pod install",
     "prepare": "husky",
     "verify": "npm run typecheck && npm run lint && npm test",
-    "db:start": "supabase start",
-    "db:stop": "supabase stop",
-    "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/database.types.ts && prettier --write src/lib/database.types.ts"
+    "db:link": "supabase link",
+    "db:push": "supabase db push --linked",
+    "db:new": "supabase migration new",
+    "db:types": "supabase gen types typescript --linked --schema public > src/lib/database.types.ts && prettier --write src/lib/database.types.ts"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.14",
