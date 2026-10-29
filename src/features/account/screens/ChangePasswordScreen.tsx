@@ -9,6 +9,7 @@ import {
   FormTextField,
   Screen,
   Stack,
+  Text,
   toast,
 } from '@/components';
 import { changePassword } from '@/features/auth/api';
@@ -21,8 +22,10 @@ import {
 
 export function ChangePasswordScreen() {
   const navigation = useNavigation();
-  // Opened from a reset link: the app stays on this screen until it's saved.
+  // Opened from a reset or invite link: the app stays on this screen until
+  // it's saved.
   const fromResetLink = useAuthStore(s => s.passwordResetPending);
+  const isInvite = fromResetLink === 'invite';
   const [formError, setFormError] = useState<string | null>(null);
   const { control, handleSubmit, formState } = useForm<ChangePasswordValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -33,7 +36,7 @@ export function ChangePasswordScreen() {
     setFormError(null);
     try {
       await changePassword(password);
-      toast.show('Password changed', 'success');
+      toast.show(isInvite ? 'You’re all set' : 'Password changed', 'success');
       if (!fromResetLink) {
         navigation.goBack();
       }
@@ -45,16 +48,23 @@ export function ChangePasswordScreen() {
   return (
     <Screen scroll padded edges={['bottom', 'left', 'right']}>
       <Stack gap="lg">
+        {isInvite ? (
+          <Text color="textSecondary">
+            Your friends added you to Sharelith. Choose a password so you can
+            log in next time.
+          </Text>
+        ) : null}
         {formError ? <Banner tone="danger" message={formError} /> : null}
         <FormTextField
           control={control}
           name="password"
-          label="New password"
+          label={isInvite ? 'Password' : 'New password'}
           leadingIcon={Lock}
           password
           autoComplete="new-password"
           textContentType="newPassword"
           helper="At least 8 characters"
+          testID="password-new"
         />
         <FormTextField
           control={control}
@@ -65,9 +75,11 @@ export function ChangePasswordScreen() {
           autoComplete="new-password"
           textContentType="newPassword"
           onSubmitEditing={() => onSubmit()}
+          testID="password-confirm"
         />
         <Button
-          title="Change password"
+          testID="password-submit"
+          title={isInvite ? 'Set password' : 'Change password'}
           size="lg"
           fullWidth
           loading={formState.isSubmitting}

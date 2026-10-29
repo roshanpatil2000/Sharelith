@@ -18,6 +18,8 @@ import { EditProfileScreen } from '@/features/account/screens/EditProfileScreen'
 import { ChangePasswordScreen } from '@/features/account/screens/ChangePasswordScreen';
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { ComponentGalleryScreen } from '@/features/dev/ComponentGalleryScreen';
+import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
+import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
 import { MainTabs } from './MainTabs';
 import { headerTitleStyle, toNavigationTheme } from './navigationTheme';
 import type { AuthStackParamList, RootStackParamList } from './types';
@@ -88,11 +90,19 @@ export function RootNavigator() {
     <NavigationContainer theme={navTheme}>
       <Root.Navigator screenOptions={stackOptions(theme)}>
         {status === 'signedIn' && resetPending ? (
-          // Opened a reset link: choose a new password before anything else.
+          // Opened a reset or invite link: choose a password before anything
+          // else. A distinct route name, so saving lands on Main rather than
+          // the regular ChangePassword screen.
           <Root.Screen
-            name="ChangePassword"
+            name="SetPassword"
             component={ChangePasswordScreen}
-            options={{ title: 'Set new password', headerBackVisible: false }}
+            options={{
+              title:
+                resetPending === 'invite'
+                  ? 'Welcome to Sharelith'
+                  : 'Set new password',
+              headerBackVisible: false,
+            }}
           />
         ) : status === 'signedIn' ? (
           <>
@@ -120,6 +130,16 @@ export function RootNavigator() {
               name="ChangePassword"
               component={ChangePasswordScreen}
               options={{ title: 'Change password' }}
+            />
+            <Root.Screen
+              name="AddFriend"
+              component={AddFriendScreen}
+              options={{ presentation: 'modal', title: 'Add friend' }}
+            />
+            <Root.Screen
+              name="FriendDetail"
+              component={FriendDetailScreen}
+              options={{ title: '' }}
             />
             <Root.Screen
               name="ComponentGallery"

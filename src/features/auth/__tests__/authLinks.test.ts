@@ -46,6 +46,56 @@ describe('parseAuthLink', () => {
   });
 });
 
+describe('parseAuthLink: invites', () => {
+  it('reads implicit-flow tokens from the fragment', () => {
+    expect(
+      parseAuthLink(
+        'sharelith://auth/callback?next=invite#access_token=at&refresh_token=rt&type=invite',
+      ),
+    ).toEqual({
+      kind: 'tokens',
+      accessToken: 'at',
+      refreshToken: 'rt',
+      intent: 'invite',
+    });
+  });
+
+  it('falls back to the type parameter for the intent', () => {
+    const link = parseAuthLink(
+      'sharelith://auth/callback#access_token=at&refresh_token=rt&type=invite',
+    );
+    expect(link).toMatchObject({ kind: 'tokens', intent: 'invite' });
+  });
+});
+
+describe('handleAuthLink: invite', () => {
+  it('signs in with the tokens and requires a password first', async () => {
+    supabaseMock.auth.setSession = jest.fn(async () => ({
+      data: { user: fakeSession().user, session: fakeSession() },
+      error: null,
+    })) as never;
+    await handleAuthLink(
+      'sharelith://auth/callback?next=invite#access_token=at&refresh_token=rt',
+    );
+    expect(supabaseMock.auth.setSession).toHaveBeenCalledWith({
+      access_token: 'at',
+      refresh_token: 'rt',
+    });
+    expect(useAuthStore.getState().passwordResetPending).toBe('invite');
+  });
+
+  it('clears the pending state if the tokens are rejected', async () => {
+    supabaseMock.auth.setSession = jest.fn(async () => ({
+      data: { user: null, session: null },
+      error: { message: 'invalid' },
+    })) as never;
+    await handleAuthLink(
+      'sharelith://auth/callback?next=invite#access_token=x&refresh_token=y',
+    );
+    expect(useAuthStore.getState().passwordResetPending).toBe(false);
+  });
+});
+
 describe('authRedirectFor', () => {
   it('points at the bridge page with the intent', () => {
     expect(authRedirectFor('verify')).toBe(
@@ -105,7 +155,7 @@ describe('handleAuthLink', () => {
     await handleAuthLink('sharelith://auth/callback?next=reset&code=abc');
     const s = useAuthStore.getState();
     expect(selectStatus(s)).toBe('signedIn');
-    expect(s.passwordResetPending).toBe(true);
+    expect(s.passwordResetPending).toBe('reset');
     // A reset link also proves the address.
     expect(supabaseMock.rpc).toHaveBeenCalledWith('mark_email_verified');
     stop();

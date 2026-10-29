@@ -22,9 +22,13 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList>;
   AddExpense: undefined;
   ComponentGallery: undefined;
+  AddFriend: undefined;
+  FriendDetail: { friendId: string };
   VerifyEmail: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
+  /** Forced after a reset or invite link. Its own name, so leaving it resets the stack. */
+  SetPassword: undefined;
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> =

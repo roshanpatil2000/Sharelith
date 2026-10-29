@@ -9,7 +9,10 @@ import { buildAuthEmail, type EmailData } from '../_shared/authEmails.ts';
 import { MailtrapError, sendEmail } from '../_shared/mailtrap.ts';
 
 type HookPayload = {
-  user: { email: string; user_metadata?: { full_name?: string } };
+  user: {
+    email: string;
+    user_metadata?: { full_name?: string; invited_by_name?: string };
+  };
   email_data: EmailData;
 };
 
@@ -52,7 +55,11 @@ Deno.serve(async req => {
 
   const { user, email_data } = payload;
   try {
-    const email = buildAuthEmail(Deno.env.get('SUPABASE_URL')!, email_data);
+    const email = buildAuthEmail(
+      Deno.env.get('SUPABASE_URL')!,
+      email_data,
+      user.user_metadata?.invited_by_name,
+    );
     await sendEmail({
       to: [{ email: user.email, name: user.user_metadata?.full_name }],
       subject: email.subject,

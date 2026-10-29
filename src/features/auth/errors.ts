@@ -9,8 +9,9 @@ export class AppError extends Error {
 const byCode: Record<string, string> = {
   invalid_credentials: 'Wrong email or password.',
   user_already_exists:
-    'An account with this email already exists. Try logging in.',
-  email_exists: 'An account with this email already exists. Try logging in.',
+    'An account with this email already exists. Log in, or if a friend invited you, use your invite email or reset your password.',
+  email_exists:
+    'An account with this email already exists. Log in, or if a friend invited you, use your invite email or reset your password.',
   weak_password: 'Choose a stronger password (at least 8 characters).',
   same_password: 'Your new password must be different from the old one.',
   email_address_invalid: 'That email address doesn’t look right.',

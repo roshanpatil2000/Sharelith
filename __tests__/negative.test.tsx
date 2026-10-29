@@ -103,7 +103,9 @@ describe('Sign up: invalid input never reaches Supabase', () => {
     );
     await fireEvent.press(screen.getByTestId('signup-submit'));
     expect(
-      await screen.findByText(/already exists\. Try logging in/),
+      await screen.findByText(
+        /already exists\. Log in, or if a friend invited you/,
+      ),
     ).toBeOnTheScreen();
   });
 });

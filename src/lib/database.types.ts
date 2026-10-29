@@ -14,6 +14,49 @@ export type Database = {
   };
   public: {
     Tables: {
+      friendships: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          user_a: string;
+          user_b: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          user_a: string;
+          user_b: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          user_a?: string;
+          user_b?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'friendships_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'friendships_user_a_fkey';
+            columns: ['user_a'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'friendships_user_b_fkey';
+            columns: ['user_b'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -23,6 +66,8 @@ export type Database = {
           email_verified_at: string | null;
           full_name: string;
           id: string;
+          invited_by: string | null;
+          joined_at: string | null;
           phone: string | null;
           timezone: string;
           updated_at: string;
@@ -35,6 +80,8 @@ export type Database = {
           email_verified_at?: string | null;
           full_name: string;
           id: string;
+          invited_by?: string | null;
+          joined_at?: string | null;
           phone?: string | null;
           timezone?: string;
           updated_at?: string;
@@ -47,11 +94,21 @@ export type Database = {
           email_verified_at?: string | null;
           full_name?: string;
           id?: string;
+          invited_by?: string | null;
+          joined_at?: string | null;
           phone?: string | null;
           timezone?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'profiles_invited_by_fkey';
+            columns: ['invited_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
       };
     };
     Views: {
@@ -59,7 +116,19 @@ export type Database = {
     };
     Functions: {
       delete_account: { Args: never; Returns: undefined };
+      list_friends: {
+        Args: never;
+        Returns: {
+          avatar_url: string;
+          email: string;
+          friends_since: string;
+          full_name: string;
+          id: string;
+          invited: boolean;
+        }[];
+      };
       mark_email_verified: { Args: never; Returns: undefined };
+      remove_friend: { Args: { friend: string }; Returns: undefined };
     };
     Enums: {
       [_ in never]: never;
