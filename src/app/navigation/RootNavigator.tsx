@@ -19,7 +19,7 @@ import { ChangePasswordScreen } from '@/features/account/screens/ChangePasswordS
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { ComponentGalleryScreen } from '@/features/dev/ComponentGalleryScreen';
 import { MainTabs } from './MainTabs';
-import { toNavigationTheme } from './navigationTheme';
+import { headerTitleStyle, toNavigationTheme } from './navigationTheme';
 import type { AuthStackParamList, RootStackParamList } from './types';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
@@ -27,7 +27,8 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
 function stackOptions(theme: Theme): NativeStackNavigationOptions {
   return {
-    headerTitleStyle: theme.typography.heading,
+    headerTitleStyle: headerTitleStyle(theme),
+    headerTitleAlign: 'center',
     headerShadowVisible: false,
     headerBackButtonDisplayMode: 'minimal',
     // Native-stack screens own the iOS status bar appearance.

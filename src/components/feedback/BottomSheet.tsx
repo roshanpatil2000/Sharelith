@@ -1,5 +1,11 @@
-import React, { useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
+import { BackHandler, StyleSheet, View } from 'react-native';
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -32,9 +38,26 @@ export function BottomSheet({
   ref,
   scrollable = false,
   header,
+  onChange,
   ...rest
 }: Props) {
   const styles = useStyles(createStyles);
+  const sheet = useRef<BottomSheetModal>(null);
+  useImperativeHandle(ref, () => sheet.current as BottomSheetModal);
+  const [open, setOpen] = useState(false);
+
+  // Android Back closes an open sheet instead of navigating behind it.
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      sheet.current?.dismiss();
+      return true;
+    });
+    return () => sub.remove();
+  }, [open]);
+
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
@@ -47,7 +70,11 @@ export function BottomSheet({
   );
   return (
     <BottomSheetModal
-      ref={ref}
+      ref={sheet}
+      onChange={(index, position, type) => {
+        setOpen(index >= 0);
+        onChange?.(index, position, type);
+      }}
       enableDynamicSizing={!scrollable}
       snapPoints={scrollable ? ['75%'] : undefined}
       keyboardBehavior="extend"

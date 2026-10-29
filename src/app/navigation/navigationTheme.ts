@@ -21,3 +21,9 @@ export function toNavigationTheme(t: Theme): NavTheme {
     },
   };
 }
+
+/** Header titles accept only family, size and weight. */
+export function headerTitleStyle(t: Theme) {
+  const { fontFamily, fontSize, fontWeight } = t.typography.heading;
+  return { fontFamily, fontSize, fontWeight };
+}

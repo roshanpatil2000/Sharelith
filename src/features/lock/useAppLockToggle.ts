@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { useEffect, useState } from 'react';
 import { toast } from '@/components';
 import { useSettingsStore } from '@/lib/settingsStore';
@@ -39,6 +40,8 @@ export function useAppLockToggle() {
     toggle,
     subtitle: support.available
       ? `Require ${label} to open Sharelith`
-      : 'Set up Face ID or fingerprint on this device to use app lock',
+      : Platform.OS === 'ios'
+      ? 'Set up Face ID or Touch ID on this device to use app lock'
+      : 'Set up a fingerprint or face unlock on this device to use app lock',
   };
 }
