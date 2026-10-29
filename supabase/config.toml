@@ -423,3 +423,7 @@ verify_jwt = true
 # user JWT; the function verifies the signature itself.
 [functions.send-auth-email]
 verify_jwt = false
+
+# Adds friends / sends invites for the signed-in user.
+[functions.add-friend]
+verify_jwt = true

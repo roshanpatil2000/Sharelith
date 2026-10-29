@@ -18,10 +18,10 @@ type AuthState = {
    * Set after opening a password-reset link: the user is signed in but must
    * choose a new password before using the app.
    */
-  passwordResetPending: boolean;
+  passwordResetPending: false | 'reset' | 'invite';
   setSession: (session: Session | null) => void;
   setRecovering: (recovering: boolean) => void;
-  setPasswordResetPending: (pending: boolean) => void;
+  setPasswordResetPending: (pending: false | 'reset' | 'invite') => void;
 };
 
 export const useAuthStore = create<AuthState>(set => ({

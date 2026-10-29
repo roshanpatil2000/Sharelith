@@ -8,7 +8,7 @@ import { useAuthStore } from './authStore';
 import { toAppError } from './errors';
 
 /** What an emailed link should do once it reaches the app. */
-export type AuthLinkIntent = 'verify' | 'reset';
+export type AuthLinkIntent = 'verify' | 'reset' | 'invite';
 
 /** Redirect target for emails; the bridge page forwards it to sharelith://. */
 export function authRedirectFor(intent: AuthLinkIntent): string {
@@ -17,7 +17,19 @@ export function authRedirectFor(intent: AuthLinkIntent): string {
 
 export type ParsedAuthLink =
   | { kind: 'code'; code: string; intent: AuthLinkIntent | null }
+  // Admin-sent links (friend invites) use the implicit flow: tokens arrive
+  // in the URL fragment instead of a PKCE code.
+  | {
+      kind: 'tokens';
+      accessToken: string;
+      refreshToken: string;
+      intent: AuthLinkIntent | null;
+    }
   | { kind: 'error'; code: string | null; description: string | null };
+
+const intents: readonly AuthLinkIntent[] = ['verify', 'reset', 'invite'];
+const toIntent = (v: string | null): AuthLinkIntent | null =>
+  intents.includes(v as AuthLinkIntent) ? (v as AuthLinkIntent) : null;
 
 /**
  * Parses sharelith://auth/callback?code=…&next=… (and Supabase's error
@@ -44,16 +56,17 @@ export function parseAuthLink(url: string): ParsedAuthLink | null {
       description: params.get('error_description'),
     };
   }
+  const intent = toIntent(params.get('next')) ?? toIntent(params.get('type'));
   const code = params.get('code');
-  if (!code) {
-    return null;
+  if (code) {
+    return { kind: 'code', code, intent };
   }
-  const next = params.get('next');
-  return {
-    kind: 'code',
-    code,
-    intent: next === 'verify' || next === 'reset' ? next : null,
-  };
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  if (accessToken && refreshToken) {
+    return { kind: 'tokens', accessToken, refreshToken, intent };
+  }
+  return null;
 }
 
 /** Signs in with the link's code, then finishes verification or reset. */
@@ -72,20 +85,36 @@ export async function handleAuthLink(url: string): Promise<void> {
     return;
   }
 
-  const { data, error } = await supabase.auth.exchangeCodeForSession(link.code);
+  // Invites set a password before anything else; flag it before signing in
+  // so the app never flashes the main screens.
+  if (link.intent === 'invite') {
+    useAuthStore.getState().setPasswordResetPending('invite');
+  }
+  const { data, error } =
+    link.kind === 'code'
+      ? await supabase.auth.exchangeCodeForSession(link.code)
+      : await supabase.auth.setSession({
+          access_token: link.accessToken,
+          refresh_token: link.refreshToken,
+        });
   if (error) {
+    useAuthStore.getState().setPasswordResetPending(false);
     // Usually the link was opened on a different device than it was
     // requested from (PKCE), or it was already used.
     toast.show(
-      'Open the link on the phone where you requested it, or use the code from the email.',
+      link.kind === 'code'
+        ? 'Open the link on the phone where you requested it, or use the code from the email.'
+        : 'That link didn’t work. Ask your friend to invite you again.',
       'error',
     );
     return;
   }
 
   const userId = data.user?.id;
-  if (link.intent === 'reset') {
-    useAuthStore.getState().setPasswordResetPending(true);
+  if (link.intent === 'reset' || link.intent === 'invite') {
+    if (link.intent === 'reset') {
+      useAuthStore.getState().setPasswordResetPending('reset');
+    }
     // Opening a reset email also proves the address; best effort.
     const marked = await supabase.rpc('mark_email_verified');
     if (!marked.error && userId) {

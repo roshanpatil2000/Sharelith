@@ -8,6 +8,7 @@ import {
   queryBuilder,
   supabaseMock,
 } from '@/test/supabaseMock';
+import { useAuthStore } from '@/features/auth/authStore';
 
 beforeEach(() => {
   supabaseMock.from.mockReturnValue(
@@ -170,4 +171,31 @@ describe('App auth flow', () => {
     await fireEvent.press(logOutButtons[logOutButtons.length - 1]!);
     expect(await screen.findByTestId('welcome-login')).toBeOnTheScreen();
   });
+
+  it.each(['invite', 'reset'] as const)(
+    'after a %s link, saving the password lands on the tabs',
+    async pending => {
+      useAuthStore.getState().setPasswordResetPending(pending);
+      supabaseMock.auth.getSession.mockResolvedValueOnce({
+        data: { session: fakeSession() },
+        error: null,
+      });
+      await render(<App />);
+      await fireEvent.changeText(
+        await screen.findByTestId('password-new'),
+        'new-secret-1',
+      );
+      await fireEvent.changeText(
+        screen.getByTestId('password-confirm'),
+        'new-secret-1',
+      );
+      await fireEvent.press(screen.getByTestId('password-submit'));
+
+      expect(supabaseMock.auth.updateUser).toHaveBeenCalledWith({
+        password: 'new-secret-1',
+      });
+      expect(await screen.findByText('No groups yet')).toBeOnTheScreen();
+      expect(screen.queryByTestId('password-new')).toBeNull();
+    },
+  );
 });

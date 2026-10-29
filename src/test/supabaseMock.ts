@@ -39,6 +39,8 @@ export function fakeProfile(overrides: Partial<Profile> = {}): Profile {
     default_currency: 'INR',
     timezone: 'Asia/Kolkata',
     email_verified_at: null,
+    invited_by: null,
+    joined_at: '2026-10-28T00:00:00Z',
     created_at: '2026-10-28T00:00:00Z',
     updated_at: '2026-10-28T00:00:00Z',
     ...overrides,
@@ -87,6 +89,7 @@ export const supabaseMock = {
     resetPasswordForEmail: jest.fn(async () => ({ data: {}, error: null })),
     verifyOtp: jest.fn(),
     exchangeCodeForSession: jest.fn(),
+    setSession: jest.fn(),
     resend: jest.fn(async () => ({ data: {}, error: null })),
     updateUser: jest.fn(async () => ({ data: {}, error: null })),
     signInWithOtp: jest.fn(async () => ({ data: {}, error: null })),
@@ -97,7 +100,15 @@ export const supabaseMock = {
   functions: {
     invoke: jest.fn(async () => ({ data: null, error: null })),
   },
-  rpc: jest.fn(async () => ({ data: null, error: null })),
+  rpc: jest.fn(
+    async (
+      _fn: string,
+      _args?: unknown,
+    ): Promise<{ data: unknown; error: unknown }> => ({
+      data: null,
+      error: null,
+    }),
+  ),
   storage: {
     from: jest.fn(() => ({
       upload: jest.fn(async () => ({ data: {}, error: null })),

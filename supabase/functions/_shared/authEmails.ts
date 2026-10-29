@@ -124,8 +124,19 @@ const escapeHtml = (s: string) =>
 export function buildAuthEmail(
   supabaseUrl: string,
   data: EmailData,
+  /** For invites: who sent it, from the invited user's metadata. */
+  inviterName?: string,
 ): BuiltEmail {
-  const t = templates[data.email_action_type] ?? fallback;
+  const base = templates[data.email_action_type] ?? fallback;
+  const inviter = inviterName?.trim();
+  const t =
+    data.email_action_type === 'invite' && inviter
+      ? {
+          ...base,
+          subject: `${inviter} invited you to Sharelith`,
+          intro: `${inviter} invited you to split expenses on Sharelith. Accept to see what you share and settle up.`,
+        }
+      : base;
   const link = t.button ? confirmationUrl(supabaseUrl, data) : '';
   const code = data.token;
 
