@@ -7,14 +7,13 @@ import {
   emitAuth,
   fakeProfile,
   fakeSession,
+  mockProfiles,
   queryBuilder,
   supabaseMock,
 } from '@/test/supabaseMock';
 
 beforeEach(() => {
-  supabaseMock.from.mockReturnValue(
-    queryBuilder({ data: fakeProfile(), error: null }),
-  );
+  mockProfiles(queryBuilder({ data: fakeProfile(), error: null }));
 });
 
 async function openSignUp() {
@@ -153,7 +152,7 @@ describe('Edit profile: invalid input never reaches Supabase', () => {
   it('blank name is rejected and nothing is saved', async () => {
     await signedInAt('EditProfile');
     const builder = queryBuilder({ data: fakeProfile(), error: null });
-    supabaseMock.from.mockReturnValue(builder);
+    mockProfiles(builder);
     await fireEvent.changeText(screen.getByTestId('edit-name'), '  ');
     await fireEvent.press(screen.getByTestId('edit-save'));
     expect(await screen.findByText('Enter your name')).toBeOnTheScreen();
@@ -171,7 +170,7 @@ describe('Edit profile: invalid input never reaches Supabase', () => {
 
   it('a server rejection is shown, not swallowed', async () => {
     await signedInAt('EditProfile');
-    supabaseMock.from.mockReturnValue(
+    mockProfiles(
       queryBuilder({
         data: null,
         error: { code: '42501', message: 'permission denied' },

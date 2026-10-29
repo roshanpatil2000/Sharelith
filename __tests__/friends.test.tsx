@@ -5,6 +5,7 @@ import App from '../App';
 import {
   fakeProfile,
   fakeSession,
+  mockProfiles,
   queryBuilder,
   supabaseMock,
 } from '@/test/supabaseMock';
@@ -40,7 +41,7 @@ async function openFriends() {
     data: { session: fakeSession() },
     error: null,
   });
-  supabaseMock.from.mockReturnValue(
+  mockProfiles(
     queryBuilder({
       data: fakeProfile({ email_verified_at: '2026-10-28T00:00:00Z' }),
       error: null,

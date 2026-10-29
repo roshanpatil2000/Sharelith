@@ -20,6 +20,10 @@ import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { ComponentGalleryScreen } from '@/features/dev/ComponentGalleryScreen';
 import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
+import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
+import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
+import { GroupSettingsScreen } from '@/features/groups/screens/GroupSettingsScreen';
+import { AddGroupMembersScreen } from '@/features/groups/screens/AddGroupMembersScreen';
 import { MainTabs } from './MainTabs';
 import { headerTitleStyle, toNavigationTheme } from './navigationTheme';
 import type { AuthStackParamList, RootStackParamList } from './types';
@@ -140,6 +144,26 @@ export function RootNavigator() {
               name="FriendDetail"
               component={FriendDetailScreen}
               options={{ title: '' }}
+            />
+            <Root.Screen
+              name="CreateGroup"
+              component={CreateGroupScreen}
+              options={{ presentation: 'modal', title: 'Create a group' }}
+            />
+            <Root.Screen
+              name="GroupDetail"
+              component={GroupDetailScreen}
+              options={{ title: '' }}
+            />
+            <Root.Screen
+              name="GroupSettings"
+              component={GroupSettingsScreen}
+              options={{ title: 'Group settings' }}
+            />
+            <Root.Screen
+              name="AddGroupMembers"
+              component={AddGroupMembersScreen}
+              options={{ presentation: 'modal', title: 'Add people' }}
             />
             <Root.Screen
               name="ComponentGallery"

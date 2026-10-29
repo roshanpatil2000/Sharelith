@@ -4,6 +4,7 @@ import {
   emitAuth,
   fakeProfile,
   fakeSession,
+  mockProfiles,
   queryBuilder,
   supabaseMock,
 } from '@/test/supabaseMock';
@@ -123,7 +124,7 @@ describe('handleAuthLink', () => {
   it('verify: fixes a profile cached before the server marked it', async () => {
     // A fetch that raced the RPC cached the old, unverified profile.
     queryClient.setQueryData(profileKey('user-1'), fakeProfile());
-    supabaseMock.from.mockReturnValue(
+    mockProfiles(
       queryBuilder({
         data: fakeProfile({ email_verified_at: '2026-10-29T05:20:09Z' }),
         error: null,
