@@ -12,6 +12,8 @@ module.exports = {
         alias: { '@': path.join(__dirname, 'src') },
       },
     ],
+    // zod v4 ships `export * as ns from`, which the RN preset doesn't compile.
+    '@babel/plugin-transform-export-namespace-from',
     // Must stay last.
     'react-native-worklets/plugin',
   ],

@@ -35,7 +35,7 @@ export function Banner({
 }: Props) {
   const styles = useStyles(createStyles);
   const color =
-    tone === 'danger' ? 'danger' : tone === 'info' ? 'primary' : 'warning';
+    tone === 'danger' ? 'danger' : tone === 'info' ? 'primaryText' : 'warning';
   return (
     <View style={[styles.banner, styles[tone]]} accessibilityRole="alert">
       <Icon icon={icons[tone]} size={18} color={color} />

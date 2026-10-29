@@ -25,6 +25,7 @@ import {
   Chip,
   ChipGroup,
   ConfirmDialog,
+  CurrencyPicker,
   Divider,
   EmptyState,
   ErrorView,
@@ -35,6 +36,7 @@ import {
   SearchBar,
   SectionHeader,
   SegmentedControl,
+  SelectField,
   Skeleton,
   Stack,
   Switch,
@@ -101,6 +103,7 @@ function Gallery() {
   const [on, setOn] = useState(true);
   const [selected, setSelected] = useState<string[]>(['Asha Rao']);
   const [dialog, setDialog] = useState(false);
+  const [currency, setCurrency] = useState('INR');
 
   const { category, ...flat } = t.colors;
 
@@ -193,6 +196,16 @@ function Gallery() {
           ))}
         </ChipGroup>
       </Section>
+
+      <SectionHeader title="Pickers" />
+      <CurrencyPicker value={currency} onChange={setCurrency} />
+      <Divider inset={52} />
+      <SelectField
+        label="Split by"
+        value={split}
+        options={splitSegments.map(s => ({ value: s.value, label: s.label }))}
+        onChange={setSplit}
+      />
 
       <Section title="Avatars & categories">
         <Row gap="sm">

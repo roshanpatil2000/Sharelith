@@ -10,6 +10,7 @@ import {
   Screen,
   toast,
 } from '@/components';
+import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
 
 export function GroupsScreen() {
   const navigation = useNavigation();
@@ -19,6 +20,7 @@ export function GroupsScreen() {
         <BalanceSummary balances={[]} />
       </Box>
       <Divider />
+      <VerifyEmailBanner />
       <EmptyState
         icon={Users}
         title="No groups yet"

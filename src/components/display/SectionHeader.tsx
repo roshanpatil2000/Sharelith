@@ -26,7 +26,7 @@ const createStyles = (t: Theme) =>
       justifyContent: 'space-between',
       paddingHorizontal: t.spacing.lg,
       paddingVertical: t.spacing.sm,
-      backgroundColor: t.colors.surface,
+      backgroundColor: t.colors.background,
     },
     title: { textTransform: 'uppercase', letterSpacing: 0.5 },
   });

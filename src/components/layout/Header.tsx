@@ -49,7 +49,7 @@ const createStyles = (t: Theme) =>
       alignItems: 'center',
       minHeight: 52,
       paddingHorizontal: t.spacing.xs,
-      backgroundColor: t.colors.background,
+      backgroundColor: t.colors.surface,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: t.colors.border,
     },

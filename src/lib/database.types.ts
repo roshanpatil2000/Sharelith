@@ -14,13 +14,52 @@ export type Database = {
   };
   public: {
     Tables: {
-      [_ in never]: never;
+      profiles: {
+        Row: {
+          avatar_url: string | null;
+          created_at: string;
+          default_currency: string;
+          email: string | null;
+          email_verified_at: string | null;
+          full_name: string;
+          id: string;
+          phone: string | null;
+          timezone: string;
+          updated_at: string;
+        };
+        Insert: {
+          avatar_url?: string | null;
+          created_at?: string;
+          default_currency?: string;
+          email?: string | null;
+          email_verified_at?: string | null;
+          full_name: string;
+          id: string;
+          phone?: string | null;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Update: {
+          avatar_url?: string | null;
+          created_at?: string;
+          default_currency?: string;
+          email?: string | null;
+          email_verified_at?: string | null;
+          full_name?: string;
+          id?: string;
+          phone?: string | null;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      delete_account: { Args: never; Returns: undefined };
+      mark_email_verified: { Args: never; Returns: undefined };
     };
     Enums: {
       [_ in never]: never;

@@ -7,6 +7,9 @@ export type ThemePreference = 'system' | 'light' | 'dark';
 type SettingsState = {
   themePreference: ThemePreference;
   setThemePreference: (pref: ThemePreference) => void;
+  /** Require Face ID / fingerprint to open the app on this device. */
+  appLockEnabled: boolean;
+  setAppLockEnabled: (enabled: boolean) => void;
 };
 
 /** Device-local UI preferences (not synced to the server). */
@@ -15,6 +18,8 @@ export const useSettingsStore = create<SettingsState>()(
     set => ({
       themePreference: 'system',
       setThemePreference: themePreference => set({ themePreference }),
+      appLockEnabled: false,
+      setAppLockEnabled: appLockEnabled => set({ appLockEnabled }),
     }),
     {
       name: 'settings',

@@ -122,11 +122,11 @@ const createStyles = (t: Theme) =>
     stack: { flexDirection: 'row', alignItems: 'center' },
     ring: {
       borderWidth: 2,
-      borderColor: t.colors.background,
+      borderColor: t.colors.surface,
       borderRadius: t.radius.pill,
     },
     more: {
-      backgroundColor: t.colors.surface,
+      backgroundColor: t.colors.primarySoft,
       alignItems: 'center',
       justifyContent: 'center',
     },

@@ -1,5 +1,7 @@
 module.exports = {
   preset: '@react-native/jest-preset',
+  // Reset mock call history (not implementations) between tests.
+  clearMocks: true,
   // Resolves Reanimated/Worklets to their JS (non-native) implementations.
   resolver: 'react-native-reanimated/jest/resolver',
   setupFiles: ['./node_modules/react-native-gesture-handler/jestSetup.js'],

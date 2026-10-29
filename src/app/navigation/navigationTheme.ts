@@ -14,7 +14,7 @@ export function toNavigationTheme(t: Theme): NavTheme {
       ...base.colors,
       primary: t.colors.primary,
       background: t.colors.background,
-      card: t.colors.background,
+      card: t.colors.surface,
       text: t.colors.textPrimary,
       border: t.colors.border,
       notification: t.colors.negative,
