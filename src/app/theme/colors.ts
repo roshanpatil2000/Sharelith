@@ -35,9 +35,18 @@ export const avatarColors = [
 ] as const;
 
 export type ColorTokens = {
+  /** Brand: filled buttons, FAB, switches, active tab, focus rings. */
   primary: string;
   primaryPressed: string;
+  /** Selected backgrounds (chips, segmented track, pressed rows, banners). */
   primarySoft: string;
+  /** Stronger teal surface for secondary emphasis. */
+  primaryTint: string;
+  /**
+   * Teal for small text/icons on tinted backgrounds. In light mode the brand
+   * teal is only 4.1–4.3:1 on primarySoft/background, so this is darker.
+   */
+  primaryText: string;
   accent: string;
   positive: string;
   negative: string;
@@ -55,22 +64,25 @@ export type ColorTokens = {
   category: Record<CategoryKey, string>;
 };
 
+// Brand teal #00838A. Light: bright surfaces, teal accents.
 export const lightColors: ColorTokens = {
-  primary: '#1E9E83',
-  primaryPressed: '#16806A',
-  primarySoft: '#E3F5F0',
+  primary: '#00838A',
+  primaryPressed: '#006A6F',
+  primarySoft: '#E6F6F7',
+  primaryTint: '#C8EDED',
+  primaryText: '#006A6F',
   accent: '#5B5BD6',
-  positive: '#1E9E83',
+  positive: '#006A6F',
   negative: '#E8642C',
   danger: '#D93A3A',
   warning: '#E0A400',
   neutral: '#8A9099',
-  background: '#FFFFFF',
-  surface: '#F6F7F8',
+  background: '#F7FAFA',
+  surface: '#FFFFFF',
   surfaceRaised: '#FFFFFF',
-  border: '#E3E6E9',
-  textPrimary: '#15191C',
-  textSecondary: '#5E666E',
+  border: '#D9E4E5',
+  textPrimary: '#172B2D',
+  textSecondary: '#5F7072',
   textOnPrimary: '#FFFFFF',
   overlay: 'rgba(15, 18, 20, 0.45)',
   category: {
@@ -85,23 +97,26 @@ export const lightColors: ColorTokens = {
   },
 };
 
+// Dark: deep teal surfaces with a brighter teal (#26B8B8) for interactions.
 export const darkColors: ColorTokens = {
-  primary: '#34C7A5',
-  primaryPressed: '#2AA88B',
-  primarySoft: '#13332C',
+  primary: '#26B8B8',
+  primaryPressed: '#5FCFCB',
+  primarySoft: '#123C3E',
+  primaryTint: '#16494B',
+  primaryText: '#26B8B8',
   accent: '#8B8BF0',
-  positive: '#34C7A5',
+  positive: '#26B8B8',
   negative: '#FF8A50',
   danger: '#FF6B6B',
   warning: '#F5C542',
   neutral: '#7C838C',
-  background: '#0F1214',
-  surface: '#181C1F',
-  surfaceRaised: '#20252A',
-  border: '#2B3136',
-  textPrimary: '#F2F4F5',
-  textSecondary: '#A5ADB4',
-  textOnPrimary: '#0F1214',
+  background: '#0B1516',
+  surface: '#142224',
+  surfaceRaised: '#142224',
+  border: '#304345',
+  textPrimary: '#F2F7F7',
+  textSecondary: '#A6B8B9',
+  textOnPrimary: '#0B1516',
   overlay: 'rgba(0, 0, 0, 0.6)',
   category: {
     food: '#FF9A66',

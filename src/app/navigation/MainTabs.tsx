@@ -12,6 +12,7 @@ import { FriendsScreen } from '@/features/friends/screens/FriendsScreen';
 import { GroupsScreen } from '@/features/groups/screens/GroupsScreen';
 import { ActivityScreen } from '@/features/activity/screens/ActivityScreen';
 import { AccountScreen } from '@/features/account/screens/AccountScreen';
+import { headerTitleStyle } from './navigationTheme';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -39,8 +40,15 @@ export function MainTabs() {
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: t.colors.primary,
         tabBarInactiveTintColor: t.colors.textSecondary,
-        tabBarLabelStyle: t.typography.caption,
-        headerTitleStyle: t.typography.heading,
+        // No lineHeight here: the tab bar sizes the label itself, and a fixed
+        // line height clips descenders on Android.
+        tabBarLabelStyle: {
+          fontFamily: t.typography.label.fontFamily,
+          fontWeight: t.typography.label.fontWeight,
+          fontSize: 12,
+        },
+        headerTitleStyle: headerTitleStyle(t),
+        headerTitleAlign: 'center',
         headerShadowVisible: false,
         tabBarIcon: tabIcons[route.name],
       })}

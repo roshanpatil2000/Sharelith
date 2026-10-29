@@ -15,6 +15,9 @@ export { Switch } from './inputs/Switch';
 export { Checkbox } from './inputs/Checkbox';
 export { SegmentedControl, type Segment } from './inputs/SegmentedControl';
 export { Chip, ChipGroup } from './inputs/Chip';
+export { FormTextField } from './inputs/FormTextField';
+export { SelectField, type SelectOption } from './inputs/SelectField';
+export { CurrencyPicker } from './inputs/CurrencyPicker';
 
 // Data display
 export {

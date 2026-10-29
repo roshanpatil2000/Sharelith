@@ -35,7 +35,7 @@ export function Chip({
       style={[styles.chip, selected && styles.selected]}
     >
       {leading}
-      <Text variant="label" color={selected ? 'primary' : 'textPrimary'}>
+      <Text variant="label" color={selected ? 'primaryText' : 'textPrimary'}>
         {label}
       </Text>
       {onRemove ? <Icon icon={X} size={14} color="textSecondary" /> : null}
@@ -59,7 +59,7 @@ const createStyles = (t: Theme) =>
       borderRadius: t.radius.pill,
       borderWidth: 1,
       borderColor: t.colors.border,
-      backgroundColor: t.colors.background,
+      backgroundColor: t.colors.surface,
     },
     selected: {
       borderColor: t.colors.primary,

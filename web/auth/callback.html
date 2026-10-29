@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <title>Opening Sharelith</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="card">
+    <div class="logo" aria-hidden="true">S</div>
+    <h1 id="title">Opening Sharelith…</h1>
+    <p id="message">If the app doesn’t open by itself, tap the button below.</p>
+    <a id="open" class="button" href="sharelith://auth/callback">Open Sharelith</a>
+    <p class="hint" id="hint">
+      Open this link on the phone where you use Sharelith. On another device,
+      enter the code from the email in the app instead.
+    </p>
+  </main>
+  <script>
+    (function () {
+      // Forward Supabase's query (code / next / error) and fragment to the app.
+      // The code only works inside the app that requested it (PKCE).
+      var target = 'sharelith://auth/callback' + location.search + location.hash;
+      document.getElementById('open').setAttribute('href', target);
+
+      var params = new URLSearchParams(location.search + '&' + location.hash.slice(1));
+      if (params.get('error') || params.get('error_code')) {
+        document.getElementById('title').textContent = 'This link didn’t work';
+        document.getElementById('message').textContent =
+          params.get('error_code') === 'otp_expired'
+            ? 'It has expired or was already used. Request a new email from the app.'
+            : (params.get('error_description') || 'Request a new email from the app.');
+      }
+
+      // Try to open the app straight away; browsers that block this still
+      // allow the button tap.
+      window.location.replace(target);
+    })();
+  </script>
+</body>
+</html>

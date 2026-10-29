@@ -48,7 +48,7 @@ export function Button({
     variant === 'primary' || variant === 'danger'
       ? colors.textOnPrimary
       : variant === 'secondary'
-      ? colors.primary
+      ? colors.primaryText
       : colors.textPrimary;
 
   return (

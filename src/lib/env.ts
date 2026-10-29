@@ -12,6 +12,10 @@ function hostForPlatform(url: string): string {
 export const env = {
   supabaseUrl: hostForPlatform(Config.SUPABASE_URL ?? 'http://127.0.0.1:54321'),
   supabaseAnonKey: Config.SUPABASE_ANON_KEY ?? '',
+  /** Web page that forwards email links into the app (sharelith://). */
+  authRedirectUrl:
+    Config.AUTH_REDIRECT_URL ??
+    'https://sharelith.techbeas.co.in/auth/callback',
 };
 
 export const isSupabaseConfigured =

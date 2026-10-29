@@ -24,28 +24,41 @@ export const radius = {
 } as const;
 export type RadiusKey = keyof typeof radius;
 
-const fontFamily = Platform.select({ ios: 'System', default: undefined });
+/**
+ * Android's default font (Roboto) only renders 400 and 700 from fontWeight;
+ * 500/600 fall back to regular. Use the named medium family there instead.
+ */
+const regular: TextStyle = Platform.select({
+  ios: { fontFamily: 'System', fontWeight: '400' },
+  default: { fontFamily: 'sans-serif', fontWeight: 'normal' },
+});
+const semibold: TextStyle = Platform.select({
+  ios: { fontFamily: 'System', fontWeight: '600' },
+  default: { fontFamily: 'sans-serif-medium', fontWeight: 'normal' },
+});
+const bold: TextStyle = Platform.select({
+  ios: { fontFamily: 'System', fontWeight: '700' },
+  default: { fontFamily: 'sans-serif', fontWeight: 'bold' },
+});
 
 export const typography = {
-  display: { fontFamily, fontSize: 28, lineHeight: 34, fontWeight: '700' },
-  title: { fontFamily, fontSize: 20, lineHeight: 26, fontWeight: '700' },
-  heading: { fontFamily, fontSize: 17, lineHeight: 22, fontWeight: '600' },
-  body: { fontFamily, fontSize: 15, lineHeight: 20, fontWeight: '400' },
-  bodyStrong: { fontFamily, fontSize: 15, lineHeight: 20, fontWeight: '600' },
-  caption: { fontFamily, fontSize: 13, lineHeight: 18, fontWeight: '400' },
-  label: { fontFamily, fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  display: { ...bold, fontSize: 28, lineHeight: 34 },
+  title: { ...bold, fontSize: 20, lineHeight: 26 },
+  heading: { ...semibold, fontSize: 17, lineHeight: 22 },
+  body: { ...regular, fontSize: 15, lineHeight: 20 },
+  bodyStrong: { ...semibold, fontSize: 15, lineHeight: 20 },
+  caption: { ...regular, fontSize: 13, lineHeight: 18 },
+  label: { ...semibold, fontSize: 13, lineHeight: 18 },
   amount: {
-    fontFamily,
+    ...semibold,
     fontSize: 15,
     lineHeight: 20,
-    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   amountLarge: {
-    fontFamily,
+    ...bold,
     fontSize: 34,
     lineHeight: 40,
-    fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
 } satisfies Record<string, TextStyle>;

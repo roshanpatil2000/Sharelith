@@ -14,10 +14,16 @@ export function toNavigationTheme(t: Theme): NavTheme {
       ...base.colors,
       primary: t.colors.primary,
       background: t.colors.background,
-      card: t.colors.background,
+      card: t.colors.surface,
       text: t.colors.textPrimary,
       border: t.colors.border,
       notification: t.colors.negative,
     },
   };
+}
+
+/** Header titles accept only family, size and weight. */
+export function headerTitleStyle(t: Theme) {
+  const { fontFamily, fontSize, fontWeight } = t.typography.heading;
+  return { fontFamily, fontSize, fontWeight };
 }

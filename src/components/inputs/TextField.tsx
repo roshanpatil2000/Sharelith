@@ -90,7 +90,7 @@ const createStyles = (t: Theme) =>
       borderRadius: t.radius.md,
       borderWidth: 1,
       borderColor: t.colors.border,
-      backgroundColor: t.colors.background,
+      backgroundColor: t.colors.surface,
     },
     focused: { borderColor: t.colors.primary },
     errored: { borderColor: t.colors.danger },

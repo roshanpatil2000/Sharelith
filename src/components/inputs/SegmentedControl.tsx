@@ -37,7 +37,7 @@ export function SegmentedControl<T extends string>({
           >
             <Text
               variant="label"
-              color={selected ? 'primary' : 'textSecondary'}
+              color={selected ? 'primaryText' : 'textSecondary'}
             >
               {seg.label}
             </Text>
@@ -52,7 +52,7 @@ const createStyles = (t: Theme) =>
   StyleSheet.create({
     track: {
       flexDirection: 'row',
-      backgroundColor: t.colors.surface,
+      backgroundColor: t.colors.primarySoft,
       borderRadius: t.radius.md,
       padding: t.spacing.xxs,
     },

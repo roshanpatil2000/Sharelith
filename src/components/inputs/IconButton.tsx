@@ -54,6 +54,6 @@ const createStyles = (t: Theme) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    filled: { backgroundColor: t.colors.surface },
+    filled: { backgroundColor: t.colors.primarySoft },
     disabled: { opacity: 0.4 },
   });

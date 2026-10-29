@@ -13,13 +13,17 @@
     "pods": "cd ios && bundle exec pod install",
     "prepare": "husky",
     "verify": "npm run typecheck && npm run lint && npm test",
-    "db:start": "supabase start",
-    "db:stop": "supabase stop",
-    "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/database.types.ts && prettier --write src/lib/database.types.ts"
+    "db:link": "supabase link",
+    "db:push": "supabase db push --linked",
+    "db:new": "supabase migration new",
+    "db:types": "supabase gen types typescript --linked --schema public > src/lib/database.types.ts && prettier --write src/lib/database.types.ts",
+    "functions:deploy": "supabase functions deploy --use-api",
+    "functions:secrets": "supabase secrets set --env-file supabase/functions/.env",
+    "db:restore-profiles": "supabase migration repair --status reverted 20261028165155 --linked && supabase db push --linked --yes"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.14",
+    "@hookform/resolvers": "^6.0.2",
     "@react-native/new-app-screen": "0.88.1",
     "@react-navigation/bottom-tabs": "^7.21.0",
     "@react-navigation/native": "^7.5.1",
@@ -31,9 +35,12 @@
     "@tanstack/react-query-persist-client": "^5.105.0",
     "lucide-react-native": "^1.63.0",
     "react": "19.3.0",
+    "react-hook-form": "^7.91.0",
     "react-native": "0.88.1",
+    "react-native-biometrics": "^3.0.1",
     "react-native-config": "^1.7.2",
     "react-native-gesture-handler": "^3.4.0",
+    "react-native-image-picker": "^8.3.0",
     "react-native-mmkv": "^4.3.2",
     "react-native-nitro-modules": "^0.37.1",
     "react-native-reanimated": "^4.7.1",
@@ -42,6 +49,7 @@
     "react-native-svg": "^15.16.0",
     "react-native-url-polyfill": "^4.0.0",
     "react-native-worklets": "^0.13.1",
+    "zod": "^4.6.7",
     "zustand": "^5.0.16"
   },
   "devDependencies": {

@@ -32,3 +32,39 @@ jest.mock('react-native-config', () => ({
   SUPABASE_URL: 'http://localhost:54321',
   SUPABASE_ANON_KEY: 'test-anon-key',
 }));
+
+jest.mock('@/lib/supabase', () => ({
+  supabase: require('./src/test/supabaseMock').supabaseMock,
+}));
+
+jest.mock('@gorhom/bottom-sheet', () => require('@gorhom/bottom-sheet/mock'));
+
+jest.mock('react-native-biometrics', () =>
+  jest.fn().mockImplementation(() => ({
+    isSensorAvailable: jest.fn(async () => ({
+      available: true,
+      biometryType: 'FaceID',
+    })),
+    simplePrompt: jest.fn(async () => ({ success: true })),
+  })),
+);
+
+jest.mock('react-native-image-picker', () => ({
+  launchImageLibrary: jest.fn(async () => ({ didCancel: true })),
+}));
+
+beforeEach(() => {
+  // Each test starts signed out with an empty query cache.
+  const { useAuthStore } = require('@/features/auth/authStore');
+  useAuthStore.setState({ session: null, ready: false, recovering: false });
+  require('@/lib/queryClient').queryClient.clear();
+});
+
+// toAppError logs raw auth errors in dev; keep test output clean.
+const originalWarn = console.warn;
+jest.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
+  if (args[0] === '[auth]') {
+    return;
+  }
+  originalWarn(...args);
+});
