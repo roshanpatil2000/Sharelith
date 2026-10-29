@@ -2,6 +2,7 @@ import React from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -9,7 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
-import { useStyles, type Theme } from '@/app/theme';
+import { useStyles, useTheme, type Theme } from '@/app/theme';
 
 type Props = {
   children: React.ReactNode;
@@ -20,6 +21,11 @@ type Props = {
   /** Safe-area edges; tab screens usually skip 'bottom'. */
   edges?: Edge[];
   contentStyle?: StyleProp<ViewStyle>;
+  /** Rendered above the content and outside the scroll, e.g. a FAB. */
+  overlay?: React.ReactNode;
+  /** With `scroll`: enables pull-to-refresh. */
+  onRefresh?: () => void;
+  refreshing?: boolean;
   testID?: string;
 };
 
@@ -29,13 +35,27 @@ export function Screen({
   padded = false,
   edges = ['left', 'right'],
   contentStyle,
+  overlay,
+  onRefresh,
+  refreshing = false,
   testID,
 }: Props) {
   const styles = useStyles(createStyles);
+  const { colors } = useTheme();
   const inner = scroll ? (
     <ScrollView
       contentContainerStyle={[padded && styles.padded, contentStyle]}
       keyboardShouldPersistTaps="handled"
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        ) : undefined
+      }
     >
       {children}
     </ScrollView>
@@ -51,6 +71,7 @@ export function Screen({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {inner}
+        {overlay}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

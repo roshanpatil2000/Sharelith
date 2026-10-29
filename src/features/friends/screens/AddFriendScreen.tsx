@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/app/navigation/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,8 +24,10 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
-export function AddFriendScreen() {
-  const navigation = useNavigation();
+type Props = NativeStackScreenProps<RootStackParamList, 'AddFriend'>;
+
+export function AddFriendScreen({ route, navigation }: Props) {
+  const returnTo = route.params?.returnTo;
   const addFriend = useAddFriend();
   // Set when the email isn't on Sharelith yet: we need a name to invite them.
   const [needsName, setNeedsName] = useState(false);
@@ -61,7 +64,18 @@ export function AddFriendScreen() {
           : `Added ${first}`,
         'success',
       );
-      navigation.goBack();
+      const addedFriendId = result.friend.id;
+      if (returnTo?.screen === 'CreateGroup') {
+        navigation.popTo('CreateGroup', { addedFriendId }, { merge: true });
+      } else if (returnTo?.screen === 'AddGroupMembers') {
+        navigation.popTo(
+          'AddGroupMembers',
+          { groupId: returnTo.groupId, addedFriendId },
+          { merge: true },
+        );
+      } else {
+        navigation.goBack();
+      }
     } catch (e) {
       setFormError(toAppError(e).message);
     }

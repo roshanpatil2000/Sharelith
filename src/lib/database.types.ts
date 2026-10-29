@@ -57,6 +57,96 @@ export type Database = {
           },
         ];
       };
+      group_members: {
+        Row: {
+          added_by: string | null;
+          group_id: string;
+          joined_at: string;
+          user_id: string;
+        };
+        Insert: {
+          added_by?: string | null;
+          group_id: string;
+          joined_at?: string;
+          user_id: string;
+        };
+        Update: {
+          added_by?: string | null;
+          group_id?: string;
+          joined_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'group_members_added_by_fkey';
+            columns: ['added_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'group_members_group_id_fkey';
+            columns: ['group_id'];
+            isOneToOne: false;
+            referencedRelation: 'groups';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'group_members_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      groups: {
+        Row: {
+          cover_url: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          description: string | null;
+          id: string;
+          name: string;
+          simplify_debts: boolean;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          cover_url?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+          simplify_debts?: boolean;
+          type?: string;
+          updated_at?: string;
+        };
+        Update: {
+          cover_url?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          simplify_debts?: boolean;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'groups_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -115,7 +205,33 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_group_members: {
+        Args: { gid: string; member_ids: string[] };
+        Returns: undefined;
+      };
+      assert_all_friends: {
+        Args: { member_ids: string[] };
+        Returns: undefined;
+      };
+      assert_group_admin: { Args: { gid: string }; Returns: undefined };
+      befriend_group_members: { Args: { gid: string }; Returns: undefined };
+      can_write_group_cover: {
+        Args: { object_name: string };
+        Returns: boolean;
+      };
+      create_group: {
+        Args: {
+          description?: string;
+          member_ids?: string[];
+          name: string;
+          type?: string;
+        };
+        Returns: string;
+      };
       delete_account: { Args: never; Returns: undefined };
+      delete_group: { Args: { gid: string }; Returns: undefined };
+      is_group_member: { Args: { gid: string }; Returns: boolean };
+      leave_group: { Args: { gid: string }; Returns: undefined };
       list_friends: {
         Args: never;
         Returns: {
@@ -129,6 +245,10 @@ export type Database = {
       };
       mark_email_verified: { Args: never; Returns: undefined };
       remove_friend: { Args: { friend: string }; Returns: undefined };
+      remove_group_member: {
+        Args: { gid: string; member: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;

@@ -47,13 +47,30 @@ export function fakeProfile(overrides: Partial<Profile> = {}): Profile {
   };
 }
 
-/** Chainable stand-in for supabase.from(...): select/update/eq resolve `result`. */
+/**
+ * Chainable stand-in for supabase.from(...): every chain resolves `result`,
+ * whether it ends in single()/maybeSingle() or is awaited directly.
+ */
 type QueryBuilder<T> = {
   select: jest.Mock<QueryBuilder<T>>;
   update: jest.Mock<QueryBuilder<T>>;
   eq: jest.Mock<QueryBuilder<T>>;
+  order: jest.Mock<QueryBuilder<T>>;
   single: jest.Mock<Promise<{ data: T; error: unknown }>>;
+  maybeSingle: jest.Mock<Promise<{ data: T; error: unknown }>>;
+  then: Promise<{ data: T; error: unknown }>['then'];
 };
+
+/**
+ * Serves `profiles` reads from `builder`; every other table (groups, …)
+ * reads as an empty list.
+ */
+export function mockProfiles<T>(builder: QueryBuilder<T>) {
+  supabaseMock.from.mockImplementation(((table: string) =>
+    table === 'profiles'
+      ? builder
+      : queryBuilder<unknown>({ data: [], error: null })) as never);
+}
 
 export function queryBuilder<T>(result: {
   data: T;
@@ -63,7 +80,11 @@ export function queryBuilder<T>(result: {
     select: jest.fn(() => builder),
     update: jest.fn(() => builder),
     eq: jest.fn(() => builder),
+    order: jest.fn(() => builder),
     single: jest.fn(async () => result),
+    maybeSingle: jest.fn(async () => result),
+    then: (onFulfilled, onRejected) =>
+      Promise.resolve(result).then(onFulfilled, onRejected),
   };
   return builder;
 }

@@ -22,8 +22,20 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList>;
   AddExpense: undefined;
   ComponentGallery: undefined;
-  AddFriend: undefined;
+  /** returnTo: a group member picker that should select the person added. */
+  AddFriend:
+    | {
+        returnTo?:
+          | { screen: 'CreateGroup' }
+          | { screen: 'AddGroupMembers'; groupId: string };
+      }
+    | undefined;
   FriendDetail: { friendId: string };
+  /** addedFriendId: set by AddFriend so the picker selects them. */
+  CreateGroup: { addedFriendId?: string } | undefined;
+  GroupDetail: { groupId: string };
+  GroupSettings: { groupId: string };
+  AddGroupMembers: { groupId: string; addedFriendId?: string };
   VerifyEmail: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;

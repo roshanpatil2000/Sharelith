@@ -5,15 +5,14 @@ import {
   emitAuth,
   fakeProfile,
   fakeSession,
+  mockProfiles,
   queryBuilder,
   supabaseMock,
 } from '@/test/supabaseMock';
 import { useAuthStore } from '@/features/auth/authStore';
 
 beforeEach(() => {
-  supabaseMock.from.mockReturnValue(
-    queryBuilder({ data: fakeProfile(), error: null }),
-  );
+  mockProfiles(queryBuilder({ data: fakeProfile(), error: null }));
 });
 
 describe('App auth flow', () => {
@@ -149,7 +148,7 @@ describe('App auth flow', () => {
       data: { session: fakeSession() },
       error: null,
     });
-    supabaseMock.from.mockReturnValue(
+    mockProfiles(
       queryBuilder({
         data: fakeProfile({ email_verified_at: '2026-10-28T00:00:00Z' }),
         error: null,

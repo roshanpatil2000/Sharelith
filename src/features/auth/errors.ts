@@ -30,7 +30,14 @@ type MaybeSupabaseError = {
   status?: number;
   message?: string;
   name?: string;
+  hint?: string;
 };
+
+/**
+ * Database functions raise these (as the error's hint) with a message
+ * written for the user, so the message is shown as-is.
+ */
+const userFacingHints = new Set(['not_friends', 'not_admin', 'remove_self']);
 
 /** Converts Supabase/network errors into an AppError with friendly text. */
 export function toAppError(error: unknown): AppError {
@@ -44,6 +51,9 @@ export function toAppError(error: unknown): AppError {
   }
   if (e.code && byCode[e.code]) {
     return new AppError(byCode[e.code]!, e.code);
+  }
+  if (e.hint && userFacingHints.has(e.hint) && e.message) {
+    return new AppError(e.message, e.hint);
   }
   const message = e.message ?? '';
   // supabase-js reports both "no network" (status 0) and 5xx responses as
