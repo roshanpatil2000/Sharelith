@@ -243,6 +243,14 @@ export type Database = {
           invited: boolean;
         }[];
       };
+      claim_friend_add_attempt: {
+        Args: { daily_limit: number; uid: string };
+        Returns: boolean;
+      };
+      get_my_profile: {
+        Args: never;
+        Returns: Database['public']['Tables']['profiles']['Row'][];
+      };
       mark_email_verified: { Args: never; Returns: undefined };
       remove_friend: { Args: { friend: string }; Returns: undefined };
       remove_group_member: {

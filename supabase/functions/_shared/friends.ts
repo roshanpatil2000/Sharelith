@@ -1,7 +1,11 @@
 // Pure helpers for the add-friend function (no Deno APIs, so Jest can test).
 
-/** New friendships one person may create per 24 hours (anti-spam). */
-export const DAILY_FRIEND_LIMIT = 30;
+/**
+ * add-friend lookups one person may make per 24 hours (anti-spam, and limits
+ * probing which emails have accounts). Inviting someone new takes two: one
+ * finds no account, the next sends the name. So this allows at least 30 adds.
+ */
+export const DAILY_ATTEMPT_LIMIT = 60;
 
 export function normalizeEmail(input: unknown): string | null {
   if (typeof input !== 'string') {

@@ -62,10 +62,18 @@ type QueryBuilder<T> = {
 };
 
 /**
- * Serves `profiles` reads from `builder`; every other table (groups, …)
- * reads as an empty list.
+ * Serves `profiles` reads and get_my_profile from `builder`; every other table
+ * (groups, …) reads as an empty list.
  */
 export function mockProfiles<T>(builder: QueryBuilder<T>) {
+  const others = supabaseMock.rpc.getMockImplementation();
+  supabaseMock.rpc.mockImplementation(async (fn: string, args?: unknown) => {
+    if (fn !== 'get_my_profile') {
+      return others ? others(fn, args) : { data: null, error: null };
+    }
+    const { data, error } = await builder.single();
+    return { data: data === null ? null : [data], error };
+  });
   supabaseMock.from.mockImplementation(((table: string) =>
     table === 'profiles'
       ? builder
