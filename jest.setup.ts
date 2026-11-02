@@ -48,6 +48,16 @@ jest.mock('react-native-keychain', () => {
   };
 });
 
+// The real persister saves on a 1-second throttle into storage shared by every
+// test in a file, so on a slow machine one test restores another's cached data.
+jest.mock('@tanstack/query-async-storage-persister', () => ({
+  createAsyncStoragePersister: () => ({
+    persistClient: async () => {},
+    restoreClient: async () => undefined,
+    removeClient: async () => {},
+  }),
+}));
+
 jest.mock('react-native-config', () => ({
   SUPABASE_URL: 'http://localhost:54321',
   SUPABASE_ANON_KEY: 'test-anon-key',
