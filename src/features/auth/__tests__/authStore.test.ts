@@ -1,5 +1,6 @@
 import { waitFor } from '@testing-library/react-native';
 import { emitAuth, fakeSession, supabaseMock } from '@/test/supabaseMock';
+import { queryClient } from '@/lib/queryClient';
 import { selectStatus, startAuthListener, useAuthStore } from '../authStore';
 import { resetPassword } from '../api';
 
@@ -70,6 +71,24 @@ describe('authStore', () => {
       resetPassword('asha@example.com', '123456', 'old-password'),
     ).rejects.toThrow(/must be different/);
     expect(status()).toBe('signedOut');
+    stop();
+  });
+});
+
+describe('startAuthListener', () => {
+  it('clears the cache on a sign-out the app did not start', async () => {
+    const stop = startAuthListener();
+    queryClient.setQueryData(['friends', 'user-1'], [{ id: 'x' }]);
+    emitAuth('SIGNED_OUT', null);
+    expect(queryClient.getQueryData(['friends', 'user-1'])).toBeUndefined();
+    stop();
+  });
+
+  it('keeps the cache on other auth events', () => {
+    const stop = startAuthListener();
+    queryClient.setQueryData(['friends', 'user-1'], [{ id: 'x' }]);
+    emitAuth('TOKEN_REFRESHED', fakeSession());
+    expect(queryClient.getQueryData(['friends', 'user-1'])).toHaveLength(1);
     stop();
   });
 });

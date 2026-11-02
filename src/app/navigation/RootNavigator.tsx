@@ -16,6 +16,7 @@ import { VerifyEmailScreen } from '@/features/auth/screens/VerifyEmailScreen';
 import { SplashScreen } from '@/features/auth/screens/SplashScreen';
 import { EditProfileScreen } from '@/features/account/screens/EditProfileScreen';
 import { ChangePasswordScreen } from '@/features/account/screens/ChangePasswordScreen';
+import { DeleteAccountScreen } from '@/features/account/screens/DeleteAccountScreen';
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { ComponentGalleryScreen } from '@/features/dev/ComponentGalleryScreen';
 import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
@@ -134,6 +135,11 @@ export function RootNavigator() {
               name="ChangePassword"
               component={ChangePasswordScreen}
               options={{ title: 'Change password' }}
+            />
+            <Root.Screen
+              name="DeleteAccount"
+              component={DeleteAccountScreen}
+              options={{ title: 'Delete account' }}
             />
             <Root.Screen
               name="AddFriend"

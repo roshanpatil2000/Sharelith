@@ -1,5 +1,8 @@
 import type { Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { clearQueryCache } from '@/lib/queryClient';
+import { zustandStorage } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
 export type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
@@ -16,7 +19,8 @@ type AuthState = {
   recovering: boolean;
   /**
    * Set after opening a password-reset link: the user is signed in but must
-   * choose a new password before using the app.
+   * choose a new password before using the app. Persisted, so closing the app
+   * can't skip that step.
    */
   passwordResetPending: false | 'reset' | 'invite';
   setSession: (session: Session | null) => void;
@@ -24,21 +28,30 @@ type AuthState = {
   setPasswordResetPending: (pending: false | 'reset' | 'invite') => void;
 };
 
-export const useAuthStore = create<AuthState>(set => ({
-  session: null,
-  ready: false,
-  recovering: false,
-  passwordResetPending: false,
-  setSession: session =>
-    set(s => ({
-      session,
-      ready: true,
-      passwordResetPending: session ? s.passwordResetPending : false,
-    })),
-  setRecovering: recovering => set({ recovering }),
-  setPasswordResetPending: passwordResetPending =>
-    set({ passwordResetPending }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    set => ({
+      session: null,
+      ready: false,
+      recovering: false,
+      passwordResetPending: false,
+      setSession: session =>
+        set(s => ({
+          session,
+          ready: true,
+          passwordResetPending: session ? s.passwordResetPending : false,
+        })),
+      setRecovering: recovering => set({ recovering }),
+      setPasswordResetPending: passwordResetPending =>
+        set({ passwordResetPending }),
+    }),
+    {
+      name: 'auth-flow',
+      storage: createJSONStorage(() => zustandStorage),
+      partialize: s => ({ passwordResetPending: s.passwordResetPending }),
+    },
+  ),
+);
 
 export function selectStatus(s: AuthState): AuthStatus {
   if (!s.ready) {
@@ -59,8 +72,12 @@ export function startAuthListener(): () => void {
     .getSession()
     .then(({ data }) => setSession(data.session))
     .catch(() => setSession(null));
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
     setSession(session);
+    // Also covers sign-outs the app didn't start, like a revoked session.
+    if (event === 'SIGNED_OUT') {
+      clearQueryCache().catch(() => {});
+    }
   });
   return () => data.subscription.unsubscribe();
 }

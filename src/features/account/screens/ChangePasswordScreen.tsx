@@ -17,6 +17,7 @@ import { useAuthStore } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
 import {
   changePasswordSchema,
+  setPasswordSchema,
   type ChangePasswordValues,
 } from '@/features/auth/schemas';
 
@@ -28,14 +29,16 @@ export function ChangePasswordScreen() {
   const isInvite = fromResetLink === 'invite';
   const [formError, setFormError] = useState<string | null>(null);
   const { control, handleSubmit, formState } = useForm<ChangePasswordValues>({
-    resolver: zodResolver(changePasswordSchema),
-    defaultValues: { password: '', confirm: '' },
+    resolver: zodResolver(
+      fromResetLink ? setPasswordSchema : changePasswordSchema,
+    ),
+    defaultValues: { current: '', password: '', confirm: '' },
   });
 
-  const onSubmit = handleSubmit(async ({ password }) => {
+  const onSubmit = handleSubmit(async ({ current, password }) => {
     setFormError(null);
     try {
-      await changePassword(password);
+      await changePassword(password, fromResetLink ? undefined : current);
       toast.show(isInvite ? 'You’re all set' : 'Password changed', 'success');
       if (!fromResetLink) {
         navigation.goBack();
@@ -55,6 +58,18 @@ export function ChangePasswordScreen() {
           </Text>
         ) : null}
         {formError ? <Banner tone="danger" message={formError} /> : null}
+        {fromResetLink ? null : (
+          <FormTextField
+            control={control}
+            name="current"
+            label="Current password"
+            leadingIcon={Lock}
+            password
+            autoComplete="current-password"
+            textContentType="password"
+            testID="password-current"
+          />
+        )}
         <FormTextField
           control={control}
           name="password"

@@ -79,6 +79,7 @@ describe('resetPasswordSchema', () => {
 describe('changePasswordSchema', () => {
   it('requires matching passwords', () => {
     const r = changePasswordSchema.safeParse({
+      current: 'old-secret',
       password: 'new-password',
       confirm: 'other-password',
     });

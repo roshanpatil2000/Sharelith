@@ -55,16 +55,29 @@ export const resetPasswordSchema = z.object({
 });
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
-export const changePasswordSchema = z
-  .object({
-    password: passwordSchema,
-    confirm: z.string(),
-  })
-  .refine(v => v.password === v.confirm, {
-    message: 'Passwords don’t match',
-    path: ['confirm'],
-  });
+const currentPasswordSchema = z.string().min(1, 'Enter your current password');
+
+/** After a reset or invite link there's no current password to ask for. */
+const passwordFormSchema = (current: z.ZodString) =>
+  z
+    .object({
+      current,
+      password: passwordSchema,
+      confirm: z.string(),
+    })
+    .refine(v => v.password === v.confirm, {
+      message: 'Passwords don’t match',
+      path: ['confirm'],
+    });
+
+export const changePasswordSchema = passwordFormSchema(currentPasswordSchema);
+export const setPasswordSchema = passwordFormSchema(z.string());
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
+
+export const deleteAccountSchema = z.object({
+  password: currentPasswordSchema,
+});
+export type DeleteAccountValues = z.infer<typeof deleteAccountSchema>;
 
 export const verifyCodeSchema = z.object({ code: codeSchema });
 export type VerifyCodeValues = z.infer<typeof verifyCodeSchema>;

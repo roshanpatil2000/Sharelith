@@ -1,4 +1,4 @@
-import { Linking } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { toast } from '@/components';
 import { env } from '@/lib/env';
 import { queryClient } from '@/lib/queryClient';
@@ -69,6 +69,35 @@ export function parseAuthLink(url: string): ParsedAuthLink | null {
   return null;
 }
 
+/** The email inside an access token, or null if it isn't a readable JWT. */
+export function emailFromToken(token: string): string | null {
+  try {
+    const payload = token.split('.')[1]!;
+    const { email } = JSON.parse(
+      atob(payload.replace(/-/g, '+').replace(/_/g, '/')),
+    );
+    return typeof email === 'string' ? email : null;
+  } catch {
+    return null;
+  }
+}
+
+function confirmSignIn(email: string): Promise<boolean> {
+  const signedIn = !!useAuthStore.getState().session;
+  return new Promise(resolve => {
+    Alert.alert(
+      'Sign in to Sharelith?',
+      `This link signs you in as ${email}.` +
+        (signedIn ? ' You’ll be signed out of your current account.' : ''),
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Continue', onPress: () => resolve(true) },
+      ],
+      { cancelable: true, onDismiss: () => resolve(false) },
+    );
+  });
+}
+
 /** Signs in with the link's code, then finishes verification or reset. */
 export async function handleAuthLink(url: string): Promise<void> {
   const link = parseAuthLink(url);
@@ -83,6 +112,21 @@ export async function handleAuthLink(url: string): Promise<void> {
       'error',
     );
     return;
+  }
+
+  // A link carrying tokens works from any app or website, unlike a PKCE code,
+  // which only this install can redeem. Only invites use them, and the person
+  // must agree first: otherwise a crafted link could silently switch them
+  // into someone else's account.
+  if (link.kind === 'tokens') {
+    const email = emailFromToken(link.accessToken);
+    if (link.intent !== 'invite' || !email) {
+      toast.show('That link didn’t work.', 'error');
+      return;
+    }
+    if (!(await confirmSignIn(email))) {
+      return;
+    }
   }
 
   // Invites set a password before anything else; flag it before signing in
