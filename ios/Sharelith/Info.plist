@@ -47,8 +47,6 @@
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Sharelith uses Face ID to unlock the app when App lock is on.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo for your profile picture.</string>
 	<key>RCTNewArchEnabled</key>
