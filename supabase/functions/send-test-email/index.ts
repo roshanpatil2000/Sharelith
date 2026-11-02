@@ -15,6 +15,11 @@ Deno.serve(async req => {
     return json({ error: 'Method not allowed' }, 405);
   }
 
+  // Off unless switched on, so it can't burn the email quota in production.
+  if (Deno.env.get('ALLOW_TEST_EMAIL') !== 'true') {
+    return json({ error: 'Not found' }, 404);
+  }
+
   // Identify the caller from their session token (forwarded by the app).
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,

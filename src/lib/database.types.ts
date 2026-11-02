@@ -214,7 +214,10 @@ export type Database = {
         Returns: undefined;
       };
       assert_group_admin: { Args: { gid: string }; Returns: undefined };
-      befriend_group_members: { Args: { gid: string }; Returns: undefined };
+      befriend_group_members: {
+        Args: { gid: string; new_ids: string[] };
+        Returns: undefined;
+      };
       can_write_group_cover: {
         Args: { object_name: string };
         Returns: boolean;
@@ -242,6 +245,18 @@ export type Database = {
           id: string;
           invited: boolean;
         }[];
+      };
+      claim_friend_add_attempt: {
+        Args: { daily_limit: number; uid: string };
+        Returns: boolean;
+      };
+      get_my_profile: {
+        Args: never;
+        Returns: Database['public']['Tables']['profiles']['Row'][];
+      };
+      is_orphan_group_cover: {
+        Args: { object_name: string };
+        Returns: boolean;
       };
       mark_email_verified: { Args: never; Returns: undefined };
       remove_friend: { Args: { friend: string }; Returns: undefined };

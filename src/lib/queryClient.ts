@@ -30,3 +30,9 @@ export const queryPersister = createAsyncStoragePersister({
   key: 'query-cache',
   throttleTime: 1000,
 });
+
+/** Drops every cached query, in memory and on disk. */
+export async function clearQueryCache(): Promise<void> {
+  queryClient.clear();
+  await queryPersister.removeClient();
+}

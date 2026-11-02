@@ -29,7 +29,7 @@ export function FriendDetailScreen({ route }: Props) {
   const { friendId } = route.params;
   const styles = useStyles(createStyles);
   const navigation = useNavigation();
-  const { data: current } = useFriend(friendId);
+  const { data: current, isLoading } = useFriend(friendId);
   // Removing drops the friend from the cache straight away; keep showing them
   // until the request finishes and the screen closes.
   const lastFriend = useRef(current);
@@ -46,8 +46,19 @@ export function FriendDetailScreen({ route }: Props) {
   }, [navigation, friend?.full_name]);
 
   if (!friend) {
-    // Not loaded yet.
-    return <Screen>{null}</Screen>;
+    if (isLoading) {
+      return <Screen>{null}</Screen>;
+    }
+    // Group members needn't be friends: either of you may have removed the other.
+    return (
+      <Screen>
+        <EmptyState
+          icon={UserMinus}
+          title="Not on your friends list"
+          message="You can add them as a friend with their email."
+        />
+      </Screen>
+    );
   }
 
   const first = friend.full_name.split(' ')[0];

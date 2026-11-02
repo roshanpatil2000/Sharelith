@@ -1,4 +1,5 @@
 import { waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { useToastStore } from '@/components';
 import {
   emitAuth,
@@ -10,7 +11,12 @@ import {
 } from '@/test/supabaseMock';
 import { queryClient } from '@/lib/queryClient';
 import { profileKey, type Profile } from '@/features/account/api';
-import { authRedirectFor, handleAuthLink, parseAuthLink } from '../authLinks';
+import {
+  authRedirectFor,
+  emailFromToken,
+  handleAuthLink,
+  parseAuthLink,
+} from '../authLinks';
 import { selectStatus, startAuthListener, useAuthStore } from '../authStore';
 
 describe('parseAuthLink', () => {
@@ -69,29 +75,81 @@ describe('parseAuthLink: invites', () => {
   });
 });
 
+/** An unsigned JWT: the app only reads the email to show it. */
+const inviteToken = (email: string) =>
+  `h.${btoa(JSON.stringify({ email })).replace(/[=]+$/, '')}.s`;
+
+/** Answers the sign-in prompt by pressing the named button. */
+const answerPrompt = (button: 'Continue' | 'Cancel') =>
+  jest
+    .spyOn(Alert, 'alert')
+    .mockImplementation((_title, _message, buttons) =>
+      buttons?.find(b => b.text === button)?.onPress?.(),
+    );
+
 describe('handleAuthLink: invite', () => {
+  const at = inviteToken('asha@example.com');
+
+  it('reads the email from a token, and rejects junk', () => {
+    expect(emailFromToken(at)).toBe('asha@example.com');
+    expect(emailFromToken('junk')).toBeNull();
+  });
+
+  it('does nothing if the person cancels the prompt', async () => {
+    const alert = answerPrompt('Cancel');
+    supabaseMock.auth.setSession = jest.fn() as never;
+    await handleAuthLink(
+      `sharelith://auth/callback?next=invite#access_token=${at}&refresh_token=rt`,
+    );
+    expect(alert.mock.calls[0]?.[1]).toContain('asha@example.com');
+    expect(supabaseMock.auth.setSession).not.toHaveBeenCalled();
+    expect(useAuthStore.getState().passwordResetPending).toBe(false);
+  });
+
+  it('warns that the current account will be signed out', async () => {
+    useAuthStore.setState({ session: fakeSession() });
+    const alert = answerPrompt('Cancel');
+    await handleAuthLink(
+      `sharelith://auth/callback?next=invite#access_token=${at}&refresh_token=rt`,
+    );
+    expect(alert.mock.calls[0]?.[1]).toContain('signed out');
+  });
+
+  it.each([
+    ['tokens without an invite', `next=verify#access_token=${at}`],
+    ['an unreadable token', 'next=invite#access_token=junk'],
+  ])('refuses %s without prompting', async (_name, query) => {
+    const alert = answerPrompt('Continue');
+    supabaseMock.auth.setSession = jest.fn() as never;
+    await handleAuthLink(`sharelith://auth/callback?${query}&refresh_token=rt`);
+    expect(alert).not.toHaveBeenCalled();
+    expect(supabaseMock.auth.setSession).not.toHaveBeenCalled();
+  });
+
   it('signs in with the tokens and requires a password first', async () => {
+    answerPrompt('Continue');
     supabaseMock.auth.setSession = jest.fn(async () => ({
       data: { user: fakeSession().user, session: fakeSession() },
       error: null,
     })) as never;
     await handleAuthLink(
-      'sharelith://auth/callback?next=invite#access_token=at&refresh_token=rt',
+      `sharelith://auth/callback?next=invite#access_token=${at}&refresh_token=rt`,
     );
     expect(supabaseMock.auth.setSession).toHaveBeenCalledWith({
-      access_token: 'at',
+      access_token: at,
       refresh_token: 'rt',
     });
     expect(useAuthStore.getState().passwordResetPending).toBe('invite');
   });
 
   it('clears the pending state if the tokens are rejected', async () => {
+    answerPrompt('Continue');
     supabaseMock.auth.setSession = jest.fn(async () => ({
       data: { user: null, session: null },
       error: { message: 'invalid' },
     })) as never;
     await handleAuthLink(
-      'sharelith://auth/callback?next=invite#access_token=x&refresh_token=y',
+      `sharelith://auth/callback?next=invite#access_token=${at}&refresh_token=y`,
     );
     expect(useAuthStore.getState().passwordResetPending).toBe(false);
   });

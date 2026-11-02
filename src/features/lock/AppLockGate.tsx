@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, StyleSheet, View } from 'react-native';
 import { Lock } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
-import { Button, Icon, Text } from '@/components';
+import { Button, Icon, Text, toast } from '@/components';
+import { signOut } from '@/features/auth/api';
 import { useAuthStatus } from '@/features/auth/authStore';
+import { toAppError } from '@/features/auth/errors';
 import { useSettingsStore } from '@/lib/settingsStore';
 import { authenticate } from './biometrics';
 
@@ -12,13 +14,16 @@ export const RELOCK_AFTER_MS = 30_000;
 
 /**
  * Covers the app with a lock screen on launch and after returning from the
- * background, when the user has turned on app lock and is signed in.
+ * background, when the user has turned on app lock and is signed in. Also
+ * hides the app whenever it isn't active, so it doesn't show in the app
+ * switcher.
  */
 export function AppLockGate({ children }: { children: React.ReactNode }) {
   const styles = useStyles(createStyles);
   const enabled = useSettingsStore(s => s.appLockEnabled);
   const signedIn = useAuthStatus() === 'signedIn';
   const [locked, setLocked] = useState(enabled);
+  const [hidden, setHidden] = useState(false);
   const backgroundedAt = useRef<number | null>(null);
   const prompting = useRef(false);
 
@@ -36,6 +41,7 @@ export function AppLockGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', state => {
+      setHidden(state !== 'active');
       if (state === 'background') {
         backgroundedAt.current = Date.now();
       } else if (state === 'active' && backgroundedAt.current !== null) {
@@ -61,9 +67,23 @@ export function AppLockGate({ children }: { children: React.ReactNode }) {
     }
   }, [showLock, unlock]);
 
+  // Without this the lock screen has no way out if the device's biometrics
+  // and passcode are removed.
+  const logOut = async () => {
+    try {
+      await signOut();
+      setLocked(false);
+    } catch (e) {
+      toast.show(toAppError(e).message, 'error');
+    }
+  };
+
   return (
     <>
       {children}
+      {hidden && enabled && signedIn && !showLock ? (
+        <View style={styles.overlay} testID="app-privacy-cover" />
+      ) : null}
       {showLock ? (
         <View style={styles.overlay} testID="app-lock">
           <View style={styles.iconWrap}>
@@ -71,6 +91,12 @@ export function AppLockGate({ children }: { children: React.ReactNode }) {
           </View>
           <Text variant="title">Sharelith is locked</Text>
           <Button title="Unlock" size="lg" onPress={unlock} />
+          <Button
+            title="Log out"
+            variant="ghost"
+            onPress={logOut}
+            testID="app-lock-logout"
+          />
         </View>
       ) : null}
     </>

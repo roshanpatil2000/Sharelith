@@ -1,5 +1,6 @@
 import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
+import { safeImageUri } from '@/lib/imageUri';
 import { avatarColors, useStyles, type Theme } from '@/app/theme';
 import { Text } from '../primitives/Text';
 
@@ -39,10 +40,11 @@ export function Avatar({ name, uri, size = 'md' }: Props) {
   const dim = sizes[size];
   const box = { width: dim, height: dim, borderRadius: dim / 2 };
 
-  if (uri) {
+  const safeUri = safeImageUri(uri);
+  if (safeUri) {
     return (
       <Image
-        source={{ uri }}
+        source={{ uri: safeUri }}
         style={[styles.base, box]}
         accessibilityLabel={name}
         accessibilityIgnoresInvertColors

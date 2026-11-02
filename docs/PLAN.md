@@ -1,9 +1,32 @@
 # Sharelith — Splitwise-style expense splitter (React Native CLI)
 
 ## Context
-`/Users/roshan/Documents/dev/personal/Sharelith` is empty. Goal: build a React Native CLI app that reproduces Splitwise's feature set (free + Pro), feature by feature, on iOS and Android together. Use our own name (Sharelith), logo, and colors rather than Splitwise's branding; the flows and behavior match Splitwise.
+Goal: build a React Native CLI app that reproduces Splitwise's feature set (free + Pro), feature by feature, on iOS and Android together. Use our own name (Sharelith), logo, and colors rather than Splitwise's branding; the flows and behavior match Splitwise.
 
 **Decisions:** TypeScript · Zustand (UI/session state) + TanStack Query (server state) · Supabase (Postgres, Auth, Realtime, Storage, Edge Functions) · iOS + Android from day one · Core + Pro scope.
+
+## Status (2 Nov 2026)
+Phases 0-3 are built. Phase 4 is next. A hardening pass came first; its open items are below.
+
+**Changes from the original plan**
+- Storybook is replaced by the dev-only Component Gallery (Account → Developer).
+- Instant friends stay, Splitwise-style. Friends and group members can read only `id`, `full_name`, `email`, `avatar_url` and `joined_at`; the rest comes from `get_my_profile()`.
+- Pro (Phase 9) moves after the first release. Beta means Phases 4-7 plus the release essentials from Phase 10.
+
+**Needed before Phase 4 stores real data**
+- `group_members`: add `left_at` and soft-leave. Rows are hard-deleted today, and past expenses need them.
+- Empty groups: archive instead of deleting, since the trigger would otherwise destroy financial records.
+- `delete_account`: anonymize and keep the profile, so other people's balances survive.
+- `leave_group`, `remove_group_member`, `remove_friend`: require settled balances.
+- `create_expense`: reject shares that don't sum to the total, on the server.
+
+**Before release**
+- Turn on Confirm email in hosted Supabase, or unverified accounts can claim someone else's address.
+- Add a release keystore and enable R8 (release builds use the debug keystore today).
+- Add universal/app links so tokens stop passing through the `sharelith://` scheme.
+- Add a staging Supabase project and confirm backups.
+- Encrypt the persisted query cache (names and emails). Auth tokens are in the Keychain already.
+- Consider `FLAG_SECURE` on Android: the privacy cover may appear too late for the recents screenshot.
 
 ## Tech stack
 | Concern | Choice |

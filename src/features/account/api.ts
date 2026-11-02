@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Tables, TablesUpdate } from '@/lib/database.types';
 import { supabase } from '@/lib/supabase';
 import { useUserId } from '@/features/auth/authStore';
-import { toAppError } from '@/features/auth/errors';
+import { AppError, toAppError } from '@/features/auth/errors';
 
 export type Profile = Tables<'profiles'>;
 export type ProfileUpdate = Pick<
@@ -13,22 +13,25 @@ export type ProfileUpdate = Pick<
 export const profileKey = (userId: string | null) =>
   ['profile', userId] as const;
 
+/** Your own full profile. Others' private columns can't be read at all. */
+async function fetchMyProfile(): Promise<Profile> {
+  const { data, error } = await supabase.rpc('get_my_profile');
+  if (error) {
+    throw toAppError(error);
+  }
+  const profile = data?.[0];
+  if (!profile) {
+    throw new AppError('Your profile couldn’t be loaded.', 'no_profile');
+  }
+  return profile;
+}
+
 export function useProfile() {
   const userId = useUserId();
   return useQuery({
     queryKey: profileKey(userId),
     enabled: !!userId,
-    queryFn: async (): Promise<Profile> => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId!)
-        .single();
-      if (error) {
-        throw toAppError(error);
-      }
-      return data;
-    },
+    queryFn: fetchMyProfile,
   });
 }
 
@@ -36,16 +39,14 @@ async function updateProfile(
   userId: string,
   patch: ProfileUpdate,
 ): Promise<Profile> {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('profiles')
     .update(patch)
-    .eq('id', userId)
-    .select('*')
-    .single();
+    .eq('id', userId);
   if (error) {
     throw toAppError(error);
   }
-  return data;
+  return fetchMyProfile();
 }
 
 /** Optimistically updates the profile, rolling back on failure. */

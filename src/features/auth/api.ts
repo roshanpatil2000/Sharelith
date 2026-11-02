@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { queryClient, queryPersister } from '@/lib/queryClient';
+import { clearQueryCache } from '@/lib/queryClient';
 import { deviceTimezone } from '@/domain/timezones';
 import { authRedirectFor, markProfileVerified } from './authLinks';
 import { useAuthStore } from './authStore';
@@ -80,8 +80,7 @@ export async function signIn(email: string, password: string): Promise<void> {
 /** Signs out and drops every cached query so the next user starts clean. */
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut({ scope: 'local' });
-  queryClient.clear();
-  await queryPersister.removeClient();
+  await clearQueryCache();
 }
 
 /** Emails a password-reset link and code. */
@@ -124,7 +123,28 @@ export async function resetPassword(
   }
 }
 
-export async function changePassword(password: string): Promise<void> {
+/**
+ * Checks the password before a sensitive change, so an unlocked phone alone
+ * isn't enough.
+ */
+async function confirmCurrentPassword(password: string): Promise<void> {
+  const email = useAuthStore.getState().session?.user.email;
+  const { error } = email
+    ? await supabase.auth.signInWithPassword({ email, password })
+    : { error: true };
+  if (error) {
+    throw new AppError('That password isn’t right.', 'wrong_password');
+  }
+}
+
+/** Pass currentPassword unless the user came from a reset or invite link. */
+export async function changePassword(
+  password: string,
+  currentPassword?: string,
+): Promise<void> {
+  if (currentPassword !== undefined) {
+    await confirmCurrentPassword(currentPassword);
+  }
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {
     throw toAppError(error);
@@ -173,7 +193,11 @@ export async function verifyEmailCode(
 }
 
 /** Removes the avatar, deletes the account server-side, then signs out. */
-export async function deleteAccount(userId: string): Promise<void> {
+export async function deleteAccount(
+  userId: string,
+  password: string,
+): Promise<void> {
+  await confirmCurrentPassword(password);
   await supabase.storage.from('avatars').remove([`${userId}/avatar.jpg`]);
   const { error } = await supabase.rpc('delete_account');
   if (error) {

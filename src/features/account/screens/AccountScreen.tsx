@@ -33,8 +33,7 @@ import {
   toast,
 } from '@/components';
 import { timezoneLabel, timezoneOptions } from '@/domain/timezones';
-import { deleteAccount, signOut } from '@/features/auth/api';
-import { useUserId } from '@/features/auth/authStore';
+import { signOut } from '@/features/auth/api';
 import { toAppError } from '@/features/auth/errors';
 import { sendTestEmail } from '@/features/dev/api';
 import { useAppLockToggle } from '@/features/lock/useAppLockToggle';
@@ -49,8 +48,16 @@ const themeSegments = [
 ] as const;
 
 function ProfileHeader() {
-  const { data: profile, isLoading, isError, refetch } = useProfile();
-  if (isError) {
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    errorUpdatedAt,
+    refetch,
+  } = useProfile();
+  // A query with no data goes back to loading on every retry. Keep the error
+  // up meanwhile: swapping it for the shorter skeleton moves every row below.
+  if (isError || (!profile && errorUpdatedAt > 0)) {
     return <ErrorView onRetry={refetch} />;
   }
   if (isLoading || !profile) {
@@ -81,13 +88,12 @@ function ProfileHeader() {
 
 export function AccountScreen() {
   const navigation = useNavigation();
-  const userId = useUserId();
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
   const themePreference = useSettingsStore(s => s.themePreference);
   const setThemePreference = useSettingsStore(s => s.setThemePreference);
   const appLock = useAppLockToggle();
-  const [confirm, setConfirm] = useState<'logout' | 'delete' | null>(null);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
 
@@ -117,18 +123,14 @@ export function AccountScreen() {
       onError: e => toast.show(toAppError(e).message, 'error'),
     });
 
-  const runConfirmed = async () => {
+  const logOut = async () => {
     setBusy(true);
     try {
-      if (confirm === 'delete' && userId) {
-        await deleteAccount(userId);
-      } else {
-        await signOut();
-      }
+      await signOut();
     } catch (e) {
       toast.show(toAppError(e).message, 'error');
       setBusy(false);
-      setConfirm(null);
+      setConfirmLogout(false);
     }
   };
 
@@ -232,31 +234,26 @@ export function AccountScreen() {
       <ListRow
         title="Log out"
         leading={<Icon icon={LogOut} color="danger" />}
-        onPress={() => setConfirm('logout')}
+        onPress={() => setConfirmLogout(true)}
         testID="account-logout"
       />
       <Divider inset={52} />
       <ListRow
         title="Delete account"
         leading={<Icon icon={Trash2} color="danger" />}
-        onPress={() => setConfirm('delete')}
+        onPress={() => navigation.navigate('DeleteAccount')}
         testID="account-delete"
       />
       <Box p="xxl" />
 
       <ConfirmDialog
-        visible={confirm !== null}
-        title={confirm === 'delete' ? 'Delete your account?' : 'Log out?'}
-        message={
-          confirm === 'delete'
-            ? 'This permanently deletes your profile and can’t be undone.'
-            : undefined
-        }
-        confirmLabel={confirm === 'delete' ? 'Delete account' : 'Log out'}
+        visible={confirmLogout}
+        title="Log out?"
+        confirmLabel="Log out"
         destructive
         loading={busy}
-        onConfirm={runConfirmed}
-        onCancel={() => setConfirm(null)}
+        onConfirm={logOut}
+        onCancel={() => setConfirmLogout(false)}
       />
     </Screen>
   );

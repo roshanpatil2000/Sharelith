@@ -28,6 +28,36 @@ jest.mock('react-native-mmkv', () => {
   return { createMMKV };
 });
 
+jest.mock('react-native-keychain', () => {
+  const store = new Map<string, string>();
+  return {
+    ACCESSIBLE: { AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY: 'afterFirstUnlock' },
+    getGenericPassword: jest.fn(async ({ service }: { service: string }) => {
+      const password = store.get(service);
+      return password === undefined ? false : { password };
+    }),
+    setGenericPassword: jest.fn(
+      async (_user: string, password: string, o: { service: string }) => {
+        store.set(o.service, password);
+        return { service: o.service };
+      },
+    ),
+    resetGenericPassword: jest.fn(async ({ service }: { service: string }) =>
+      store.delete(service),
+    ),
+  };
+});
+
+// The real persister saves on a 1-second throttle into storage shared by every
+// test in a file, so on a slow machine one test restores another's cached data.
+jest.mock('@tanstack/query-async-storage-persister', () => ({
+  createAsyncStoragePersister: () => ({
+    persistClient: async () => {},
+    restoreClient: async () => undefined,
+    removeClient: async () => {},
+  }),
+}));
+
 jest.mock('react-native-config', () => ({
   SUPABASE_URL: 'http://localhost:54321',
   SUPABASE_ANON_KEY: 'test-anon-key',
@@ -60,6 +90,21 @@ beforeEach(() => {
   require('@/lib/queryClient').queryClient.clear();
 });
 
+// Queries hold 24-hour gcTime timers; don't let them keep Jest alive.
+// React Native's types say timers are numbers, but under Jest they're Node's.
+const unref = <T>(timer: T): T => {
+  (timer as { unref: () => void }).unref();
+  return timer;
+};
+require('@tanstack/react-query').timeoutManager.setTimeoutProvider({
+  setTimeout: (callback: () => void, delay: number) =>
+    unref(setTimeout(callback, delay)),
+  clearTimeout,
+  setInterval: (callback: () => void, delay: number) =>
+    unref(setInterval(callback, delay)),
+  clearInterval,
+});
+
 // toAppError logs raw auth errors in dev; keep test output clean.
 const originalWarn = console.warn;
 jest.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
@@ -67,4 +112,9 @@ jest.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
     return;
   }
   originalWarn(...args);
+});
+
+// Cached queries hold their 24-hour gcTime timers, which would keep Jest alive.
+afterAll(() => {
+  require('@/lib/queryClient').queryClient.clear();
 });
