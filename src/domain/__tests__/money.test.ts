@@ -1,4 +1,5 @@
 import {
+  MAX_AMOUNT_MINOR,
   currencyExponent,
   currencySymbol,
   formatMoney,
@@ -44,5 +45,13 @@ describe('money', () => {
     expect(formatMoney(123456, 'INR')).toBe('₹1,234.56');
     expect(formatMoney(-5000, 'INR', { absolute: true })).toBe('₹50.00');
     expect(formatMoney(1999, 'USD', { locale: 'en-US' })).toBe('$19.99');
+  });
+});
+
+describe('parseToMinor limits', () => {
+  it('rejects amounts above the maximum', () => {
+    expect(parseToMinor('1000000000', 'INR')).toBe(MAX_AMOUNT_MINOR);
+    expect(parseToMinor('1000000000.01', 'INR')).toBeNull();
+    expect(parseToMinor('99999999999999999999', 'INR')).toBeNull();
   });
 });

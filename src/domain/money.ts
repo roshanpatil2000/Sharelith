@@ -5,6 +5,9 @@
 
 export type Money = { minor: number; currency: string };
 
+/** Biggest single amount; also enforced by create_expense. */
+export const MAX_AMOUNT_MINOR = 100_000_000_000;
+
 const fractionDigitsCache = new Map<string, number>();
 
 /** Number of minor-unit digits for a currency (INR → 2, JPY → 0). */
@@ -49,7 +52,9 @@ export function parseToMinor(input: string, currency: string): number | null {
     return null;
   }
   const [whole = '0', frac = ''] = cleaned.split('.');
-  return Number(whole || '0') * 10 ** exp + Number(frac.padEnd(exp, '0') || 0);
+  const minor =
+    Number(whole || '0') * 10 ** exp + Number(frac.padEnd(exp, '0') || 0);
+  return minor <= MAX_AMOUNT_MINOR ? minor : null;
 }
 
 type FormatOptions = {
