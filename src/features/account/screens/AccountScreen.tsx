@@ -48,8 +48,16 @@ const themeSegments = [
 ] as const;
 
 function ProfileHeader() {
-  const { data: profile, isLoading, isError, refetch } = useProfile();
-  if (isError) {
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    errorUpdatedAt,
+    refetch,
+  } = useProfile();
+  // A query with no data goes back to loading on every retry. Keep the error
+  // up meanwhile: swapping it for the shorter skeleton moves every row below.
+  if (isError || (!profile && errorUpdatedAt > 0)) {
     return <ErrorView onRetry={refetch} />;
   }
   if (isLoading || !profile) {

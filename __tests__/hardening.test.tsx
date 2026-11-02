@@ -2,6 +2,7 @@ import React from 'react';
 import { AppState } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import App from '../App';
+import { queryClient } from '@/lib/queryClient';
 import { useSettingsStore } from '@/lib/settingsStore';
 import { storage } from '@/lib/storage';
 import { useAuthStore } from '@/features/auth/authStore';
@@ -41,6 +42,40 @@ const openAccount = async () => {
 afterEach(() => {
   useSettingsStore.setState({ appLockEnabled: false });
   (authenticate as jest.Mock).mockResolvedValue(true);
+});
+
+describe('Account header', () => {
+  it('keeps showing the error while a failed profile reloads', async () => {
+    queryClient.setQueryDefaults(['profile'], { retry: false });
+    supabaseMock.auth.getSession.mockResolvedValueOnce({
+      data: { session: fakeSession() },
+      error: null,
+    });
+    mockProfiles(queryBuilder({ data: null, error: { message: 'boom' } }));
+    await render(<App />);
+    await fireEvent.press(
+      await screen.findByRole('button', { name: /Account/ }),
+    );
+    expect(await screen.findByText('Something went wrong')).toBeOnTheScreen();
+
+    // Holds the retry open, to check what shows during a reload.
+    type Result = { data: unknown; error: unknown };
+    let finish = (_result: Result) => {};
+    const failed = supabaseMock.rpc.getMockImplementation();
+    supabaseMock.rpc.mockImplementation(
+      () => new Promise<Result>(resolve => (finish = resolve)),
+    );
+    await act(async () => {
+      queryClient.refetchQueries({ queryKey: ['profile'] });
+      // Query updates reach the screen on a timer.
+      await new Promise<void>(resolve => setTimeout(() => resolve(), 20));
+    });
+    expect(screen.getByText('Something went wrong')).toBeOnTheScreen();
+
+    await act(async () => finish({ data: null, error: { message: 'boom' } }));
+    supabaseMock.rpc.mockImplementation(failed!);
+    queryClient.setQueryDefaults(['profile'], { retry: undefined });
+  });
 });
 
 describe('Change password', () => {
