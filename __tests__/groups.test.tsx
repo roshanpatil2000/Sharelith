@@ -251,6 +251,50 @@ describe('Group settings', () => {
     expect(await screen.findByText('No groups yet')).toBeOnTheScreen();
   });
 
+  it('removes the cover only after the group is deleted', async () => {
+    await openSettings('user-1');
+    await fireEvent.press(screen.getByTestId('group-delete'));
+    const buttons = screen.getAllByRole('button', { name: 'Delete' });
+    supabaseMock.storage.from.mockClear();
+    mockBackend({ groups: [], friends: [asha] });
+    await fireEvent.press(buttons[buttons.length - 1]!);
+    await screen.findByText('Deleted Goa trip');
+    const deleted = supabaseMock.rpc.mock.calls.findIndex(
+      ([fn]) => fn === 'delete_group',
+    );
+    expect(
+      supabaseMock.storage.from.mock.invocationCallOrder[0]!,
+    ).toBeGreaterThan(supabaseMock.rpc.mock.invocationCallOrder[deleted]!);
+  });
+
+  it('keeps the cover if the delete is refused', async () => {
+    await openSettings('user-1');
+    await fireEvent.press(screen.getByTestId('group-delete'));
+    const buttons = screen.getAllByRole('button', { name: 'Delete' });
+    supabaseMock.storage.from.mockClear();
+    supabaseMock.rpc.mockResolvedValueOnce({
+      data: null,
+      error: {
+        code: '42501',
+        hint: 'not_admin',
+        message: 'Only the group admin can do that',
+      },
+    });
+    await fireEvent.press(buttons[buttons.length - 1]!);
+    await screen.findByText('Only the group admin can do that');
+    expect(supabaseMock.storage.from).not.toHaveBeenCalled();
+  });
+
+  it('explains when a member is not a friend', async () => {
+    await openSettings('user-1');
+    mockBackend({ friends: [], detail: goaDetail(), groups: [] });
+    supabaseMock.rpc.mockClear();
+    await fireEvent.press(screen.getByTestId('group-member-f-asha'));
+    expect(
+      await screen.findByText('Not on your friends list'),
+    ).toBeOnTheScreen();
+  });
+
   it('shows the admin-only error from the server', async () => {
     await openSettings('user-1');
     supabaseMock.rpc.mockResolvedValueOnce({

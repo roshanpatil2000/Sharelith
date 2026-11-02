@@ -180,10 +180,21 @@ export function useRemoveGroupMember(groupId: string) {
   });
 }
 
+/**
+ * Best effort, once the group is gone: the row's delete doesn't reach Storage.
+ * Does nothing while the group still exists, so it's safe after leaving too.
+ */
+const removeOrphanCover = (groupId: string) =>
+  supabase.storage.from('group-covers').remove([`${groupId}/cover.jpg`]);
+
 export function useLeaveGroup(groupId: string) {
   const invalidate = useInvalidateGroups();
   return useMutation({
-    mutationFn: () => rpc(supabase.rpc('leave_group', { gid: groupId })),
+    mutationFn: async () => {
+      await rpc(supabase.rpc('leave_group', { gid: groupId }));
+      // The last person to leave deletes the group.
+      await removeOrphanCover(groupId);
+    },
     onSuccess: invalidate,
   });
 }
@@ -192,11 +203,8 @@ export function useDeleteGroup(groupId: string) {
   const invalidate = useInvalidateGroups();
   return useMutation({
     mutationFn: async () => {
-      // Best effort: the cover file isn't removed by deleting the row.
-      await supabase.storage
-        .from('group-covers')
-        .remove([`${groupId}/cover.jpg`]);
       await rpc(supabase.rpc('delete_group', { gid: groupId }));
+      await removeOrphanCover(groupId);
     },
     onSuccess: invalidate,
   });

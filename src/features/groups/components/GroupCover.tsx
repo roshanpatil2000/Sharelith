@@ -2,6 +2,7 @@ import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import { Icon } from '@/components';
+import { safeImageUri } from '@/lib/imageUri';
 import { groupTypeIcon } from '../groupTypes';
 
 const sizes = { md: 44, lg: 64, xl: 96 } as const;
@@ -17,10 +18,11 @@ export function GroupCover({ type, uri, size = 'md' }: Props) {
   const styles = useStyles(createStyles);
   const px = sizes[size];
   const box = { width: px, height: px };
-  if (uri) {
+  const safeUri = safeImageUri(uri);
+  if (safeUri) {
     return (
       <Image
-        source={{ uri }}
+        source={{ uri: safeUri }}
         style={[styles.tile, box]}
         accessibilityIgnoresInvertColors
       />
