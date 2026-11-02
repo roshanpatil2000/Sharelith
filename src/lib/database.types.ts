@@ -62,6 +62,7 @@ export type Database = {
           added_by: string | null;
           group_id: string;
           joined_at: string;
+          left_at: string | null;
           user_id: string;
         };
         Insert: {
@@ -102,6 +103,7 @@ export type Database = {
       };
       groups: {
         Row: {
+          archived_at: string | null;
           cover_url: string | null;
           created_at: string;
           created_by: string | null;
@@ -153,6 +155,7 @@ export type Database = {
           created_at: string;
           default_currency: string;
           email: string | null;
+          deleted_at: string | null;
           email_verified_at: string | null;
           full_name: string;
           id: string;
@@ -257,6 +260,63 @@ export type Database = {
       is_orphan_group_cover: {
         Args: { object_name: string };
         Returns: boolean;
+      };
+      create_expense: {
+        Args: {
+          amount_minor: number;
+          category?: string;
+          currency: string;
+          description: string;
+          expense_date?: string;
+          group_id?: string;
+          notes?: string;
+          payers: Json;
+          shares: Json;
+        };
+        Returns: string;
+      };
+      list_expenses: {
+        Args: { friend?: string; gid?: string };
+        Returns: {
+          amount_minor: number;
+          category: string;
+          currency: string;
+          description: string;
+          expense_date: string;
+          group_id: string | null;
+          id: string;
+          is_payment: boolean;
+          my_net_minor: number;
+          paid_by: string;
+          payer_count: number;
+        }[];
+      };
+      list_my_balances: {
+        Args: never;
+        Returns: {
+          currency: string;
+          friend_id: string;
+          group_id: string | null;
+          net_minor: number;
+        }[];
+      };
+      set_expense_deleted: {
+        Args: { deleted: boolean; eid: string };
+        Returns: undefined;
+      };
+      update_expense: {
+        Args: {
+          amount_minor: number;
+          category?: string;
+          currency: string;
+          description: string;
+          eid: string;
+          expense_date?: string;
+          notes?: string;
+          payers: Json;
+          shares: Json;
+        };
+        Returns: undefined;
       };
       mark_email_verified: { Args: never; Returns: undefined };
       remove_friend: { Args: { friend: string }; Returns: undefined };

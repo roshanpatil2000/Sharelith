@@ -20,7 +20,8 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
-  AddExpense: undefined;
+  /** Starts with this group or friend chosen. */
+  AddExpense: { groupId?: string; friendId?: string } | undefined;
   ComponentGallery: undefined;
   /** returnTo: a group member picker that should select the person added. */
   AddFriend:

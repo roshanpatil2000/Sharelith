@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Receipt, UserMinus } from 'lucide-react-native';
+import { UserMinus } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   Avatar,
@@ -11,6 +11,7 @@ import {
   ConfirmDialog,
   Divider,
   EmptyState,
+  FAB,
   Icon,
   ListRow,
   Screen,
@@ -20,6 +21,7 @@ import {
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { toAppError } from '@/features/auth/errors';
+import { ExpenseList } from '@/features/expenses/components/ExpenseList';
 import { useFriend, useRemoveFriend } from '../api';
 import { useFriendBalances } from '../balances';
 
@@ -76,7 +78,18 @@ export function FriendDetailScreen({ route }: Props) {
     });
 
   return (
-    <Screen scroll edges={['bottom', 'left', 'right']}>
+    <Screen
+      scroll
+      edges={['bottom', 'left', 'right']}
+      overlay={
+        <FAB
+          testID="friend-add-expense"
+          onPress={() =>
+            navigation.navigate('AddExpense', { friendId: friend.id })
+          }
+        />
+      }
+    >
       <View style={styles.header}>
         <Avatar name={friend.full_name} uri={friend.avatar_url} size="xl" />
         <Stack align="center" gap="xs">
@@ -94,10 +107,10 @@ export function FriendDetailScreen({ route }: Props) {
         />
       </View>
       <Divider />
-      <EmptyState
-        icon={Receipt}
-        title="No expenses yet"
-        message={`Expenses you share with ${first} will show here.`}
+      <ExpenseList
+        friendId={friend.id}
+        names={{ [friend.id]: friend.full_name }}
+        emptyMessage={`Expenses you share with ${first} will show here.`}
       />
       <Divider />
       <ListRow
