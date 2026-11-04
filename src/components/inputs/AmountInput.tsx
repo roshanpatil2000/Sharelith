@@ -1,7 +1,12 @@
 import React, { useEffect, useReducer, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { useStyles, useTheme, type Theme } from '@/app/theme';
-import { currencyExponent, currencySymbol, parseToMinor } from '@/domain/money';
+import {
+  currencyExponent,
+  currencySymbol,
+  minorToInput,
+  parseToMinor,
+} from '@/domain/money';
 import { Pressable } from '../primitives/Pressable';
 import { Text } from '../primitives/Text';
 
@@ -14,18 +19,6 @@ type Props = {
   autoFocus?: boolean;
   testID?: string;
 };
-
-function minorToInput(minor: number, currency: string): string {
-  if (minor === 0) {
-    return '';
-  }
-  const exp = currencyExponent(currency);
-  const whole = Math.floor(minor / 10 ** exp);
-  const frac = minor % 10 ** exp;
-  return frac === 0
-    ? String(whole)
-    : `${whole}.${String(frac).padStart(exp, '0')}`;
-}
 
 /**
  * Large amount entry. Keeps the raw text locally so partial input like "12."

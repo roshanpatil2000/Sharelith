@@ -153,8 +153,12 @@ describe('Add expense', () => {
     mockBackend({});
     await openForm();
     await fill('Dinner', '100');
-    expect(screen.getByTestId('expense-per-person')).toHaveTextContent(
-      /33\.33 each/,
+    // Each person's real share: the extra paisa goes to the first.
+    expect(screen.getByTestId(`expense-owed-${me}`)).toHaveTextContent(
+      '₹33.34',
+    );
+    expect(screen.getByTestId(`expense-owed-${vik}`)).toHaveTextContent(
+      '₹33.33',
     );
     await fireEvent.press(screen.getByTestId('expense-save'));
 
@@ -232,6 +236,195 @@ describe('Add expense', () => {
     expect(
       await screen.findByText('The split must add up to the total'),
     ).toBeOnTheScreen();
+  });
+});
+
+describe('Split types', () => {
+  const chooseType = (label: string) =>
+    fireEvent.press(screen.getByRole('tab', { name: label }));
+  const type = (id: string, text: string) =>
+    fireEvent.changeText(screen.getByTestId(`expense-split-${id}`), text);
+  const save = async () => {
+    await fireEvent.press(screen.getByTestId('expense-save'));
+  };
+
+  it('splits by exact amounts once they add up', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Groceries', '100');
+    await chooseType('Exact');
+    await type(me, '50');
+    await type(asha, '30');
+    expect(screen.getByTestId('expense-split-status')).toHaveTextContent(
+      '₹20.00 left to assign',
+    );
+    await save();
+    expect(await screen.findByText('₹20.00 left to assign')).toBeOnTheScreen();
+    expect(createCall()).toBeUndefined();
+
+    await type(vik, '20');
+    await save();
+    await screen.findByText('Expense added');
+    expect(createCall()?.shares).toEqual([
+      { user_id: me, owed_minor: 5000, split_type: 'exact', raw_value: null },
+      { user_id: asha, owed_minor: 3000, split_type: 'exact', raw_value: null },
+      { user_id: vik, owed_minor: 2000, split_type: 'exact', raw_value: null },
+    ]);
+  });
+
+  it('splits by percent, keeping the percentages', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Rent', '1000');
+    await chooseType('%');
+    await type(me, '50');
+    await type(asha, '25');
+    expect(screen.getByTestId('expense-split-status')).toHaveTextContent(
+      '25% left to assign',
+    );
+    await type(vik, '25');
+    expect(screen.getByTestId(`expense-split-${me}-result`)).toHaveTextContent(
+      '₹500.00',
+    );
+    await save();
+    await screen.findByText('Expense added');
+    expect(createCall()?.shares).toEqual([
+      { user_id: me, owed_minor: 50000, split_type: 'percent', raw_value: 50 },
+      {
+        user_id: asha,
+        owed_minor: 25000,
+        split_type: 'percent',
+        raw_value: 25,
+      },
+      { user_id: vik, owed_minor: 25000, split_type: 'percent', raw_value: 25 },
+    ]);
+  });
+
+  it('splits by shares, starting at one each', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Fuel', '100');
+    await chooseType('Shares');
+    expect(screen.getByTestId(`expense-split-${asha}`)).toHaveDisplayValue('1');
+    await type(me, '2');
+    expect(screen.getByTestId(`expense-split-${me}-result`)).toHaveTextContent(
+      '₹50.00',
+    );
+    await save();
+    await screen.findByText('Expense added');
+    expect(createCall()?.shares).toEqual([
+      { user_id: me, owed_minor: 5000, split_type: 'shares', raw_value: 2 },
+      { user_id: asha, owed_minor: 2500, split_type: 'shares', raw_value: 1 },
+      { user_id: vik, owed_minor: 2500, split_type: 'shares', raw_value: 1 },
+    ]);
+  });
+
+  it('adds adjustments on top of an equal split', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Hotel', '100');
+    await chooseType('+/−');
+    await type(me, '10');
+    await type(asha, '-4');
+    await save();
+    await screen.findByText('Expense added');
+    // 100 − 6 = 94 split three ways (31.34, 31.33, 31.33), then +10 / −4.
+    expect(createCall()?.shares).toEqual([
+      {
+        user_id: me,
+        owed_minor: 4134,
+        split_type: 'adjustment',
+        raw_value: 1000,
+      },
+      {
+        user_id: asha,
+        owed_minor: 2733,
+        split_type: 'adjustment',
+        raw_value: -400,
+      },
+      {
+        user_id: vik,
+        owed_minor: 3133,
+        split_type: 'adjustment',
+        raw_value: 0,
+      },
+    ]);
+  });
+
+  it('records several payers once they add up', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Dinner', '90');
+    await fireEvent.press(screen.getByTestId('expense-paid-by'));
+    await fireEvent.press(
+      screen.getByTestId('expense-paid-by-option-multiple'),
+    );
+    // Starts with you paying it all.
+    expect(screen.getByTestId(`expense-paid-${me}`)).toHaveDisplayValue('90');
+    await fireEvent.changeText(screen.getByTestId(`expense-paid-${me}`), '60');
+    expect(screen.getByTestId('expense-paid-status')).toHaveTextContent(
+      '₹30.00 of the total still unpaid',
+    );
+    await fireEvent.changeText(
+      screen.getByTestId(`expense-paid-${asha}`),
+      '30',
+    );
+    await save();
+    await screen.findByText('Expense added');
+    expect(createCall()?.payers).toEqual([
+      { user_id: me, paid_minor: 6000 },
+      { user_id: asha, paid_minor: 3000 },
+    ]);
+  });
+
+  it('opens a percent split to edit as it was entered', async () => {
+    mockBackend({
+      expenses: [dinner],
+      detail: {
+        ...dinnerDetail,
+        expense_payers: [
+          { user_id: me, paid_minor: 45000 },
+          { user_id: asha, paid_minor: 45000 },
+        ],
+        expense_shares: [
+          {
+            user_id: me,
+            owed_minor: 45000,
+            split_type: 'percent',
+            raw_value: 50,
+          },
+          {
+            user_id: vik,
+            owed_minor: 45000,
+            split_type: 'percent',
+            raw_value: 50,
+          },
+        ],
+      },
+    });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    await screen.findByTestId('expense-description');
+
+    expect(screen.getByRole('tab', { name: '%' })).toBeSelected();
+    expect(screen.getByTestId(`expense-split-${vik}`)).toHaveDisplayValue('50');
+    expect(screen.getByTestId(`expense-paid-${asha}`)).toHaveDisplayValue(
+      '450',
+    );
+    await type(me, '60');
+    await type(vik, '40');
+    await save();
+    await screen.findByText('Expense saved');
+    expect(rpcCall('update_expense')).toMatchObject({
+      payers: [
+        { user_id: me, paid_minor: 45000 },
+        { user_id: asha, paid_minor: 45000 },
+      ],
+      shares: [
+        { user_id: me, owed_minor: 54000, raw_value: 60 },
+        { user_id: vik, owed_minor: 36000, raw_value: 40 },
+      ],
+    });
   });
 });
 
@@ -349,8 +542,8 @@ describe('Edit expense', () => {
       'Dinner',
     );
     expect(screen.getByTestId('expense-amount')).toHaveDisplayValue('900');
-    expect(screen.getByTestId('expense-per-person')).toHaveTextContent(
-      /300\.00 each/,
+    expect(screen.getByTestId(`expense-owed-${asha}`)).toHaveTextContent(
+      '₹300.00',
     );
   });
 
@@ -378,26 +571,26 @@ describe('Edit expense', () => {
     expect(rpcCall('create_expense')).toBeUndefined();
   });
 
-  it('only renames a custom split, keeping every amount', async () => {
-    const custom = {
+  it('only renames an expense with someone who has left', async () => {
+    const withGone = {
       ...dinnerDetail,
       expense_shares: [
         {
           user_id: me,
-          owed_minor: 10000,
-          split_type: 'exact',
+          owed_minor: 45000,
+          split_type: 'equal',
           raw_value: null,
         },
         {
-          user_id: asha,
-          owed_minor: 80000,
-          split_type: 'exact',
+          user_id: 'f-gone',
+          owed_minor: 45000,
+          split_type: 'equal',
           raw_value: null,
         },
       ],
     };
-    await openEdit(custom);
-    expect(screen.getByText(/can’t change yet/)).toBeOnTheScreen();
+    await openEdit(withGone);
+    expect(screen.getByText(/no longer here/)).toBeOnTheScreen();
     expect(screen.queryByTestId('expense-amount')).toBeNull();
     await fireEvent.changeText(
       screen.getByTestId('expense-description'),
