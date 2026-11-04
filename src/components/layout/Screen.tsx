@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -23,9 +23,11 @@ type Props = {
   contentStyle?: StyleProp<ViewStyle>;
   /** Rendered above the content and outside the scroll, e.g. a FAB. */
   overlay?: React.ReactNode;
-  /** With `scroll`: enables pull-to-refresh. */
-  onRefresh?: () => void;
-  refreshing?: boolean;
+  /**
+   * With `scroll`: enables pull-to-refresh. The spinner shows only while a
+   * pull's promise is pending, never for background reloads.
+   */
+  onRefresh?: () => unknown;
   testID?: string;
 };
 
@@ -37,11 +39,19 @@ export function Screen({
   contentStyle,
   overlay,
   onRefresh,
-  refreshing = false,
   testID,
 }: Props) {
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
+  const [pulling, setPulling] = useState(false);
+  const pull = async () => {
+    setPulling(true);
+    try {
+      await onRefresh?.();
+    } finally {
+      setPulling(false);
+    }
+  };
   const inner = scroll ? (
     <ScrollView
       contentContainerStyle={[padded && styles.padded, contentStyle]}
@@ -49,8 +59,8 @@ export function Screen({
       refreshControl={
         onRefresh ? (
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={pulling}
+            onRefresh={pull}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />

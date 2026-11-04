@@ -516,6 +516,7 @@ export type Database = {
           is_payment: boolean;
           my_net_minor: number;
           paid_by: string;
+          paid_to: string;
           payer_count: number;
         }[];
       };
@@ -530,6 +531,14 @@ export type Database = {
           invited: boolean;
         }[];
       };
+      list_group_balances: {
+        Args: { gid: string };
+        Returns: {
+          currency: string;
+          net_minor: number;
+          user_id: string;
+        }[];
+      };
       list_my_balances: {
         Args: never;
         Returns: {
@@ -540,6 +549,17 @@ export type Database = {
         }[];
       };
       mark_email_verified: { Args: never; Returns: undefined };
+      record_payment: {
+        Args: {
+          amount_minor: number;
+          currency: string;
+          expense_date?: string;
+          group_id?: string;
+          payee: string;
+          payer: string;
+        };
+        Returns: string;
+      };
       remove_friend: { Args: { friend: string }; Returns: undefined };
       remove_group_member: {
         Args: { gid: string; member: string };

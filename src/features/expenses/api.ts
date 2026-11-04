@@ -26,6 +26,8 @@ export type ExpenseSummary = {
   /** Only they can change the amounts or delete it. */
   created_by: string;
   paid_by: string;
+  /** For a payment, who was paid; otherwise null. */
+  paid_to: string | null;
   payer_count: number;
   /** What this did to you: + you lent, − you borrowed. */
   my_net_minor: number;
@@ -250,6 +252,60 @@ export function useSetExpenseDeleted() {
       if (error) {
         throw toAppError(error);
       }
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export type GroupBalanceRow = {
+  user_id: string;
+  currency: string;
+  net_minor: number;
+};
+
+/** Every member's net in a group, for simplified settle-up suggestions. */
+export function useGroupMemberBalances(groupId: string | undefined) {
+  const userId = useUserId();
+  return useQuery({
+    // Under the balances key, so every expense change refreshes it too.
+    queryKey: [...balancesKey(userId), 'group', groupId ?? null],
+    enabled: !!userId && !!groupId,
+    queryFn: async (): Promise<GroupBalanceRow[]> => {
+      const { data, error } = await supabase.rpc('list_group_balances', {
+        gid: groupId!,
+      });
+      if (error) {
+        throw toAppError(error);
+      }
+      return data ?? [];
+    },
+  });
+}
+
+export type NewPayment = {
+  from: string;
+  to: string;
+  amountMinor: number;
+  currency: string;
+  groupId: string | null;
+};
+
+/** Records money paid outside the app, which cancels what was owed. */
+export function useRecordPayment() {
+  const invalidate = useInvalidateExpenses();
+  return useMutation({
+    mutationFn: async (payment: NewPayment): Promise<string> => {
+      const { data, error } = await supabase.rpc('record_payment', {
+        payer: payment.from,
+        payee: payment.to,
+        amount_minor: payment.amountMinor,
+        currency: payment.currency,
+        group_id: payment.groupId ?? undefined,
+      });
+      if (error) {
+        throw toAppError(error);
+      }
+      return data!;
     },
     onSuccess: invalidate,
   });

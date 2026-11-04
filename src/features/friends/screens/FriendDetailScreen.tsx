@@ -2,12 +2,13 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { UserMinus } from 'lucide-react-native';
+import { HandCoins, UserMinus } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   Avatar,
   Badge,
   BalanceSummary,
+  Button,
   ConfirmDialog,
   Divider,
   EmptyState,
@@ -21,6 +22,7 @@ import {
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { toAppError } from '@/features/auth/errors';
+import { useRefreshExpenses } from '@/features/expenses/api';
 import { ExpenseList } from '@/features/expenses/components/ExpenseList';
 import { useFriend, useRemoveFriend } from '../api';
 import { useFriendBalances } from '../balances';
@@ -41,6 +43,7 @@ export function FriendDetailScreen({ route }: Props) {
   const friend = current ?? lastFriend.current;
   const balances = useFriendBalances();
   const removeFriend = useRemoveFriend();
+  const refreshExpenses = useRefreshExpenses();
   const [confirm, setConfirm] = useState(false);
 
   useLayoutEffect(() => {
@@ -81,6 +84,7 @@ export function FriendDetailScreen({ route }: Props) {
     <Screen
       scroll
       edges={['bottom', 'left', 'right']}
+      onRefresh={refreshExpenses}
       overlay={
         <FAB
           testID="friend-add-expense"
@@ -105,6 +109,16 @@ export function FriendDetailScreen({ route }: Props) {
           balances={balances[friend.id] ?? []}
           subject={`With ${first}`}
         />
+        {(balances[friend.id] ?? []).length > 0 ? (
+          <Button
+            title="Settle up"
+            icon={HandCoins}
+            onPress={() =>
+              navigation.navigate('SettleUp', { friendId: friend.id })
+            }
+            testID="friend-settle-up"
+          />
+        ) : null}
       </View>
       <Divider />
       <ExpenseList

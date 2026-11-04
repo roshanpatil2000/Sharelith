@@ -7,11 +7,12 @@ import {
   type RouteProp,
 } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Receipt, Settings } from 'lucide-react-native';
+import { HandCoins, Receipt, Settings } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   AvatarStack,
   BalanceSummary,
+  Button,
   Divider,
   EmptyState,
   ErrorView,
@@ -23,6 +24,7 @@ import {
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { useUserId } from '@/features/auth/authStore';
+import { useRefreshExpenses } from '@/features/expenses/api';
 import { ExpenseList } from '@/features/expenses/components/ExpenseList';
 import { groupsKey, useGroup } from '../api';
 import { useGroupBalances } from '../balances';
@@ -53,7 +55,8 @@ export function GroupDetailScreen({ route }: Props) {
   const { groupId } = route.params;
   const styles = useStyles(createStyles);
   const navigation = useNavigation();
-  const { data: group, isError, refetch, isRefetching } = useGroup(groupId);
+  const { data: group, isError, refetch } = useGroup(groupId);
+  const refreshExpenses = useRefreshExpenses();
   const balances = useGroupBalances();
   const userId = useUserId();
   const qc = useQueryClient();
@@ -102,8 +105,7 @@ export function GroupDetailScreen({ route }: Props) {
           onPress={() => navigation.navigate('AddExpense', { groupId })}
         />
       }
-      onRefresh={refetch}
-      refreshing={isRefetching}
+      onRefresh={() => Promise.all([refetch(), refreshExpenses()])}
     >
       <View style={styles.header}>
         <GroupCover type={group.type} uri={group.cover_url} size="xl" />
@@ -129,6 +131,14 @@ export function GroupDetailScreen({ route }: Props) {
           max={6}
         />
         <BalanceSummary balances={balances[group.id] ?? []} />
+        {(balances[group.id] ?? []).length > 0 ? (
+          <Button
+            title="Settle up"
+            icon={HandCoins}
+            onPress={() => navigation.navigate('SettleUp', { groupId })}
+            testID="group-settle-up"
+          />
+        ) : null}
       </View>
       <Divider />
       <ExpenseList

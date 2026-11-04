@@ -25,6 +25,10 @@ export type RootStackParamList = {
   AddExpense:
     | { groupId?: string; friendId?: string; expenseId?: string }
     | undefined;
+  /** Payments with this friend (any group), or yours in this group. */
+  SettleUp:
+    | { friendId: string; groupId?: undefined }
+    | { groupId: string; friendId?: undefined };
   ComponentGallery: undefined;
   /** returnTo: a group member picker that should select the person added. */
   AddFriend:
