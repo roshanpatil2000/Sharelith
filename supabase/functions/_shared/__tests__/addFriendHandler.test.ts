@@ -142,6 +142,43 @@ describe('handleAddFriend', () => {
     expect(sendEmail).toHaveBeenCalledTimes(1);
   });
 
+  it('says so when they are already friends, without emailing again', async () => {
+    const { deps, sendEmail } = setup({
+      lookup: {
+        data: {
+          id: 'ravi',
+          full_name: 'Ravi',
+          email: 'ravi@example.com',
+          joined_at: '2026-10-29T00:00:00Z',
+        },
+        error: null,
+      },
+      // The friendship's primary key already exists.
+      insert: { error: { code: '23505', message: 'duplicate key' } },
+    });
+    const res = await handleAddFriend(
+      request({ email: 'Ravi@Example.com' }),
+      deps,
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      status: 'already_friends',
+      friend: { id: 'ravi', full_name: 'Ravi' },
+    });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('refuses to add yourself', async () => {
+    const { deps, rpc } = setup();
+    const res = await handleAddFriend(
+      request({ email: 'ASHA@example.com' }),
+      deps,
+    );
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe('self');
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it('rejects other methods and signed-out callers', async () => {
     const { deps } = setup();
     const get = new Request('http://localhost/add-friend');

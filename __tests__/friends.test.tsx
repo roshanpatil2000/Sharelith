@@ -120,6 +120,27 @@ describe('Add friend', () => {
     expect(await screen.findByText('Added Asha')).toBeOnTheScreen();
   });
 
+  it('says when they are already a friend, without a second entry', async () => {
+    mockRpc([asha]);
+    await openFriends();
+    await screen.findByText('Asha Rao');
+    await fireEvent.press(screen.getByTestId('friends-add'));
+    supabaseMock.functions.invoke.mockResolvedValueOnce({
+      data: { status: 'already_friends', friend: asha },
+      error: null,
+    } as never);
+    await fireEvent.changeText(
+      await screen.findByTestId('add-friend-email'),
+      'asha@example.com',
+    );
+    await fireEvent.press(screen.getByTestId('add-friend-submit'));
+
+    expect(
+      await screen.findByText('Asha is already your friend'),
+    ).toBeOnTheScreen();
+    expect(screen.getAllByText('Asha Rao')).toHaveLength(1);
+  });
+
   it('asks for a name, then sends an invite', async () => {
     await openAdd();
     supabaseMock.functions.invoke
