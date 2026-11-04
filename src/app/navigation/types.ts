@@ -21,7 +21,10 @@ export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
   /** Starts with this group or friend chosen. */
-  AddExpense: { groupId?: string; friendId?: string } | undefined;
+  /** expenseId opens the form to edit that expense. */
+  AddExpense:
+    | { groupId?: string; friendId?: string; expenseId?: string }
+    | undefined;
   ComponentGallery: undefined;
   /** returnTo: a group member picker that should select the person added. */
   AddFriend:

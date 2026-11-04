@@ -66,6 +66,128 @@ export function useExpenses({ groupId, friendId }: ExpenseFilter) {
   });
 }
 
+export type PayerRow = { user_id: string; paid_minor: number };
+export type ShareRow = {
+  user_id: string;
+  owed_minor: number;
+  split_type: string;
+  raw_value: number | null;
+};
+
+/** One expense with who paid and who owes, for editing. */
+export type ExpenseDetail = {
+  id: string;
+  group_id: string | null;
+  description: string;
+  amount_minor: number;
+  currency: string;
+  expense_date: string;
+  expense_payers: PayerRow[];
+  expense_shares: ShareRow[];
+};
+
+export const expenseKey = (userId: string | null, expenseId: string) =>
+  ['expense', userId, expenseId] as const;
+
+export function useExpense(expenseId: string | undefined) {
+  const userId = useUserId();
+  return useQuery({
+    queryKey: expenseKey(userId, expenseId ?? ''),
+    enabled: !!userId && !!expenseId,
+    queryFn: async (): Promise<ExpenseDetail | null> => {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select(
+          'id, group_id, description, amount_minor, currency, expense_date, expense_payers(user_id, paid_minor), expense_shares(user_id, owed_minor, split_type, raw_value)',
+        )
+        .eq('id', expenseId!)
+        .is('deleted_at', null)
+        .maybeSingle();
+      if (error) {
+        throw toAppError(error);
+      }
+      return data as ExpenseDetail | null;
+    },
+  });
+}
+
+/** Rows for create_expense / update_expense from per-person amounts. */
+export function equalSplitRows(
+  paid: Record<string, number>,
+  owed: Record<string, number>,
+): { payers: PayerRow[]; shares: ShareRow[] } {
+  return {
+    payers: Object.entries(paid).map(([user_id, paid_minor]) => ({
+      user_id,
+      paid_minor,
+    })),
+    shares: Object.entries(owed).map(([user_id, owed_minor]) => ({
+      user_id,
+      owed_minor,
+      split_type: 'equal',
+      raw_value: null,
+    })),
+  };
+}
+
+/** Everything that shows expenses or balances is stale after a change. */
+function useInvalidateExpenses() {
+  const userId = useUserId();
+  const qc = useQueryClient();
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: balancesKey(userId) }),
+      qc.invalidateQueries({ queryKey: expensesKey(userId) }),
+      qc.invalidateQueries({ queryKey: ['expense', userId] }),
+    ]);
+}
+
+export type ExpenseUpdate = {
+  id: string;
+  description: string;
+  amountMinor: number;
+  currency: string;
+  payers: PayerRow[];
+  shares: ShareRow[];
+};
+
+export function useUpdateExpense() {
+  const invalidate = useInvalidateExpenses();
+  return useMutation({
+    mutationFn: async (update: ExpenseUpdate) => {
+      const { error } = await supabase.rpc('update_expense', {
+        eid: update.id,
+        description: update.description,
+        amount_minor: update.amountMinor,
+        currency: update.currency,
+        payers: update.payers,
+        shares: update.shares,
+      });
+      if (error) {
+        throw toAppError(error);
+      }
+    },
+    onSuccess: invalidate,
+  });
+}
+
+/** Deletes, or restores with deleted: false (for Undo). */
+export function useSetExpenseDeleted() {
+  const invalidate = useInvalidateExpenses();
+  return useMutation({
+    mutationFn: async ({ id, deleted }: { id: string; deleted: boolean }) => {
+      const { error } = await supabase.rpc('set_expense_deleted', {
+        eid: id,
+        deleted,
+      });
+      if (error) {
+        throw toAppError(error);
+      }
+    },
+    onSuccess: invalidate,
+  });
+}
+
 export type NewExpense = {
   description: string;
   amountMinor: number;
@@ -78,8 +200,7 @@ export type NewExpense = {
 };
 
 export function useCreateExpense() {
-  const userId = useUserId();
-  const qc = useQueryClient();
+  const invalidate = useInvalidateExpenses();
   return useMutation({
     mutationFn: async (expense: NewExpense): Promise<string> => {
       const { data, error } = await supabase.rpc('create_expense', {
@@ -87,25 +208,13 @@ export function useCreateExpense() {
         amount_minor: expense.amountMinor,
         currency: expense.currency,
         group_id: expense.groupId,
-        payers: Object.entries(expense.paid).map(([user_id, paid_minor]) => ({
-          user_id,
-          paid_minor,
-        })),
-        shares: Object.entries(expense.owed).map(([user_id, owed_minor]) => ({
-          user_id,
-          owed_minor,
-          split_type: 'equal',
-        })),
+        ...equalSplitRows(expense.paid, expense.owed),
       });
       if (error) {
         throw toAppError(error);
       }
       return data!;
     },
-    onSuccess: () =>
-      Promise.all([
-        qc.invalidateQueries({ queryKey: balancesKey(userId) }),
-        qc.invalidateQueries({ queryKey: expensesKey(userId) }),
-      ]),
+    onSuccess: invalidate,
   });
 }

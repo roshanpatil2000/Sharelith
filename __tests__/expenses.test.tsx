@@ -55,10 +55,20 @@ type Backend = {
   expenses?: unknown[];
   balances?: unknown[];
   createError?: unknown;
+  /** What useExpense loads, for editing. */
+  detail?: unknown;
 };
 
-function mockBackend({ expenses = [], balances = [], createError }: Backend) {
-  supabaseMock.from.mockImplementation((() => {
+function mockBackend({
+  expenses = [],
+  balances = [],
+  createError,
+  detail = null,
+}: Backend) {
+  supabaseMock.from.mockImplementation(((table: string) => {
+    if (table === 'expenses') {
+      return queryBuilder<unknown>({ data: detail, error: null });
+    }
     const builder = queryBuilder<unknown>({
       data: [{ ...groupRow, group_members: [{ count: 3 }] }],
       error: null,
@@ -293,5 +303,167 @@ describe('Groups tab totals', () => {
     await openGroupsTab();
     expect(await screen.findByText('you are owed')).toBeOnTheScreen();
     expect(screen.queryByTestId('groups-non-group')).toBeNull();
+  });
+});
+
+/** Dinner as useExpense loads it: Me paid ₹900, split three ways. */
+const dinnerDetail = {
+  id: 'e-1',
+  group_id: 'g-goa',
+  description: 'Dinner',
+  amount_minor: 90000,
+  currency: 'INR',
+  expense_date: '2026-11-02',
+  expense_payers: [{ user_id: me, paid_minor: 90000 }],
+  expense_shares: [me, asha, vik].map(user_id => ({
+    user_id,
+    owed_minor: 30000,
+    split_type: 'equal',
+    raw_value: null,
+  })),
+};
+
+const rpcCall = (name: string) =>
+  supabaseMock.rpc.mock.calls.find(([fn]) => fn === name)?.[1] as
+    | Record<string, unknown>
+    | undefined;
+
+describe('Edit expense', () => {
+  const openEdit = async (detail: unknown) => {
+    mockBackend({ expenses: [dinner], detail });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    await screen.findByTestId('expense-description');
+  };
+
+  it('opens filled in when the row is tapped', async () => {
+    await openEdit(dinnerDetail);
+    expect(screen.getByTestId('expense-description')).toHaveDisplayValue(
+      'Dinner',
+    );
+    expect(screen.getByTestId('expense-amount')).toHaveDisplayValue('900');
+    expect(screen.getByTestId('expense-per-person')).toHaveTextContent(
+      /300\.00 each/,
+    );
+  });
+
+  it('saves a new name and amount, splitting again equally', async () => {
+    await openEdit(dinnerDetail);
+    await fireEvent.changeText(
+      screen.getByTestId('expense-description'),
+      'Team dinner',
+    );
+    await fireEvent.changeText(screen.getByTestId('expense-amount'), '1000');
+    await fireEvent.press(screen.getByTestId('expense-save'));
+
+    expect(await screen.findByText('Expense saved')).toBeOnTheScreen();
+    expect(rpcCall('update_expense')).toMatchObject({
+      eid: 'e-1',
+      description: 'Team dinner',
+      amount_minor: 100000,
+      payers: [{ user_id: me, paid_minor: 100000 }],
+      shares: [
+        { user_id: me, owed_minor: 33334 },
+        { user_id: asha, owed_minor: 33333 },
+        { user_id: vik, owed_minor: 33333 },
+      ],
+    });
+    expect(rpcCall('create_expense')).toBeUndefined();
+  });
+
+  it('only renames a custom split, keeping every amount', async () => {
+    const custom = {
+      ...dinnerDetail,
+      expense_shares: [
+        {
+          user_id: me,
+          owed_minor: 10000,
+          split_type: 'exact',
+          raw_value: null,
+        },
+        {
+          user_id: asha,
+          owed_minor: 80000,
+          split_type: 'exact',
+          raw_value: null,
+        },
+      ],
+    };
+    await openEdit(custom);
+    expect(screen.getByText(/can’t change yet/)).toBeOnTheScreen();
+    expect(screen.queryByTestId('expense-amount')).toBeNull();
+    await fireEvent.changeText(
+      screen.getByTestId('expense-description'),
+      'Renamed',
+    );
+    await fireEvent.press(screen.getByTestId('expense-save'));
+
+    await screen.findByText('Expense saved');
+    expect(rpcCall('update_expense')).toMatchObject({
+      description: 'Renamed',
+      amount_minor: 90000,
+      payers: custom.expense_payers,
+      shares: custom.expense_shares,
+    });
+  });
+});
+
+describe('Delete expense', () => {
+  const openList = async () => {
+    mockBackend({ expenses: [dinner] });
+    await openGroup();
+    await screen.findByTestId('expense-e-1');
+  };
+
+  // Swipe actions can't be pressed until the row is swiped open, which
+  // Jest can't do; the row's accessibility action calls the same handler.
+  const askToDelete = () =>
+    fireEvent(screen.getByTestId('expense-e-1'), 'accessibilityAction', {
+      nativeEvent: { actionName: 'delete' },
+    });
+
+  it('deletes after confirming, and can undo', async () => {
+    await openList();
+    await askToDelete();
+    const buttons = screen.getAllByRole('button', { name: 'Delete' });
+    await fireEvent.press(buttons[buttons.length - 1]!);
+
+    expect(await screen.findByText('Deleted “Dinner”')).toBeOnTheScreen();
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('set_expense_deleted', {
+      eid: 'e-1',
+      deleted: true,
+    });
+
+    await fireEvent.press(screen.getByTestId('toast-action'));
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('set_expense_deleted', {
+      eid: 'e-1',
+      deleted: false,
+    });
+  });
+
+  it('does nothing if the confirmation is cancelled', async () => {
+    await openList();
+    await askToDelete();
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+    expect(rpcCall('set_expense_deleted')).toBeUndefined();
+  });
+
+  it('puts Edit and Delete behind the row', async () => {
+    await openList();
+    expect(screen.getByTestId('expense-edit-e-1')).toBeTruthy();
+    expect(screen.getByTestId('expense-delete-e-1')).toBeTruthy();
+  });
+
+  it('offers edit and delete to screen readers without a swipe', async () => {
+    await openList();
+    const row = screen.getByTestId('expense-e-1');
+    expect(row.props.accessibilityActions).toEqual([
+      { name: 'edit', label: 'Edit' },
+      { name: 'delete', label: 'Delete' },
+    ]);
+    await fireEvent(row, 'accessibilityAction', {
+      nativeEvent: { actionName: 'delete' },
+    });
+    expect(await screen.findByText('Delete “Dinner”?')).toBeOnTheScreen();
   });
 });
