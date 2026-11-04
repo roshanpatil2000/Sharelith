@@ -1,5 +1,10 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import App from '../App';
 import {
   fakeProfile,
@@ -524,5 +529,27 @@ describe('Someone else’s expense', () => {
     expect(
       await screen.findByText(/Only the person who added this expense/),
     ).toBeOnTheScreen();
+  });
+});
+
+describe('Data from other people', () => {
+  const balanceCalls = () =>
+    supabaseMock.rpc.mock.calls.filter(([fn]) => fn === 'list_my_balances')
+      .length;
+
+  it('reloads balances when you come back to a tab', async () => {
+    mockBackend({});
+    supabaseMock.auth.getSession.mockResolvedValueOnce({
+      data: { session: fakeSession() },
+      error: null,
+    });
+    await render(<App />);
+    await screen.findByTestId('group-g-goa');
+    const before = balanceCalls();
+
+    await fireEvent.press(screen.getByRole('button', { name: /Friends/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Groups/ }));
+
+    await waitFor(() => expect(balanceCalls()).toBeGreaterThan(before));
   });
 });

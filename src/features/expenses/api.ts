@@ -1,7 +1,11 @@
+import { useCallback, useRef } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useUserId } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
+import { friendsKey } from '@/features/friends/api';
+import { groupsKey } from '@/features/groups/api';
 
 export type BalanceRow = {
   friend_id: string;
@@ -131,6 +135,43 @@ export function equalSplitRows(
       raw_value: null,
     })),
   };
+}
+
+/**
+ * Reloads balances, expenses, friends and groups. Other people change all of
+ * these, and until realtime arrives nothing else tells this device.
+ */
+export function useRefreshExpenses() {
+  const userId = useUserId();
+  const qc = useQueryClient();
+  return useCallback(
+    () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: balancesKey(userId) }),
+        qc.invalidateQueries({ queryKey: expensesKey(userId) }),
+        qc.invalidateQueries({ queryKey: friendsKey(userId) }),
+        qc.invalidateQueries({ queryKey: groupsKey(userId) }),
+      ]),
+    [qc, userId],
+  );
+}
+
+/**
+ * Refreshes when a screen comes back into view, like switching tabs: tab
+ * screens stay mounted, so they never load again on their own.
+ */
+export function useRefreshExpensesOnFocus() {
+  const refresh = useRefreshExpenses();
+  const firstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      refresh();
+    }, [refresh]),
+  );
 }
 
 /** Everything that shows expenses or balances is stale after a change. */

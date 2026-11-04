@@ -15,6 +15,10 @@ import {
   Screen,
 } from '@/components';
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
+import {
+  useRefreshExpenses,
+  useRefreshExpensesOnFocus,
+} from '@/features/expenses/api';
 import { overallBalance, useFriendBalances } from '@/features/friends/balances';
 import { FriendBalanceText } from '@/features/friends/components/FriendBalanceText';
 import { useGroups, type GroupSummary } from '../api';
@@ -40,13 +44,9 @@ const renderCreateGroupButton = () => <CreateGroupHeaderButton />;
 
 export function GroupsScreen() {
   const navigation = useNavigation();
-  const {
-    data: groups,
-    isLoading,
-    isError,
-    refetch,
-    isRefetching,
-  } = useGroups();
+  const refreshExpenses = useRefreshExpenses();
+  useRefreshExpensesOnFocus();
+  const { data: groups, isLoading, isError, refetch } = useGroups();
   const balances = useGroupBalances();
   const nonGroup = useNonGroupBalance();
   // Everything you owe or are owed, so it matches the Friends tab.
@@ -87,8 +87,7 @@ export function GroupsScreen() {
           keyExtractor={g => g.id}
           renderItem={renderItem}
           loading={isLoading}
-          refreshing={isRefetching}
-          onRefresh={refetch}
+          onRefresh={refreshExpenses}
           ListFooterComponent={
             nonGroup.length > 0 ? (
               <ListRow
