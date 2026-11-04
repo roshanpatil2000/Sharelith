@@ -13,7 +13,9 @@ import {
   Button,
   Checkbox,
   CurrencyPicker,
+  Row,
   Screen,
+  SegmentedControl,
   SelectField,
   Stack,
   Text,
@@ -21,49 +23,35 @@ import {
   toast,
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
-import { formatMoney } from '@/domain/money';
-import { splitEqually } from '@/domain/split';
+import { currencySymbol, formatMoney, minorToInput } from '@/domain/money';
 import { useProfile } from '@/features/account/api';
 import { useUserId } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
 import { useFriends } from '@/features/friends/api';
 import { useGroup, useGroups } from '@/features/groups/api';
 import {
-  equalSplitRows,
   useCreateExpense,
   useExpense,
   useRenameExpense,
   useUpdateExpense,
-  type ExpenseDetail,
 } from '../api';
+import { PersonAmountRow } from '../components/PersonAmountRow';
+import {
+  SPLIT_TYPES,
+  computePayers,
+  computeSplit,
+  draftFromExpense,
+  emptySplit,
+  type PayerDraft,
+  type SplitDraft,
+  type SplitType,
+} from '../splitForm';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddExpense'>;
 
 const groupTarget = (id: string) => `group:${id}`;
 const friendTarget = (id: string) => `friend:${id}`;
-
-/**
- * Whether this form can show and rebuild the split: one payer, and shares
- * that are exactly an equal split among the people on it.
- */
-export function isSimpleEqualSplit(
-  expense: ExpenseDetail,
-  peopleOrder: string[],
-): boolean {
-  const sharers = expense.expense_shares.map(s => s.user_id);
-  if (
-    expense.expense_payers.length !== 1 ||
-    expense.expense_shares.some(s => s.split_type !== 'equal') ||
-    sharers.some(id => !peopleOrder.includes(id))
-  ) {
-    return false;
-  }
-  const ordered = peopleOrder.filter(id => sharers.includes(id));
-  const expected = splitEqually(expense.amount_minor, ordered);
-  return expense.expense_shares.every(
-    s => expected[s.user_id] === s.owed_minor,
-  );
-}
+const MULTIPLE = 'multiple';
 
 export function AddExpenseScreen({ route, navigation }: Props) {
   const {
@@ -77,9 +65,9 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   const updateExpense = useUpdateExpense();
   const renameExpense = useRenameExpense();
   const loaded = useRef(false);
-  // Only the name can change: someone else added it, or this form can't
-  // rebuild its split.
-  const [nameOnly, setNameOnly] = useState<'notMine' | 'customSplit' | null>(
+  // Only the name can change: someone else added it, or someone on it has
+  // left so its split can't be rebuilt.
+  const [nameOnly, setNameOnly] = useState<'notMine' | 'someoneLeft' | null>(
     null,
   );
   const { data: profile } = useProfile();
@@ -97,8 +85,11 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState(0);
   const [currency, setCurrency] = useState<string | null>(null);
-  const [paidBy, setPaidBy] = useState(userId ?? '');
-  const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set());
+  const [payer, setPayer] = useState<PayerDraft>({
+    mode: 'single',
+    id: userId ?? '',
+  });
+  const [split, setSplit] = useState<SplitDraft>(emptySplit);
   const [formError, setFormError] = useState<string | null>(null);
 
   const [kind, targetId] = target.split(':');
@@ -137,6 +128,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
         ]
       : [];
   }, [groupId, group, friends, friendId, userId]);
+  const ids = useMemo(() => people.map(p => p.id), [people]);
 
   // Choosing someone else to split with starts the choices over. Editing
   // keeps the expense's own group or friend.
@@ -144,8 +136,8 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     if (editing) {
       return;
     }
-    setExcluded(new Set());
-    setPaidBy(userId ?? '');
+    setSplit(emptySplit());
+    setPayer({ mode: 'single', id: userId ?? '' });
   }, [target, userId, editing]);
 
   useLayoutEffect(() => {
@@ -183,41 +175,83 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     setDescription(existing.description);
     setAmount(existing.amount_minor);
     setCurrency(existing.currency);
+    const restored = draftFromExpense(existing, ids);
     if (existing.created_by !== userId) {
       setNameOnly('notMine');
-    } else if (
-      isSimpleEqualSplit(
-        existing,
-        people.map(p => p.id),
-      )
-    ) {
-      setPaidBy(existing.expense_payers[0]!.user_id);
-      const sharers = new Set(existing.expense_shares.map(s => s.user_id));
-      setExcluded(
-        new Set(people.filter(p => !sharers.has(p.id)).map(p => p.id)),
-      );
+    } else if (restored) {
+      setSplit(restored.split);
+      setPayer(restored.payers);
     } else {
-      setNameOnly('customSplit');
+      setNameOnly('someoneLeft');
     }
     setReady(true);
-  }, [existing, people, groupId, group, friendId, friends, userId]);
+  }, [existing, ids, groupId, group, friendId, friends, userId]);
 
   const expenseCurrency =
     currency ?? group?.currency ?? profile?.default_currency ?? 'INR';
-  const included = people.filter(p => !excluded.has(p.id)).map(p => p.id);
-  const perPerson =
-    amount > 0 && included.length > 0
-      ? Math.floor(amount / included.length)
-      : 0;
+  const symbol = currencySymbol(expenseCurrency);
+  const splitResult = computeSplit(amount, expenseCurrency, ids, split);
+  const payerResult = computePayers(amount, expenseCurrency, ids, payer);
+  const money = (minor: number) => formatMoney(minor, expenseCurrency);
+
+  const setSplitType = (type: SplitType) =>
+    setSplit(previous => {
+      // Shares start at one each, the usual starting point.
+      if (
+        type === 'shares' &&
+        Object.keys(previous.values.shares).length === 0
+      ) {
+        return {
+          ...previous,
+          type,
+          values: {
+            ...previous.values,
+            shares: Object.fromEntries(ids.map(id => [id, '1'])),
+          },
+        };
+      }
+      return { ...previous, type };
+    });
+
+  const setSplitValue = (id: string, text: string) =>
+    setSplit(previous =>
+      previous.type === 'equal'
+        ? previous
+        : {
+            ...previous,
+            values: {
+              ...previous.values,
+              [previous.type]: {
+                ...previous.values[previous.type],
+                [id]: text,
+              },
+            },
+          },
+    );
 
   const toggle = (id: string) =>
-    setExcluded(previous => {
-      const next = new Set(previous);
-      if (!next.delete(id)) {
-        next.add(id);
-      }
-      return next;
-    });
+    setSplit(previous => ({
+      ...previous,
+      excluded: previous.excluded.includes(id)
+        ? previous.excluded.filter(x => x !== id)
+        : [...previous.excluded, id],
+    }));
+
+  const choosePayer = (value: string) =>
+    setPayer(previous =>
+      value !== MULTIPLE
+        ? { mode: 'single', id: value }
+        : previous.mode === 'multiple'
+        ? previous
+        : // Start from whoever was chosen paying it all.
+          {
+            mode: 'multiple',
+            values:
+              amount > 0
+                ? { [previous.id]: minorToInput(amount, expenseCurrency) }
+                : {},
+          },
+    );
 
   const save = async () => {
     setFormError(null);
@@ -244,20 +278,23 @@ export function AddExpenseScreen({ route, navigation }: Props) {
       setFormError('Enter an amount.');
       return;
     }
-    if (included.length === 0) {
-      setFormError('Choose at least one person to split with.');
+    if (!payerResult.rows) {
+      setFormError(payerResult.error);
+      return;
+    }
+    if (!splitResult.rows) {
+      setFormError(splitResult.error);
       return;
     }
     try {
-      const paid = { [paidBy]: amount };
-      const owed = splitEqually(amount, included);
       if (existing) {
         await updateExpense.mutateAsync({
           id: existing.id,
           description: name,
           amountMinor: amount,
           currency: expenseCurrency,
-          ...equalSplitRows(paid, owed),
+          payers: payerResult.rows,
+          shares: splitResult.rows,
         });
       } else {
         await createExpense.mutateAsync({
@@ -265,8 +302,8 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           amountMinor: amount,
           currency: expenseCurrency,
           groupId,
-          paid,
-          owed,
+          payers: payerResult.rows,
+          shares: splitResult.rows,
         });
       }
       toast.show(existing ? 'Expense saved' : 'Expense added', 'success');
@@ -294,6 +331,9 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     );
   }
 
+  const owedText = (id: string) =>
+    amount > 0 && splitResult.owed[id] ? money(splitResult.owed[id]!) : '';
+
   return (
     <Screen scroll padded>
       <Stack gap="lg">
@@ -304,7 +344,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
             message={
               nameOnly === 'notMine'
                 ? `Only ${addedBy} can change the amount or delete this expense. You can rename it.`
-                : 'This expense has a split this screen can’t change yet. You can rename it; who paid and who owes stay the same.'
+                : 'Someone on this expense is no longer here, so its amounts can’t change. You can rename it.'
             }
           />
         ) : null}
@@ -345,25 +385,110 @@ export function AddExpenseScreen({ route, navigation }: Props) {
               <>
                 <SelectField
                   label="Paid by"
-                  value={paidBy}
-                  options={people.map(p => ({ value: p.id, label: p.name }))}
-                  onChange={setPaidBy}
+                  value={payer.mode === 'single' ? payer.id : MULTIPLE}
+                  options={[
+                    ...people.map(p => ({ value: p.id, label: p.name })),
+                    { value: MULTIPLE, label: 'Multiple people' },
+                  ]}
+                  onChange={choosePayer}
                   testID="expense-paid-by"
                 />
+                {payer.mode === 'multiple' ? (
+                  <Stack gap="sm">
+                    {people.map(p => (
+                      <PersonAmountRow
+                        key={p.id}
+                        name={p.name}
+                        prefix={symbol}
+                        value={payer.values[p.id] ?? ''}
+                        onChange={text =>
+                          setPayer({
+                            mode: 'multiple',
+                            values: { ...payer.values, [p.id]: text },
+                          })
+                        }
+                        testID={`expense-paid-${p.id}`}
+                      />
+                    ))}
+                    {amount > 0 &&
+                    payerResult.error &&
+                    payerResult.error !== formError ? (
+                      <Text
+                        variant="caption"
+                        color="textSecondary"
+                        testID="expense-paid-status"
+                      >
+                        {payerResult.error}
+                      </Text>
+                    ) : null}
+                  </Stack>
+                ) : null}
                 <Stack gap="sm">
-                  <Text variant="bodyStrong">Split equally between</Text>
-                  {people.map(p => (
-                    <Checkbox
-                      key={p.id}
-                      label={p.name}
-                      checked={!excluded.has(p.id)}
-                      onChange={() => toggle(p.id)}
-                      testID={`expense-include-${p.id}`}
-                    />
-                  ))}
-                  {perPerson > 0 ? (
-                    <Text color="textSecondary" testID="expense-per-person">
-                      {formatMoney(perPerson, expenseCurrency)} each
+                  <Text variant="bodyStrong">Split</Text>
+                  <SegmentedControl
+                    segments={SPLIT_TYPES}
+                    value={split.type}
+                    onChange={setSplitType}
+                    testID="expense-split-type"
+                  />
+                  {people.map(p =>
+                    split.type === 'equal' ? (
+                      <Row key={p.id} gap="md" justify="space-between">
+                        <Checkbox
+                          label={p.name}
+                          checked={!split.excluded.includes(p.id)}
+                          onChange={() => toggle(p.id)}
+                          testID={`expense-include-${p.id}`}
+                        />
+                        <Text
+                          color="textSecondary"
+                          testID={`expense-owed-${p.id}`}
+                        >
+                          {owedText(p.id)}
+                        </Text>
+                      </Row>
+                    ) : (
+                      <PersonAmountRow
+                        key={p.id}
+                        name={p.name}
+                        prefix={
+                          split.type === 'exact' || split.type === 'adjustment'
+                            ? split.type === 'adjustment'
+                              ? `± ${symbol}`
+                              : symbol
+                            : undefined
+                        }
+                        suffix={
+                          split.type === 'percent'
+                            ? '%'
+                            : split.type === 'shares'
+                            ? 'shares'
+                            : undefined
+                        }
+                        signed={split.type === 'adjustment'}
+                        value={split.values[split.type][p.id] ?? ''}
+                        onChange={text => setSplitValue(p.id, text)}
+                        result={
+                          split.type === 'exact' ? undefined : owedText(p.id)
+                        }
+                        testID={`expense-split-${p.id}`}
+                      />
+                    ),
+                  )}
+                  {amount > 0 &&
+                  splitResult.error &&
+                  splitResult.error !== formError ? (
+                    <Text
+                      variant="caption"
+                      color="textSecondary"
+                      testID="expense-split-status"
+                    >
+                      {splitResult.error}
+                    </Text>
+                  ) : split.type === 'adjustment' ? (
+                    <Text variant="caption" color="textSecondary">
+                      Add or take off an amount for someone; the rest is split
+                      equally.
                     </Text>
                   ) : null}
                 </Stack>

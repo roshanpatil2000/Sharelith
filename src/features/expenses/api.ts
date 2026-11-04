@@ -120,25 +120,6 @@ export function useExpense(expenseId: string | undefined) {
   });
 }
 
-/** Rows for create_expense / update_expense from per-person amounts. */
-export function equalSplitRows(
-  paid: Record<string, number>,
-  owed: Record<string, number>,
-): { payers: PayerRow[]; shares: ShareRow[] } {
-  return {
-    payers: Object.entries(paid).map(([user_id, paid_minor]) => ({
-      user_id,
-      paid_minor,
-    })),
-    shares: Object.entries(owed).map(([user_id, owed_minor]) => ({
-      user_id,
-      owed_minor,
-      split_type: 'equal',
-      raw_value: null,
-    })),
-  };
-}
-
 /**
  * Reloads balances, expenses, friends and groups. Other people change all of
  * these, and until realtime arrives nothing else tells this device.
@@ -316,10 +297,8 @@ export type NewExpense = {
   amountMinor: number;
   currency: string;
   groupId?: string;
-  /** Who paid what, in minor units. */
-  paid: Record<string, number>;
-  /** Who owes what, in minor units. */
-  owed: Record<string, number>;
+  payers: PayerRow[];
+  shares: ShareRow[];
 };
 
 export function useCreateExpense() {
@@ -331,7 +310,8 @@ export function useCreateExpense() {
         amount_minor: expense.amountMinor,
         currency: expense.currency,
         group_id: expense.groupId,
-        ...equalSplitRows(expense.paid, expense.owed),
+        payers: expense.payers,
+        shares: expense.shares,
       });
       if (error) {
         throw toAppError(error);

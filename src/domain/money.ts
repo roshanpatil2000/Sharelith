@@ -57,6 +57,34 @@ export function parseToMinor(input: string, currency: string): number | null {
   return minor <= MAX_AMOUNT_MINOR ? minor : null;
 }
 
+/** Like parseToMinor, but allows a leading + or − (for adjustments). */
+export function parseSignedToMinor(
+  input: string,
+  currency: string,
+): number | null {
+  const match = /^\s*([+\-−]?)(.*)$/.exec(input)!;
+  const minor = parseToMinor(match[2]!, currency);
+  if (minor === null) {
+    return null;
+  }
+  return match[1] === '-' || match[1] === '−' ? -minor : minor;
+}
+
+/** Minor units as editable text: 150000 → "1500", 3350 → "33.50". */
+export function minorToInput(minor: number, currency: string): string {
+  if (minor === 0) {
+    return '';
+  }
+  const sign = minor < 0 ? '-' : '';
+  const abs = Math.abs(minor);
+  const exp = currencyExponent(currency);
+  const whole = Math.floor(abs / 10 ** exp);
+  const frac = abs % 10 ** exp;
+  return frac === 0
+    ? `${sign}${whole}`
+    : `${sign}${whole}.${String(frac).padStart(exp, '0')}`;
+}
+
 type FormatOptions = {
   locale?: string;
   /** Omit the minus sign; callers convey direction with color/wording. */
