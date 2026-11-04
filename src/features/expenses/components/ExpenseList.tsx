@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { HandCoins, Pencil, Receipt, Trash2 } from 'lucide-react-native';
+import { Pencil, Receipt, Trash2 } from 'lucide-react-native';
 import {
   AmountText,
   ConfirmDialog,
-  Icon,
   EmptyState,
   ErrorView,
   ListRow,
@@ -23,12 +22,42 @@ import {
   type ExpenseFilter,
   type ExpenseSummary,
 } from '../api';
+import { PaymentGroup, PaymentRow } from './PaymentRows';
 
-const dateLabel = (date: string) =>
-  new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-  });
+/** Month over day, Splitwise-style, so the list scans by date. */
+function DateBlock({ date }: { date: string }) {
+  const d = new Date(`${date}T00:00:00`);
+  return (
+    <Stack align="center" style={dateStyle}>
+      <Text variant="caption" color="textSecondary">
+        {d.toLocaleDateString('en-IN', { month: 'short' }).toUpperCase()}
+      </Text>
+      <Text variant="bodyStrong">{d.getDate()}</Text>
+    </Stack>
+  );
+}
+
+const dateStyle = { width: 36 };
+
+type ListItem =
+  | { kind: 'expense'; expense: ExpenseSummary }
+  | { kind: 'payments'; payments: ExpenseSummary[] };
+
+/** Folds payments next to each other into one item. */
+export function groupPayments(expenses: ExpenseSummary[]): ListItem[] {
+  const items: ListItem[] = [];
+  for (const expense of expenses) {
+    const last = items[items.length - 1];
+    if (!expense.is_payment) {
+      items.push({ kind: 'expense', expense });
+    } else if (last?.kind === 'payments') {
+      last.payments.push(expense);
+    } else {
+      items.push({ kind: 'payments', payments: [expense] });
+    }
+  }
+  return items;
+}
 
 export function paidByLabel(
   expense: ExpenseSummary,
@@ -44,67 +73,6 @@ export function paidByLabel(
       ? 'You'
       : names[expense.paid_by]?.split(' ')[0] ?? 'Someone';
   return `${who} paid ${amount}`;
-}
-
-/** "You paid Asha", "Asha paid you", "Asha paid Ravi". */
-export function paymentLabel(
-  expense: ExpenseSummary,
-  userId: string | null,
-  names: Record<string, string>,
-): string {
-  const name = (id: string | null, you: string) =>
-    id === userId ? you : names[id ?? '']?.split(' ')[0] ?? 'Someone';
-  return `${name(expense.paid_by, 'You')} paid ${name(expense.paid_to, 'you')}`;
-}
-
-function PaymentRow({
-  expense,
-  names,
-  onDelete,
-}: {
-  expense: ExpenseSummary;
-  names: Record<string, string>;
-  /** Absent when someone else recorded it. */
-  onDelete?: () => void;
-}) {
-  const userId = useUserId();
-  const net = expense.my_net_minor;
-  return (
-    <SwipeRow
-      endAction={
-        onDelete
-          ? {
-              label: 'Delete',
-              icon: Trash2,
-              tone: 'danger',
-              onPress: onDelete,
-              testID: `expense-delete-${expense.id}`,
-            }
-          : undefined
-      }
-    >
-      <ListRow
-        testID={`expense-${expense.id}`}
-        leading={<Icon icon={HandCoins} color="textSecondary" />}
-        accessibilityActions={
-          onDelete ? [{ name: 'delete', label: 'Delete' }] : undefined
-        }
-        onAccessibilityAction={onDelete ? () => onDelete() : undefined}
-        title={paymentLabel(expense, userId, names)}
-        subtitle={`${dateLabel(expense.expense_date)} · Payment`}
-        trailing={
-          <Stack align="flex-end" gap="xxs">
-            <Text variant="caption" color="textSecondary">
-              {net > 0 ? 'you paid' : net < 0 ? 'you received' : 'payment'}
-            </Text>
-            <Text variant="bodyStrong" color="textSecondary">
-              {formatMoney(expense.amount_minor, expense.currency)}
-            </Text>
-          </Stack>
-        }
-      />
-    </SwipeRow>
-  );
 }
 
 function ExpenseRow({
@@ -155,12 +123,9 @@ function ExpenseRow({
         onAccessibilityAction={action =>
           action === 'delete' ? onDelete?.() : onEdit()
         }
+        leading={<DateBlock date={expense.expense_date} />}
         title={expense.description}
-        subtitle={`${dateLabel(expense.expense_date)} · ${paidByLabel(
-          expense,
-          userId,
-          names,
-        )}`}
+        subtitle={paidByLabel(expense, userId, names)}
         trailing={
           <Stack align="flex-end" gap="xxs">
             <Text variant="caption" color="textSecondary">
@@ -189,6 +154,8 @@ export function ExpenseList({ names, emptyMessage, ...filter }: Props) {
   const navigation = useNavigation();
   const setDeleted = useSetExpenseDeleted();
   const [deleting, setDeleting] = useState<ExpenseSummary | null>(null);
+  // Only whoever added an expense or recorded a payment can delete it.
+  const canDelete = (expense: ExpenseSummary) => expense.created_by === userId;
 
   const confirmDelete = () => {
     const expense = deleting!;
@@ -236,19 +203,28 @@ export function ExpenseList({ names, emptyMessage, ...filter }: Props) {
   }
   return (
     <>
-      {data.map(expense =>
-        expense.is_payment ? (
-          <PaymentRow
-            key={expense.id}
-            expense={expense}
-            names={names}
-            onDelete={
-              expense.created_by === userId
-                ? () => setDeleting(expense)
-                : undefined
-            }
-          />
-        ) : (
+      {groupPayments(data).map(item => {
+        if (item.kind === 'payments') {
+          const [only] = item.payments;
+          return item.payments.length === 1 ? (
+            <PaymentRow
+              key={only!.id}
+              payment={only!}
+              names={names}
+              onDelete={canDelete(only!) ? () => setDeleting(only!) : undefined}
+            />
+          ) : (
+            <PaymentGroup
+              key={only!.id}
+              payments={item.payments}
+              names={names}
+              canDelete={canDelete}
+              onDelete={setDeleting}
+            />
+          );
+        }
+        const { expense } = item;
+        return (
           <ExpenseRow
             key={expense.id}
             expense={expense}
@@ -257,13 +233,11 @@ export function ExpenseList({ names, emptyMessage, ...filter }: Props) {
               navigation.navigate('AddExpense', { expenseId: expense.id })
             }
             onDelete={
-              expense.created_by === userId
-                ? () => setDeleting(expense)
-                : undefined
+              canDelete(expense) ? () => setDeleting(expense) : undefined
             }
           />
-        ),
-      )}
+        );
+      })}
       <ConfirmDialog
         visible={!!deleting}
         title={

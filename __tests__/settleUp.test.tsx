@@ -292,8 +292,9 @@ describe('Payments in the list', () => {
     mockBackend({ expenses: [payment()] });
     await openGroup();
 
-    expect(await screen.findByText('Asha paid you')).toBeOnTheScreen();
-    expect(screen.getByText('you received')).toBeOnTheScreen();
+    // One quiet line, not a full expense row.
+    expect(await screen.findByText('Asha paid you ₹250.00')).toBeOnTheScreen();
+    expect(screen.queryByText('you received')).toBeNull();
     expect(screen.queryByTestId('expense-edit-p-1')).toBeNull();
     // Someone else recorded it: no delete either.
     expect(
@@ -313,7 +314,7 @@ describe('Payments in the list', () => {
       ],
     });
     await openGroup();
-    expect(await screen.findByText('You paid Asha')).toBeOnTheScreen();
+    expect(await screen.findByText('You paid Asha ₹250.00')).toBeOnTheScreen();
 
     await fireEvent(screen.getByTestId('expense-p-1'), 'accessibilityAction', {
       nativeEvent: { actionName: 'delete' },
@@ -326,5 +327,36 @@ describe('Payments in the list', () => {
       eid: 'p-1',
       deleted: true,
     });
+  });
+
+  it('folds payments next to each other into one line', async () => {
+    mockBackend({
+      expenses: [
+        payment({ id: 'p-1', amount_minor: 10000 }),
+        payment({ id: 'p-2', amount_minor: 20000 }),
+        payment({ id: 'p-3', amount_minor: 5000 }),
+      ],
+    });
+    await openGroup();
+
+    expect(
+      await screen.findByText('3 payments · Asha paid you ₹350.00'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId('expense-p-2')).toBeNull();
+
+    await fireEvent.press(screen.getByTestId('payments-p-1'));
+    expect(screen.getByText('Asha paid you ₹200.00')).toBeOnTheScreen();
+    expect(screen.getByTestId('expense-p-3')).toBeOnTheScreen();
+  });
+
+  it('only says how many when payments go different ways', async () => {
+    mockBackend({
+      expenses: [
+        payment({ id: 'p-1' }),
+        payment({ id: 'p-2', paid_by: me, paid_to: asha, created_by: me }),
+      ],
+    });
+    await openGroup();
+    expect(await screen.findByText('2 payments')).toBeOnTheScreen();
   });
 });
