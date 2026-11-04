@@ -19,6 +19,7 @@ import { EditProfileScreen } from '@/features/account/screens/EditProfileScreen'
 import { ChangePasswordScreen } from '@/features/account/screens/ChangePasswordScreen';
 import { DeleteAccountScreen } from '@/features/account/screens/DeleteAccountScreen';
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
+import { SettleUpScreen } from '@/features/expenses/screens/SettleUpScreen';
 import { ComponentGalleryScreen } from '@/features/dev/ComponentGalleryScreen';
 import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
@@ -130,6 +131,12 @@ export function RootNavigator() {
               layout={modalLayout}
               component={AddExpenseScreen}
               options={{ presentation: 'modal', title: 'Add expense' }}
+            />
+            <Root.Screen
+              name="SettleUp"
+              layout={modalLayout}
+              component={SettleUpScreen}
+              options={{ presentation: 'modal', title: 'Settle up' }}
             />
             <Root.Screen
               name="VerifyEmail"

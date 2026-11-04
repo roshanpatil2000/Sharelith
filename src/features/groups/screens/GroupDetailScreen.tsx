@@ -7,11 +7,12 @@ import {
   type RouteProp,
 } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Receipt, Settings } from 'lucide-react-native';
+import { HandCoins, Receipt, Settings } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   AvatarStack,
   BalanceSummary,
+  Button,
   Divider,
   EmptyState,
   ErrorView,
@@ -129,6 +130,14 @@ export function GroupDetailScreen({ route }: Props) {
           max={6}
         />
         <BalanceSummary balances={balances[group.id] ?? []} />
+        {(balances[group.id] ?? []).length > 0 ? (
+          <Button
+            title="Settle up"
+            icon={HandCoins}
+            onPress={() => navigation.navigate('SettleUp', { groupId })}
+            testID="group-settle-up"
+          />
+        ) : null}
       </View>
       <Divider />
       <ExpenseList

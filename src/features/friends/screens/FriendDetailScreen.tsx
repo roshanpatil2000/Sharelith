@@ -2,12 +2,13 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { UserMinus } from 'lucide-react-native';
+import { HandCoins, UserMinus } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   Avatar,
   Badge,
   BalanceSummary,
+  Button,
   ConfirmDialog,
   Divider,
   EmptyState,
@@ -105,6 +106,16 @@ export function FriendDetailScreen({ route }: Props) {
           balances={balances[friend.id] ?? []}
           subject={`With ${first}`}
         />
+        {(balances[friend.id] ?? []).length > 0 ? (
+          <Button
+            title="Settle up"
+            icon={HandCoins}
+            onPress={() =>
+              navigation.navigate('SettleUp', { friendId: friend.id })
+            }
+            testID="friend-settle-up"
+          />
+        ) : null}
       </View>
       <Divider />
       <ExpenseList

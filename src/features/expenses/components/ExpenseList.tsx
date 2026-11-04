@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Pencil, Receipt, Trash2 } from 'lucide-react-native';
+import { HandCoins, Pencil, Receipt, Trash2 } from 'lucide-react-native';
 import {
   AmountText,
   ConfirmDialog,
+  Icon,
   EmptyState,
   ErrorView,
   ListRow,
@@ -43,6 +44,67 @@ export function paidByLabel(
       ? 'You'
       : names[expense.paid_by]?.split(' ')[0] ?? 'Someone';
   return `${who} paid ${amount}`;
+}
+
+/** "You paid Asha", "Asha paid you", "Asha paid Ravi". */
+export function paymentLabel(
+  expense: ExpenseSummary,
+  userId: string | null,
+  names: Record<string, string>,
+): string {
+  const name = (id: string | null, you: string) =>
+    id === userId ? you : names[id ?? '']?.split(' ')[0] ?? 'Someone';
+  return `${name(expense.paid_by, 'You')} paid ${name(expense.paid_to, 'you')}`;
+}
+
+function PaymentRow({
+  expense,
+  names,
+  onDelete,
+}: {
+  expense: ExpenseSummary;
+  names: Record<string, string>;
+  /** Absent when someone else recorded it. */
+  onDelete?: () => void;
+}) {
+  const userId = useUserId();
+  const net = expense.my_net_minor;
+  return (
+    <SwipeRow
+      endAction={
+        onDelete
+          ? {
+              label: 'Delete',
+              icon: Trash2,
+              tone: 'danger',
+              onPress: onDelete,
+              testID: `expense-delete-${expense.id}`,
+            }
+          : undefined
+      }
+    >
+      <ListRow
+        testID={`expense-${expense.id}`}
+        leading={<Icon icon={HandCoins} color="textSecondary" />}
+        accessibilityActions={
+          onDelete ? [{ name: 'delete', label: 'Delete' }] : undefined
+        }
+        onAccessibilityAction={onDelete ? () => onDelete() : undefined}
+        title={paymentLabel(expense, userId, names)}
+        subtitle={`${dateLabel(expense.expense_date)} · Payment`}
+        trailing={
+          <Stack align="flex-end" gap="xxs">
+            <Text variant="caption" color="textSecondary">
+              {net > 0 ? 'you paid' : net < 0 ? 'you received' : 'payment'}
+            </Text>
+            <Text variant="bodyStrong" color="textSecondary">
+              {formatMoney(expense.amount_minor, expense.currency)}
+            </Text>
+          </Stack>
+        }
+      />
+    </SwipeRow>
+  );
 }
 
 function ExpenseRow({
@@ -135,7 +197,10 @@ export function ExpenseList({ names, emptyMessage, ...filter }: Props) {
       {
         onSuccess: () => {
           setDeleting(null);
-          toast.show(`Deleted “${expense.description}”`, 'info', {
+          const what = expense.is_payment
+            ? 'payment'
+            : `“${expense.description}”`;
+          toast.show(`Deleted ${what}`, 'info', {
             label: 'Undo',
             onPress: () =>
               setDeleted.mutate(
@@ -171,24 +236,41 @@ export function ExpenseList({ names, emptyMessage, ...filter }: Props) {
   }
   return (
     <>
-      {data.map(expense => (
-        <ExpenseRow
-          key={expense.id}
-          expense={expense}
-          names={names}
-          onEdit={() =>
-            navigation.navigate('AddExpense', { expenseId: expense.id })
-          }
-          onDelete={
-            expense.created_by === userId
-              ? () => setDeleting(expense)
-              : undefined
-          }
-        />
-      ))}
+      {data.map(expense =>
+        expense.is_payment ? (
+          <PaymentRow
+            key={expense.id}
+            expense={expense}
+            names={names}
+            onDelete={
+              expense.created_by === userId
+                ? () => setDeleting(expense)
+                : undefined
+            }
+          />
+        ) : (
+          <ExpenseRow
+            key={expense.id}
+            expense={expense}
+            names={names}
+            onEdit={() =>
+              navigation.navigate('AddExpense', { expenseId: expense.id })
+            }
+            onDelete={
+              expense.created_by === userId
+                ? () => setDeleting(expense)
+                : undefined
+            }
+          />
+        ),
+      )}
       <ConfirmDialog
         visible={!!deleting}
-        title={`Delete “${deleting?.description ?? ''}”?`}
+        title={
+          deleting?.is_payment
+            ? 'Delete this payment?'
+            : `Delete “${deleting?.description ?? ''}”?`
+        }
         message="Balances update for everyone on it. You can undo this straight after."
         confirmLabel="Delete"
         destructive
