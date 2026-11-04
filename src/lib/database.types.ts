@@ -426,6 +426,7 @@ export type Database = {
         Args: { member_ids: string[] };
         Returns: undefined;
       };
+      assert_expense_creator: { Args: { eid: string }; Returns: undefined };
       assert_group_admin: { Args: { gid: string }; Returns: undefined };
       befriend_group_members: {
         Args: { gid: string; new_ids: string[] };
@@ -506,12 +507,12 @@ export type Database = {
         Returns: {
           amount_minor: number;
           category: string;
+          created_by: string;
           currency: string;
           description: string;
           expense_date: string;
           group_id: string;
           id: string;
-          created_by: string;
           is_payment: boolean;
           my_net_minor: number;
           paid_by: string;
@@ -544,6 +545,10 @@ export type Database = {
         Args: { gid: string; member: string };
         Returns: undefined;
       };
+      rename_expense: {
+        Args: { description: string; eid: string };
+        Returns: undefined;
+      };
       save_expense_people: {
         Args: {
           eid: string;
@@ -552,10 +557,6 @@ export type Database = {
           shares: Json;
           total: number;
         };
-        Returns: undefined;
-      };
-      rename_expense: {
-        Args: { description: string; eid: string };
         Returns: undefined;
       };
       set_expense_deleted: {
