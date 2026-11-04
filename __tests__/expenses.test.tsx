@@ -254,3 +254,44 @@ describe('Group expenses', () => {
     expect(screen.getByText('you borrowed')).toBeOnTheScreen();
   });
 });
+
+describe('Groups tab totals', () => {
+  // Mirrors the real data: ₹101 owed in a group, ₹45 owed outside any group.
+  const balances = [
+    { friend_id: asha, group_id: 'g-goa', currency: 'INR', net_minor: -10100 },
+    { friend_id: asha, group_id: null, currency: 'INR', net_minor: -4500 },
+  ];
+
+  const openGroupsTab = async () => {
+    supabaseMock.auth.getSession.mockResolvedValueOnce({
+      data: { session: fakeSession() },
+      error: null,
+    });
+    await render(<App />);
+    await screen.findByTestId('group-g-goa');
+  };
+
+  it('shows the same overall total as the Friends tab', async () => {
+    mockBackend({ balances });
+    await openGroupsTab();
+    expect(await screen.findByText(/146\.00/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: /Friends/ }));
+    expect(await screen.findAllByText(/146\.00/)).not.toHaveLength(0);
+  });
+
+  it('lists non-group expenses so the rows add up', async () => {
+    mockBackend({ balances });
+    await openGroupsTab();
+    expect(await screen.findByTestId('groups-non-group')).toBeOnTheScreen();
+    expect(screen.getByText(/45\.00/)).toBeOnTheScreen();
+  });
+
+  it('says you are owed on a group row, not that the group owes you', async () => {
+    mockBackend({
+      balances: [{ ...balances[0]!, net_minor: 10100 }],
+    });
+    await openGroupsTab();
+    expect(await screen.findByText('you are owed')).toBeOnTheScreen();
+    expect(screen.queryByTestId('groups-non-group')).toBeNull();
+  });
+});

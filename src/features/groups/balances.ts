@@ -13,3 +13,14 @@ export function useGroupBalances(): BalancesById {
   const { data } = useBalances();
   return useMemo(() => sumBalances(data ?? [], r => r.group_id), [data]);
 }
+
+/** Your net from expenses outside any group, per currency. */
+export function useNonGroupBalance(): GroupBalance {
+  const { data } = useBalances();
+  return useMemo(
+    () =>
+      sumBalances(data ?? [], r => (r.group_id === null ? 'none' : null))
+        .none ?? [],
+    [data],
+  );
+}
