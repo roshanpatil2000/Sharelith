@@ -19,6 +19,8 @@ export type ExpenseSummary = {
   category: string;
   expense_date: string;
   is_payment: boolean;
+  /** Only they can change the amounts or delete it. */
+  created_by: string;
   paid_by: string;
   payer_count: number;
   /** What this did to you: + you lent, − you borrowed. */
@@ -82,6 +84,7 @@ export type ExpenseDetail = {
   amount_minor: number;
   currency: string;
   expense_date: string;
+  created_by: string;
   expense_payers: PayerRow[];
   expense_shares: ShareRow[];
 };
@@ -98,7 +101,7 @@ export function useExpense(expenseId: string | undefined) {
       const { data, error } = await supabase
         .from('expenses')
         .select(
-          'id, group_id, description, amount_minor, currency, expense_date, expense_payers(user_id, paid_minor), expense_shares(user_id, owed_minor, split_type, raw_value)',
+          'id, group_id, description, amount_minor, currency, expense_date, created_by, expense_payers(user_id, paid_minor), expense_shares(user_id, owed_minor, split_type, raw_value)',
         )
         .eq('id', expenseId!)
         .is('deleted_at', null)
@@ -171,7 +174,30 @@ export function useUpdateExpense() {
   });
 }
 
-/** Deletes, or restores with deleted: false (for Undo). */
+/** Anyone on an expense may rename it; amounts stay the creator's. */
+export function useRenameExpense() {
+  const invalidate = useInvalidateExpenses();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      description,
+    }: {
+      id: string;
+      description: string;
+    }) => {
+      const { error } = await supabase.rpc('rename_expense', {
+        eid: id,
+        description,
+      });
+      if (error) {
+        throw toAppError(error);
+      }
+    },
+    onSuccess: invalidate,
+  });
+}
+
+/** Deletes, or restores with deleted: false (for Undo). Creator only. */
 export function useSetExpenseDeleted() {
   const invalidate = useInvalidateExpenses();
   return useMutation({

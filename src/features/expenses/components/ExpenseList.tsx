@@ -45,11 +45,6 @@ export function paidByLabel(
   return `${who} paid ${amount}`;
 }
 
-const rowActions = [
-  { name: 'edit', label: 'Edit' },
-  { name: 'delete', label: 'Delete' },
-];
-
 function ExpenseRow({
   expense,
   names,
@@ -59,10 +54,17 @@ function ExpenseRow({
   expense: ExpenseSummary;
   names: Record<string, string>;
   onEdit: () => void;
-  onDelete: () => void;
+  /** Absent when someone else added it: only they can delete it. */
+  onDelete?: () => void;
 }) {
   const userId = useUserId();
   const net = expense.my_net_minor;
+  const actions = onDelete
+    ? [
+        { name: 'edit', label: 'Edit' },
+        { name: 'delete', label: 'Delete' },
+      ]
+    : [{ name: 'edit', label: 'Rename' }];
   return (
     <SwipeRow
       startAction={{
@@ -72,20 +74,24 @@ function ExpenseRow({
         onPress: onEdit,
         testID: `expense-edit-${expense.id}`,
       }}
-      endAction={{
-        label: 'Delete',
-        icon: Trash2,
-        tone: 'danger',
-        onPress: onDelete,
-        testID: `expense-delete-${expense.id}`,
-      }}
+      endAction={
+        onDelete
+          ? {
+              label: 'Delete',
+              icon: Trash2,
+              tone: 'danger',
+              onPress: onDelete,
+              testID: `expense-delete-${expense.id}`,
+            }
+          : undefined
+      }
     >
       <ListRow
         testID={`expense-${expense.id}`}
         onPress={onEdit}
-        accessibilityActions={rowActions}
+        accessibilityActions={actions}
         onAccessibilityAction={action =>
-          action === 'delete' ? onDelete() : onEdit()
+          action === 'delete' ? onDelete?.() : onEdit()
         }
         title={expense.description}
         subtitle={`${dateLabel(expense.expense_date)} · ${paidByLabel(
@@ -116,6 +122,7 @@ type Props = ExpenseFilter & {
 
 /** Newest first, for a group or for what you share with a friend. */
 export function ExpenseList({ names, emptyMessage, ...filter }: Props) {
+  const userId = useUserId();
   const { data, isLoading, isError, refetch } = useExpenses(filter);
   const navigation = useNavigation();
   const setDeleted = useSetExpenseDeleted();
@@ -172,7 +179,11 @@ export function ExpenseList({ names, emptyMessage, ...filter }: Props) {
           onEdit={() =>
             navigation.navigate('AddExpense', { expenseId: expense.id })
           }
-          onDelete={() => setDeleting(expense)}
+          onDelete={
+            expense.created_by === userId
+              ? () => setDeleting(expense)
+              : undefined
+          }
         />
       ))}
       <ConfirmDialog

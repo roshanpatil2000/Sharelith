@@ -32,6 +32,7 @@ import {
   equalSplitRows,
   useCreateExpense,
   useExpense,
+  useRenameExpense,
   useUpdateExpense,
   type ExpenseDetail,
 } from '../api';
@@ -74,9 +75,13 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   const userId = useUserId();
   const { data: existing, isLoading: loadingExisting } = useExpense(expenseId);
   const updateExpense = useUpdateExpense();
+  const renameExpense = useRenameExpense();
   const loaded = useRef(false);
-  // An expense this form can't rebuild: only its name can change here.
-  const [nameOnly, setNameOnly] = useState(false);
+  // Only the name can change: someone else added it, or this form can't
+  // rebuild its split.
+  const [nameOnly, setNameOnly] = useState<'notMine' | 'customSplit' | null>(
+    null,
+  );
   const { data: profile } = useProfile();
   const { data: groups } = useGroups();
   const { data: friends } = useFriends();
@@ -178,7 +183,9 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     setDescription(existing.description);
     setAmount(existing.amount_minor);
     setCurrency(existing.currency);
-    if (
+    if (existing.created_by !== userId) {
+      setNameOnly('notMine');
+    } else if (
       isSimpleEqualSplit(
         existing,
         people.map(p => p.id),
@@ -190,10 +197,10 @@ export function AddExpenseScreen({ route, navigation }: Props) {
         new Set(people.filter(p => !sharers.has(p.id)).map(p => p.id)),
       );
     } else {
-      setNameOnly(true);
+      setNameOnly('customSplit');
     }
     setReady(true);
-  }, [existing, people, groupId, group, friendId, friends]);
+  }, [existing, people, groupId, group, friendId, friends, userId]);
 
   const expenseCurrency =
     currency ?? group?.currency ?? profile?.default_currency ?? 'INR';
@@ -221,15 +228,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     }
     if (existing && nameOnly) {
       try {
-        // Same people and amounts: only the name changes.
-        await updateExpense.mutateAsync({
-          id: existing.id,
-          description: name,
-          amountMinor: existing.amount_minor,
-          currency: existing.currency,
-          payers: existing.expense_payers,
-          shares: existing.expense_shares,
-        });
+        await renameExpense.mutateAsync({ id: existing.id, description: name });
         toast.show('Expense saved', 'success');
         navigation.goBack();
       } catch (e) {
@@ -277,6 +276,13 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     }
   };
 
+  // Who added it, for the rename-only note.
+  const addedBy =
+    (existing &&
+      (group?.names[existing.created_by] ??
+        friends?.find(f => f.id === existing.created_by)?.full_name)) ||
+    'the person who added it';
+
   if (editing && (loadingExisting || (existing && !loaded.current))) {
     return <Screen>{null}</Screen>;
   }
@@ -295,7 +301,11 @@ export function AddExpenseScreen({ route, navigation }: Props) {
         {nameOnly ? (
           <Banner
             tone="info"
-            message="This expense has a split this screen can’t change yet. You can rename it; who paid and who owes stay the same."
+            message={
+              nameOnly === 'notMine'
+                ? `Only ${addedBy} can change the amount or delete this expense. You can rename it.`
+                : 'This expense has a split this screen can’t change yet. You can rename it; who paid and who owes stay the same.'
+            }
           />
         ) : null}
         <SelectField
@@ -365,7 +375,11 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           title="Save"
           size="lg"
           fullWidth
-          loading={createExpense.isPending || updateExpense.isPending}
+          loading={
+            createExpense.isPending ||
+            updateExpense.isPending ||
+            renameExpense.isPending
+          }
           onPress={save}
           testID="expense-save"
         />

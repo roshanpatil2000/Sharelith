@@ -46,6 +46,7 @@ const dinner = {
   category: 'general',
   expense_date: '2026-11-02',
   is_payment: false,
+  created_by: me,
   paid_by: me,
   payer_count: 1,
   my_net_minor: 60000,
@@ -314,6 +315,7 @@ const dinnerDetail = {
   amount_minor: 90000,
   currency: 'INR',
   expense_date: '2026-11-02',
+  created_by: me,
   expense_payers: [{ user_id: me, paid_minor: 90000 }],
   expense_shares: [me, asha, vik].map(user_id => ({
     user_id,
@@ -399,12 +401,32 @@ describe('Edit expense', () => {
     await fireEvent.press(screen.getByTestId('expense-save'));
 
     await screen.findByText('Expense saved');
-    expect(rpcCall('update_expense')).toMatchObject({
+    expect(rpcCall('rename_expense')).toEqual({
+      eid: 'e-1',
       description: 'Renamed',
-      amount_minor: 90000,
-      payers: custom.expense_payers,
-      shares: custom.expense_shares,
     });
+    expect(rpcCall('update_expense')).toBeUndefined();
+  });
+
+  it('lets others rename an expense but not change its amount', async () => {
+    await openEdit({ ...dinnerDetail, created_by: asha });
+    expect(
+      screen.getByText(/Only Asha Rao can change the amount or delete/),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId('expense-amount')).toBeNull();
+    expect(screen.queryByTestId('expense-paid-by')).toBeNull();
+    await fireEvent.changeText(
+      screen.getByTestId('expense-description'),
+      'Asha’s dinner',
+    );
+    await fireEvent.press(screen.getByTestId('expense-save'));
+
+    await screen.findByText('Expense saved');
+    expect(rpcCall('rename_expense')).toEqual({
+      eid: 'e-1',
+      description: 'Asha’s dinner',
+    });
+    expect(rpcCall('update_expense')).toBeUndefined();
   });
 });
 
@@ -465,5 +487,42 @@ describe('Delete expense', () => {
       nativeEvent: { actionName: 'delete' },
     });
     expect(await screen.findByText('Delete “Dinner”?')).toBeOnTheScreen();
+  });
+});
+
+describe('Someone else’s expense', () => {
+  it('cannot be deleted from the list', async () => {
+    mockBackend({ expenses: [{ ...dinner, created_by: asha }] });
+    await openGroup();
+    const row = await screen.findByTestId('expense-e-1');
+    expect(screen.queryByTestId('expense-delete-e-1')).toBeNull();
+    expect(screen.getByTestId('expense-edit-e-1')).toBeTruthy();
+    expect(row.props.accessibilityActions).toEqual([
+      { name: 'edit', label: 'Rename' },
+    ]);
+  });
+
+  it('shows the server’s reason if a delete is refused', async () => {
+    mockBackend({ expenses: [dinner] });
+    await openGroup();
+    await fireEvent(
+      await screen.findByTestId('expense-e-1'),
+      'accessibilityAction',
+      { nativeEvent: { actionName: 'delete' } },
+    );
+    const buttons = screen.getAllByRole('button', { name: 'Delete' });
+    supabaseMock.rpc.mockImplementationOnce(async () => ({
+      data: null,
+      error: {
+        code: '42501',
+        hint: 'not_creator',
+        message:
+          'Only the person who added this expense can change its amount or delete it',
+      },
+    }));
+    await fireEvent.press(buttons[buttons.length - 1]!);
+    expect(
+      await screen.findByText(/Only the person who added this expense/),
+    ).toBeOnTheScreen();
   });
 });

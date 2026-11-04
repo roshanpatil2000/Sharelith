@@ -511,6 +511,7 @@ export type Database = {
           expense_date: string;
           group_id: string;
           id: string;
+          created_by: string;
           is_payment: boolean;
           my_net_minor: number;
           paid_by: string;
@@ -551,6 +552,10 @@ export type Database = {
           shares: Json;
           total: number;
         };
+        Returns: undefined;
+      };
+      rename_expense: {
+        Args: { description: string; eid: string };
         Returns: undefined;
       };
       set_expense_deleted: {
