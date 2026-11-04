@@ -22,6 +22,7 @@ import {
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { toAppError } from '@/features/auth/errors';
+import { useRefreshExpenses } from '@/features/expenses/api';
 import { ExpenseList } from '@/features/expenses/components/ExpenseList';
 import { useFriend, useRemoveFriend } from '../api';
 import { useFriendBalances } from '../balances';
@@ -42,6 +43,7 @@ export function FriendDetailScreen({ route }: Props) {
   const friend = current ?? lastFriend.current;
   const balances = useFriendBalances();
   const removeFriend = useRemoveFriend();
+  const refreshExpenses = useRefreshExpenses();
   const [confirm, setConfirm] = useState(false);
 
   useLayoutEffect(() => {
@@ -82,6 +84,7 @@ export function FriendDetailScreen({ route }: Props) {
     <Screen
       scroll
       edges={['bottom', 'left', 'right']}
+      onRefresh={refreshExpenses}
       overlay={
         <FAB
           testID="friend-add-expense"
