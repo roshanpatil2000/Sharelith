@@ -16,6 +16,10 @@ import {
   SegmentedControl,
 } from '@/components';
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
+import {
+  useRefreshExpenses,
+  useRefreshExpensesOnFocus,
+} from '@/features/expenses/api';
 import { useFriends, type Friend } from '../api';
 import {
   filterFriends,
@@ -50,13 +54,9 @@ const filters = [
 
 export function FriendsScreen() {
   const navigation = useNavigation();
-  const {
-    data: friends,
-    isLoading,
-    isError,
-    refetch,
-    isRefetching,
-  } = useFriends();
+  const refreshExpenses = useRefreshExpenses();
+  useRefreshExpensesOnFocus();
+  const { data: friends, isLoading, isError, refetch } = useFriends();
   const balances = useFriendBalances();
   const [filter, setFilter] = useState<FriendFilter>('all');
 
@@ -103,8 +103,7 @@ export function FriendsScreen() {
           keyExtractor={f => f.id}
           renderItem={renderItem}
           loading={isLoading}
-          refreshing={isRefetching}
-          onRefresh={refetch}
+          onRefresh={refreshExpenses}
           empty={
             friends && friends.length > 0 ? (
               <EmptyState

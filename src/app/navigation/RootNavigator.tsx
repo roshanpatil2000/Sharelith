@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   createNativeStackNavigator,
@@ -30,6 +31,14 @@ import { headerTitleStyle, toNavigationTheme } from './navigationTheme';
 import type { AuthStackParamList, RootStackParamList } from './types';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
+
+/**
+ * iOS shows modal screens above the app root, so bottom sheets hosted at the
+ * root would open behind them. Modal screens host their own.
+ */
+const modalLayout = ({ children }: { children: React.ReactNode }) => (
+  <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
+);
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
 function stackOptions(theme: Theme): NativeStackNavigationOptions {
@@ -118,6 +127,7 @@ export function RootNavigator() {
             />
             <Root.Screen
               name="AddExpense"
+              layout={modalLayout}
               component={AddExpenseScreen}
               options={{ presentation: 'modal', title: 'Add expense' }}
             />
@@ -143,6 +153,7 @@ export function RootNavigator() {
             />
             <Root.Screen
               name="AddFriend"
+              layout={modalLayout}
               component={AddFriendScreen}
               options={{ presentation: 'modal', title: 'Add friend' }}
             />
@@ -153,6 +164,7 @@ export function RootNavigator() {
             />
             <Root.Screen
               name="CreateGroup"
+              layout={modalLayout}
               component={CreateGroupScreen}
               options={{ presentation: 'modal', title: 'Create a group' }}
             />
@@ -168,6 +180,7 @@ export function RootNavigator() {
             />
             <Root.Screen
               name="AddGroupMembers"
+              layout={modalLayout}
               component={AddGroupMembersScreen}
               options={{ presentation: 'modal', title: 'Add people' }}
             />

@@ -183,7 +183,7 @@ describe('Friend detail', () => {
     await openFriends();
     await fireEvent.press(await screen.findByTestId('friend-f-asha'));
     expect(await screen.findByText('asha@example.com')).toBeOnTheScreen();
-    expect(screen.getByText('No expenses yet')).toBeOnTheScreen();
+    expect(await screen.findByText('No expenses yet')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByTestId('friend-remove'));
     const removeButtons = screen.getAllByRole('button', { name: 'Remove' });

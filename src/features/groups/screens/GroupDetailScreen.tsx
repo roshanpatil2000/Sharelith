@@ -23,6 +23,7 @@ import {
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { useUserId } from '@/features/auth/authStore';
+import { ExpenseList } from '@/features/expenses/components/ExpenseList';
 import { groupsKey, useGroup } from '../api';
 import { useGroupBalances } from '../balances';
 import { groupTypeLabel, memberCountLabel } from '../groupTypes';
@@ -95,7 +96,12 @@ export function GroupDetailScreen({ route }: Props) {
     <Screen
       scroll
       edges={['bottom', 'left', 'right']}
-      overlay={<FAB onPress={() => navigation.navigate('AddExpense')} />}
+      overlay={
+        <FAB
+          testID="group-add-expense"
+          onPress={() => navigation.navigate('AddExpense', { groupId })}
+        />
+      }
       onRefresh={refetch}
       refreshing={isRefetching}
     >
@@ -125,10 +131,10 @@ export function GroupDetailScreen({ route }: Props) {
         <BalanceSummary balances={balances[group.id] ?? []} />
       </View>
       <Divider />
-      <EmptyState
-        icon={Receipt}
-        title="No expenses yet"
-        message="Expenses you add to this group will show here."
+      <ExpenseList
+        groupId={groupId}
+        names={group.names}
+        emptyMessage="Expenses you add to this group will show here."
       />
     </Screen>
   );

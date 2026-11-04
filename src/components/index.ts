@@ -31,6 +31,7 @@ export { AmountText, amountTone } from './display/AmountText';
 export { BalanceSummary } from './display/BalanceSummary';
 export { Badge } from './display/Badge';
 export { ListRow } from './display/ListRow';
+export { SwipeRow, type SwipeAction } from './layout/SwipeRow';
 export { SectionHeader } from './display/SectionHeader';
 export { Card } from './display/Card';
 export { EmptyState } from './display/EmptyState';

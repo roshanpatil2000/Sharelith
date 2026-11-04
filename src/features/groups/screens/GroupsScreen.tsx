@@ -1,6 +1,6 @@
 import React, { useLayoutEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Plus, Users } from 'lucide-react-native';
+import { Plus, Receipt, Users } from 'lucide-react-native';
 import {
   BalanceSummary,
   Box,
@@ -8,16 +8,21 @@ import {
   EmptyState,
   ErrorView,
   FAB,
+  Icon,
   IconButton,
   ListRow,
   PullToRefreshList,
   Screen,
 } from '@/components';
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
-import { overallBalance } from '@/features/friends/balances';
+import {
+  useRefreshExpenses,
+  useRefreshExpensesOnFocus,
+} from '@/features/expenses/api';
+import { overallBalance, useFriendBalances } from '@/features/friends/balances';
 import { FriendBalanceText } from '@/features/friends/components/FriendBalanceText';
 import { useGroups, type GroupSummary } from '../api';
-import { useGroupBalances } from '../balances';
+import { useGroupBalances, useNonGroupBalance } from '../balances';
 import { memberCountLabel } from '../groupTypes';
 import { GroupCover } from '../components/GroupCover';
 
@@ -39,14 +44,13 @@ const renderCreateGroupButton = () => <CreateGroupHeaderButton />;
 
 export function GroupsScreen() {
   const navigation = useNavigation();
-  const {
-    data: groups,
-    isLoading,
-    isError,
-    refetch,
-    isRefetching,
-  } = useGroups();
+  const refreshExpenses = useRefreshExpenses();
+  useRefreshExpensesOnFocus();
+  const { data: groups, isLoading, isError, refetch } = useGroups();
   const balances = useGroupBalances();
+  const nonGroup = useNonGroupBalance();
+  // Everything you owe or are owed, so it matches the Friends tab.
+  const overall = overallBalance(useFriendBalances());
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerRight: renderCreateGroupButton });
@@ -58,7 +62,12 @@ export function GroupsScreen() {
       title={item.name}
       subtitle={memberCountLabel(item.member_count)}
       leading={<GroupCover type={item.type} uri={item.cover_url} />}
-      trailing={<FriendBalanceText balance={balances[item.id] ?? []} />}
+      trailing={
+        <FriendBalanceText
+          balance={balances[item.id] ?? []}
+          owedLabel="you are owed"
+        />
+      }
       onPress={() => navigation.navigate('GroupDetail', { groupId: item.id })}
     />
   );
@@ -66,7 +75,7 @@ export function GroupsScreen() {
   return (
     <Screen>
       <Box p="lg">
-        <BalanceSummary balances={overallBalance(balances)} />
+        <BalanceSummary balances={overall} />
       </Box>
       <Divider />
       <VerifyEmailBanner />
@@ -78,8 +87,23 @@ export function GroupsScreen() {
           keyExtractor={g => g.id}
           renderItem={renderItem}
           loading={isLoading}
-          refreshing={isRefetching}
-          onRefresh={refetch}
+          onRefresh={refreshExpenses}
+          ListFooterComponent={
+            nonGroup.length > 0 ? (
+              <ListRow
+                testID="groups-non-group"
+                title="Non-group expenses"
+                subtitle="With friends, outside any group"
+                leading={<Icon icon={Receipt} color="textSecondary" />}
+                trailing={
+                  <FriendBalanceText
+                    balance={nonGroup}
+                    owedLabel="you are owed"
+                  />
+                }
+              />
+            ) : null
+          }
           empty={
             <EmptyState
               icon={Users}

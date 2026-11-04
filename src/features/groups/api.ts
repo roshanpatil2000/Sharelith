@@ -23,7 +23,12 @@ export type GroupMember = {
   invited: boolean;
   joined_at: string;
 };
-export type GroupDetail = Group & { members: GroupMember[] };
+export type GroupDetail = Group & {
+  /** Current members. */
+  members: GroupMember[];
+  /** Names by id, including people who left: they appear on past expenses. */
+  names: Record<string, string>;
+};
 
 export type GroupEdit = Partial<
   Pick<Group, 'name' | 'description' | 'type' | 'cover_url' | 'simplify_debts'>
@@ -45,6 +50,7 @@ export function useGroups() {
       const { data, error } = await supabase
         .from('groups')
         .select(`${GROUP_COLUMNS}, group_members(count)`)
+        .is('group_members.left_at', null)
         .order('updated_at', { ascending: false });
       if (error) {
         throw toAppError(error);
@@ -61,12 +67,12 @@ export function useGroup(groupId: string) {
   const userId = useUserId();
   return useQuery({
     queryKey: groupKey(userId, groupId),
-    enabled: !!userId,
+    enabled: !!userId && !!groupId,
     queryFn: async (): Promise<GroupDetail | null> => {
       const { data, error } = await supabase
         .from('groups')
         .select(
-          `${GROUP_COLUMNS}, group_members(joined_at, profile:profiles!group_members_user_id_fkey(id, full_name, email, avatar_url, joined_at))`,
+          `${GROUP_COLUMNS}, group_members(joined_at, left_at, profile:profiles!group_members_user_id_fkey(id, full_name, email, avatar_url, joined_at))`,
         )
         .eq('id', groupId)
         .maybeSingle();
@@ -77,8 +83,9 @@ export function useGroup(groupId: string) {
         return null;
       }
       const { group_members, ...g } = data;
-      const members = group_members
-        .filter(m => m.profile)
+      const known = group_members.filter(m => m.profile);
+      const members = known
+        .filter(m => !m.left_at)
         .map(m => ({
           id: m.profile!.id,
           full_name: m.profile!.full_name,
@@ -88,7 +95,10 @@ export function useGroup(groupId: string) {
           joined_at: m.joined_at,
         }))
         .sort((a, b) => a.joined_at.localeCompare(b.joined_at));
-      return { ...(g as Group), members };
+      const names = Object.fromEntries(
+        known.map(m => [m.profile!.id, m.profile!.full_name]),
+      );
+      return { ...(g as Group), members, names };
     },
   });
 }

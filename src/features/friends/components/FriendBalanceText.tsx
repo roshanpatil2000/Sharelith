@@ -2,8 +2,17 @@ import React from 'react';
 import { AmountText, Stack, Text } from '@/components';
 import type { FriendBalance } from '../balances';
 
-/** Trailing balance on a friend row: "owes you ₹200" / "you owe" / settled. */
-export function FriendBalanceText({ balance }: { balance: FriendBalance }) {
+/**
+ * Trailing balance on a row: "owes you ₹200" / "you owe" / settled. Group rows
+ * pass owedLabel="you are owed": a group doesn't owe anyone.
+ */
+export function FriendBalanceText({
+  balance,
+  owedLabel = 'owes you',
+}: {
+  balance: FriendBalance;
+  owedLabel?: string;
+}) {
   const nonZero = balance.filter(b => b.minor !== 0);
   if (nonZero.length === 0) {
     return (
@@ -17,7 +26,7 @@ export function FriendBalanceText({ balance }: { balance: FriendBalance }) {
       {nonZero.map(b => (
         <Stack key={b.currency} align="flex-end">
           <Text variant="caption" color={b.minor > 0 ? 'positive' : 'negative'}>
-            {b.minor > 0 ? 'owes you' : 'you owe'}
+            {b.minor > 0 ? owedLabel : 'you owe'}
           </Text>
           <AmountText minor={b.minor} currency={b.currency} />
         </Stack>

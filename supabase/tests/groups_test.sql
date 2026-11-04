@@ -100,7 +100,8 @@ select is(
 );
 
 -- Everyone leaves: the empty group is deleted.
-delete from public.group_members where group_id = (select id from g);
+update public.group_members set left_at = now()
+where group_id = (select id from g) and left_at is null;
 select is(
   (select count(*)::int from public.groups gr where gr.id = (select id from g)),
   0, 'an empty group is deleted'

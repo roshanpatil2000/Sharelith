@@ -1,4 +1,9 @@
-import { filterFriends, overallBalance, type BalancesById } from '../balances';
+import {
+  filterFriends,
+  overallBalance,
+  sumBalances,
+  type BalancesById,
+} from '../balances';
 
 const friends = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
 const balances: BalancesById = {
@@ -43,5 +48,42 @@ describe('filterFriends', () => {
     expect(filterFriends(friends, balances, 'youOwe').map(f => f.id)).toEqual([
       'b',
     ]);
+  });
+});
+
+describe('sumBalances', () => {
+  const row = (
+    friend_id: string,
+    group_id: string | null,
+    net_minor: number,
+  ) => ({
+    friend_id,
+    group_id,
+    currency: 'INR',
+    net_minor,
+  });
+
+  it('adds up a friend across groups', () => {
+    const rows = [row('a', 'g1', 300), row('a', null, 200)];
+    expect(sumBalances(rows, r => r.friend_id)).toEqual({
+      a: [{ currency: 'INR', minor: 500 }],
+    });
+  });
+
+  it('drops people whose debts cancel out', () => {
+    const rows = [row('a', 'g1', 300), row('a', 'g2', -300)];
+    expect(sumBalances(rows, r => r.friend_id)).toEqual({});
+  });
+
+  it('keeps currencies separate', () => {
+    const rows = [
+      row('a', null, 300),
+      { ...row('a', null, -50), currency: 'USD' },
+    ];
+    expect(sumBalances(rows, r => r.friend_id).a).toHaveLength(2);
+  });
+
+  it('skips rows without a key, such as non-group expenses', () => {
+    expect(sumBalances([row('a', null, 300)], r => r.group_id)).toEqual({});
   });
 });

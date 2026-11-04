@@ -15,6 +15,9 @@ type Props = {
   trailing?: React.ReactNode;
   onPress?: () => void;
   chevron?: boolean;
+  /** Named actions for screen readers, such as the actions behind a swipe. */
+  accessibilityActions?: { name: string; label: string }[];
+  onAccessibilityAction?: (actionName: string) => void;
   testID?: string;
 };
 
@@ -28,8 +31,17 @@ export function ListRow({
   trailing,
   onPress,
   chevron = false,
+  accessibilityActions,
+  onAccessibilityAction,
   testID,
 }: Props) {
+  const a11y = {
+    accessibilityActions,
+    onAccessibilityAction: onAccessibilityAction
+      ? (e: { nativeEvent: { actionName: string } }) =>
+          onAccessibilityAction(e.nativeEvent.actionName)
+      : undefined,
+  };
   const styles = useStyles(createStyles);
   const content = (
     <>
@@ -53,7 +65,7 @@ export function ListRow({
 
   if (!onPress) {
     return (
-      <View style={styles.row} testID={testID}>
+      <View style={styles.row} testID={testID} {...a11y}>
         {content}
       </View>
     );
@@ -65,6 +77,7 @@ export function ListRow({
       style={styles.row}
       pressedStyle={styles.pressed}
       accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
+      {...a11y}
     >
       {content}
     </Pressable>

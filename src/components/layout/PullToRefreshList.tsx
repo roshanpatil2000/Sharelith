@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RefreshControl } from 'react-native';
 import { FlashList, type FlashListProps } from '@shopify/flash-list';
 import { useTheme } from '@/app/theme';
@@ -7,8 +7,8 @@ import { Divider } from '../primitives/Divider';
 
 type Props<T> = FlashListProps<T> & {
   loading?: boolean;
-  refreshing?: boolean;
-  onRefresh?: () => void;
+  /** The spinner shows until the returned promise settles. */
+  onRefresh?: () => unknown;
   /** Rendered when not loading and data is empty. */
   empty?: React.ReactElement;
 };
@@ -24,13 +24,23 @@ function RowSeparator() {
  */
 export function PullToRefreshList<T>({
   loading = false,
-  refreshing = false,
   onRefresh,
   empty,
   data,
   ...rest
 }: Props<T>) {
   const { colors } = useTheme();
+  // Only a pull shows the spinner. Following background reloads too left it
+  // stuck on iOS when a reload finished while the tab was hidden.
+  const [pulling, setPulling] = useState(false);
+  const pull = async () => {
+    setPulling(true);
+    try {
+      await onRefresh?.();
+    } finally {
+      setPulling(false);
+    }
+  };
 
   if (loading && (!data || data.length === 0)) {
     return (
@@ -50,8 +60,8 @@ export function PullToRefreshList<T>({
       refreshControl={
         onRefresh ? (
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={pulling}
+            onRefresh={pull}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />

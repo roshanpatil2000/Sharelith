@@ -39,6 +39,7 @@ export function fakeProfile(overrides: Partial<Profile> = {}): Profile {
     default_currency: 'INR',
     timezone: 'Asia/Kolkata',
     email_verified_at: null,
+    deleted_at: null,
     invited_by: null,
     joined_at: '2026-10-28T00:00:00Z',
     created_at: '2026-10-28T00:00:00Z',
@@ -55,6 +56,7 @@ type QueryBuilder<T> = {
   select: jest.Mock<QueryBuilder<T>>;
   update: jest.Mock<QueryBuilder<T>>;
   eq: jest.Mock<QueryBuilder<T>>;
+  is: jest.Mock<QueryBuilder<T>>;
   order: jest.Mock<QueryBuilder<T>>;
   single: jest.Mock<Promise<{ data: T; error: unknown }>>;
   maybeSingle: jest.Mock<Promise<{ data: T; error: unknown }>>;
@@ -88,6 +90,7 @@ export function queryBuilder<T>(result: {
     select: jest.fn(() => builder),
     update: jest.fn(() => builder),
     eq: jest.fn(() => builder),
+    is: jest.fn(() => builder),
     order: jest.fn(() => builder),
     single: jest.fn(async () => result),
     maybeSingle: jest.fn(async () => result),

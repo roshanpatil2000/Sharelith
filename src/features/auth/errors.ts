@@ -37,7 +37,16 @@ type MaybeSupabaseError = {
  * Database functions raise these (as the error's hint) with a message
  * written for the user, so the message is shown as-is.
  */
-const userFacingHints = new Set(['not_friends', 'not_admin', 'remove_self']);
+const userFacingHints = new Set([
+  'not_friends',
+  'not_admin',
+  'remove_self',
+  'not_settled',
+  'not_member',
+  'not_found',
+  'invalid_expense',
+  'not_creator',
+]);
 
 /** Converts Supabase/network errors into an AppError with friendly text. */
 export function toAppError(error: unknown): AppError {
