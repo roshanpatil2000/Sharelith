@@ -11,6 +11,7 @@ import { useTheme } from '@/app/theme';
 import { FriendsScreen } from '@/features/friends/screens/FriendsScreen';
 import { GroupsScreen } from '@/features/groups/screens/GroupsScreen';
 import { ActivityScreen } from '@/features/activity/screens/ActivityScreen';
+import { useLiveUpdates } from '@/features/activity/liveUpdates';
 import { AccountScreen } from '@/features/account/screens/AccountScreen';
 import { headerTitleStyle } from './navigationTheme';
 import type { MainTabParamList } from './types';
@@ -34,6 +35,8 @@ const tabIcons: Record<keyof MainTabParamList, ReturnType<typeof tabIcon>> = {
 
 export function MainTabs() {
   const t = useTheme();
+  // Signed in from here on: keep balances current as others change them.
+  useLiveUpdates();
   return (
     <Tab.Navigator
       initialRouteName="Groups"
