@@ -531,6 +531,29 @@ export type Database = {
           invited: boolean;
         }[];
       };
+      list_activity: {
+        Args: { before_id?: number; max_rows?: number };
+        Returns: {
+          actor_id: string;
+          actor_name: string;
+          amount_minor: number;
+          created_at: string;
+          currency: string;
+          description: string;
+          expense_id: string;
+          group_id: string;
+          group_name: string;
+          id: number;
+          kind: string;
+          net_minor: number;
+          paid_by: string;
+          paid_to: string;
+          payee_name: string;
+          payer_name: string;
+          subject_id: string;
+          subject_name: string;
+        }[];
+      };
       list_group_balances: {
         Args: { gid: string };
         Returns: {

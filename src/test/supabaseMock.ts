@@ -100,6 +100,36 @@ export function queryBuilder<T>(result: {
   return builder;
 }
 
+type ChangeHandler = (payload: unknown) => void;
+
+/** Stand-in for a realtime channel; emitRealtime() plays a change to it. */
+type FakeChannel = {
+  handlers: ChangeHandler[];
+  on: jest.Mock<FakeChannel, [string, unknown, ChangeHandler]>;
+  subscribe: jest.Mock<FakeChannel, []>;
+};
+
+/** Open channels only: removeChannel() takes one out, like the real client. */
+const openChannels = new Set<FakeChannel>();
+
+function fakeChannel(): FakeChannel {
+  const channel: FakeChannel = {
+    handlers: [],
+    on: jest.fn((_type: string, _filter: unknown, handler: ChangeHandler) => {
+      channel.handlers.push(handler);
+      return channel;
+    }),
+    subscribe: jest.fn(() => channel),
+  };
+  openChannels.add(channel);
+  return channel;
+}
+
+/** Delivers a postgres change to every open channel. */
+export function emitRealtime(payload: unknown = {}) {
+  openChannels.forEach(c => c.handlers.forEach(h => h(payload)));
+}
+
 export const supabaseMock = {
   auth: {
     getSession: jest.fn(async () => ({
@@ -141,6 +171,11 @@ export const supabaseMock = {
       error: null,
     }),
   ),
+  channel: jest.fn((_name: string) => fakeChannel()),
+  removeChannel: jest.fn(async (channel: FakeChannel) => {
+    openChannels.delete(channel);
+    return 'ok';
+  }),
   storage: {
     from: jest.fn(() => ({
       upload: jest.fn(async () => ({ data: {}, error: null })),

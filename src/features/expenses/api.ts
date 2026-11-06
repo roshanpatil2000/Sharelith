@@ -6,6 +6,7 @@ import { useUserId } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
 import { friendsKey } from '@/features/friends/api';
 import { groupsKey } from '@/features/groups/api';
+import { activityKey } from '@/features/activity/api';
 
 export type BalanceRow = {
   friend_id: string;
@@ -121,8 +122,8 @@ export function useExpense(expenseId: string | undefined) {
 }
 
 /**
- * Reloads balances, expenses, friends and groups. Other people change all of
- * these, and until realtime arrives nothing else tells this device.
+ * Reloads everything other people can change: balances, expenses (and any
+ * open for editing), friends, groups and the activity feed.
  */
 export function useRefreshExpenses() {
   const userId = useUserId();
@@ -134,6 +135,8 @@ export function useRefreshExpenses() {
         qc.invalidateQueries({ queryKey: expensesKey(userId) }),
         qc.invalidateQueries({ queryKey: friendsKey(userId) }),
         qc.invalidateQueries({ queryKey: groupsKey(userId) }),
+        qc.invalidateQueries({ queryKey: ['expense', userId] }),
+        qc.invalidateQueries({ queryKey: activityKey(userId) }),
       ]),
     [qc, userId],
   );
@@ -166,6 +169,7 @@ function useInvalidateExpenses() {
       qc.invalidateQueries({ queryKey: balancesKey(userId) }),
       qc.invalidateQueries({ queryKey: expensesKey(userId) }),
       qc.invalidateQueries({ queryKey: ['expense', userId] }),
+      qc.invalidateQueries({ queryKey: activityKey(userId) }),
     ]);
 }
 
