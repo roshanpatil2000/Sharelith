@@ -14,6 +14,110 @@ export type Database = {
   };
   public: {
     Tables: {
+      activities: {
+        Row: {
+          actor_id: string | null;
+          amount_minor: number | null;
+          created_at: string;
+          currency: string | null;
+          description: string | null;
+          expense_id: string | null;
+          group_id: string | null;
+          group_name: string | null;
+          id: number;
+          kind: string;
+          subject_id: string | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          amount_minor?: number | null;
+          created_at?: string;
+          currency?: string | null;
+          description?: string | null;
+          expense_id?: string | null;
+          group_id?: string | null;
+          group_name?: string | null;
+          id?: never;
+          kind: string;
+          subject_id?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          amount_minor?: number | null;
+          created_at?: string;
+          currency?: string | null;
+          description?: string | null;
+          expense_id?: string | null;
+          group_id?: string | null;
+          group_name?: string | null;
+          id?: never;
+          kind?: string;
+          subject_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'activities_actor_id_fkey';
+            columns: ['actor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'activities_expense_id_fkey';
+            columns: ['expense_id'];
+            isOneToOne: false;
+            referencedRelation: 'expenses';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'activities_group_id_fkey';
+            columns: ['group_id'];
+            isOneToOne: false;
+            referencedRelation: 'groups';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'activities_subject_id_fkey';
+            columns: ['subject_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      activity_recipients: {
+        Row: {
+          activity_id: number;
+          net_minor: number;
+          user_id: string;
+        };
+        Insert: {
+          activity_id: number;
+          net_minor?: number;
+          user_id: string;
+        };
+        Update: {
+          activity_id?: number;
+          net_minor?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'activity_recipients_activity_id_fkey';
+            columns: ['activity_id'];
+            isOneToOne: false;
+            referencedRelation: 'activities';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'activity_recipients_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       expense_debts: {
         Row: {
           amount_minor: number;
@@ -418,6 +522,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      active_member_ids: { Args: { gid: string }; Returns: string[] };
       add_group_members: {
         Args: { gid: string; member_ids: string[] };
         Returns: undefined;
@@ -468,6 +573,7 @@ export type Database = {
       };
       delete_account: { Args: never; Returns: undefined };
       delete_group: { Args: { gid: string }; Returns: undefined };
+      expense_people: { Args: { eid: string }; Returns: string[] };
       get_my_profile: {
         Args: never;
         Returns: {
@@ -502,6 +608,29 @@ export type Database = {
         Returns: boolean;
       };
       leave_group: { Args: { gid: string }; Returns: undefined };
+      list_activity: {
+        Args: { before_id?: number; max_rows?: number };
+        Returns: {
+          actor_id: string;
+          actor_name: string;
+          amount_minor: number;
+          created_at: string;
+          currency: string;
+          description: string;
+          expense_id: string;
+          group_id: string;
+          group_name: string;
+          id: number;
+          kind: string;
+          net_minor: number;
+          paid_by: string;
+          paid_to: string;
+          payee_name: string;
+          payer_name: string;
+          subject_id: string;
+          subject_name: string;
+        }[];
+      };
       list_expenses: {
         Args: { friend?: string; gid?: string };
         Returns: {
@@ -531,29 +660,6 @@ export type Database = {
           invited: boolean;
         }[];
       };
-      list_activity: {
-        Args: { before_id?: number; max_rows?: number };
-        Returns: {
-          actor_id: string;
-          actor_name: string;
-          amount_minor: number;
-          created_at: string;
-          currency: string;
-          description: string;
-          expense_id: string;
-          group_id: string;
-          group_name: string;
-          id: number;
-          kind: string;
-          net_minor: number;
-          paid_by: string;
-          paid_to: string;
-          payee_name: string;
-          payer_name: string;
-          subject_id: string;
-          subject_name: string;
-        }[];
-      };
       list_group_balances: {
         Args: { gid: string };
         Returns: {
@@ -570,6 +676,21 @@ export type Database = {
           group_id: string;
           net_minor: number;
         }[];
+      };
+      log_activity: {
+        Args: {
+          eid?: string;
+          gid?: string;
+          kind: string;
+          nets?: Json;
+          people: string[];
+          subject?: string;
+        };
+        Returns: undefined;
+      };
+      log_expense_activity: {
+        Args: { before?: string[]; eid: string; kind: string };
+        Returns: undefined;
       };
       mark_email_verified: { Args: never; Returns: undefined };
       record_payment: {
