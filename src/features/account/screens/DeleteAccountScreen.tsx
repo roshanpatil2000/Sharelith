@@ -11,6 +11,7 @@ import {
   Text,
 } from '@/components';
 import { deleteAccount } from '@/features/auth/api';
+import { useBalances } from '@/features/expenses/api';
 import { useUserId } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
 import {
@@ -21,6 +22,9 @@ import {
 export function DeleteAccountScreen() {
   const userId = useUserId();
   const [formError, setFormError] = useState<string | null>(null);
+  // A deleted account can't settle up, so balances must be cleared first.
+  const { data: balances } = useBalances();
+  const unsettled = (balances ?? []).length > 0;
   const { control, handleSubmit, formState } = useForm<DeleteAccountValues>({
     resolver: zodResolver(deleteAccountSchema),
     defaultValues: { password: '' },
@@ -42,6 +46,12 @@ export function DeleteAccountScreen() {
           This permanently deletes your profile and can’t be undone. Enter your
           password to confirm.
         </Text>
+        {unsettled ? (
+          <Banner
+            tone="info"
+            message="You still owe or are owed money. Settle up with everyone first, so nobody is left with a balance they can’t clear."
+          />
+        ) : null}
         {formError ? <Banner tone="danger" message={formError} /> : null}
         <FormTextField
           control={control}
@@ -59,6 +69,7 @@ export function DeleteAccountScreen() {
           size="lg"
           fullWidth
           loading={formState.isSubmitting}
+          disabled={unsettled}
           onPress={onSubmit}
           testID="delete-submit"
         />
