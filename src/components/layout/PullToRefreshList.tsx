@@ -57,6 +57,11 @@ export function PullToRefreshList<T>({
       data={data}
       ItemSeparatorComponent={RowSeparator}
       ListEmptyComponent={empty}
+      // Lists here grow at the top (new friends, groups, activity). Show new
+      // rows when you're already at the top, rather than holding the old top
+      // row in place and hiding them above the screen; scrolled further
+      // down, your position is kept.
+      maintainVisibleContentPosition={{ autoscrollToTopThreshold: 80 }}
       refreshControl={
         onRefresh ? (
           <RefreshControl
