@@ -41,9 +41,6 @@ export function ActivityScreen() {
         loading={isLoading}
         onRefresh={refetch}
         keyExtractor={item => String(item.id)}
-        // New entries arrive at the top: show them when you're already at the
-        // top, but don't move the list under you if you've scrolled down.
-        maintainVisibleContentPosition={{ autoscrollToTopThreshold: 80 }}
         renderItem={({ item }) => (
           <ActivityRow
             item={item}
