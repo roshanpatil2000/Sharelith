@@ -1,5 +1,11 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import App from '../App';
 import {
   emitRealtime,
@@ -130,26 +136,26 @@ describe('Live updates', () => {
   });
 
   it('reloads balances and the feed when someone else changes something', async () => {
-    jest.useFakeTimers();
-    try {
-      mockBackend([]);
-      await openActivity();
-      await screen.findByText('No activity yet');
-      const balances = calls('list_my_balances');
-      const feed = calls('list_activity');
+    // Real timers: Reanimated's mocked animation frames also run on timers,
+    // and faking them can spin forever on a slow CI machine.
+    mockBackend([]);
+    await openActivity();
+    await screen.findByText('No activity yet');
+    const balances = calls('list_my_balances');
+    const feed = calls('list_activity');
 
-      // A burst of rows from one change refreshes once.
-      await act(async () => {
-        emitRealtime();
-        emitRealtime();
-        emitRealtime();
-        await jest.advanceTimersByTimeAsync(400);
-      });
+    // A burst of rows from one change refreshes once.
+    await act(async () => {
+      emitRealtime();
+      emitRealtime();
+      emitRealtime();
+    });
+    await waitFor(() => expect(calls('list_activity')).toBe(feed + 1));
+    expect(calls('list_my_balances')).toBe(balances + 1);
 
-      expect(calls('list_my_balances')).toBe(balances + 1);
-      expect(calls('list_activity')).toBe(feed + 1);
-    } finally {
-      jest.useRealTimers();
-    }
+    // Nothing more arrives after the burst has settled.
+    await act(() => new Promise<void>(resolve => setTimeout(resolve, 500)));
+    expect(calls('list_activity')).toBe(feed + 1);
+    expect(calls('list_my_balances')).toBe(balances + 1);
   });
 });
