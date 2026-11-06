@@ -147,6 +147,49 @@ describe('Delete account', () => {
     expect(supabaseMock.rpc).not.toHaveBeenCalledWith('delete_account');
   });
 
+  const owing = (balances: unknown[]) =>
+    supabaseMock.rpc.mockImplementation(async (fn: string) =>
+      fn === 'list_my_balances'
+        ? { data: balances, error: null }
+        : { data: null, error: null },
+    );
+  const unsettled = [
+    { friend_id: 'f-asha', group_id: null, currency: 'INR', net_minor: -500 },
+  ];
+  // This file doesn't reset mocks between tests; leave RPCs as they were.
+  afterEach(() => owing([]));
+
+  it('asks you to settle up first while anything is owed', async () => {
+    owing(unsettled);
+    await openAccount();
+    await fireEvent.press(await screen.findByTestId('account-delete'));
+    expect(
+      await screen.findByText(/You still owe or are owed money/),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId('delete-submit')).toBeDisabled();
+  });
+
+  it('keeps everything, avatar included, if a balance appears meanwhile', async () => {
+    supabaseMock.auth.signInWithPassword.mockResolvedValueOnce({ error: null });
+    owing([]);
+    await openAccount();
+    await fireEvent.press(await screen.findByTestId('account-delete'));
+    await fireEvent.changeText(
+      await screen.findByTestId('delete-password'),
+      'secret',
+    );
+    // Settled when the screen opened, but not by the time of submitting.
+    owing(unsettled);
+    await fireEvent.press(screen.getByTestId('delete-submit'));
+    expect(
+      await screen.findByText(
+        'Settle up with everyone before deleting your account',
+      ),
+    ).toBeOnTheScreen();
+    expect(supabaseMock.storage.from).not.toHaveBeenCalled();
+    expect(supabaseMock.rpc).not.toHaveBeenCalledWith('delete_account');
+  });
+
   it('deletes the account once the password checks out', async () => {
     supabaseMock.auth.signInWithPassword.mockResolvedValueOnce({ error: null });
     await submit();

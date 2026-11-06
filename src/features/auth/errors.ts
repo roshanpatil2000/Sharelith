@@ -46,6 +46,9 @@ const userFacingHints = new Set([
   'not_found',
   'invalid_expense',
   'not_creator',
+  'is_payment',
+  'not_party',
+  'locked',
 ]);
 
 /** Converts Supabase/network errors into an AppError with friendly text. */

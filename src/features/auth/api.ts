@@ -198,6 +198,20 @@ export async function deleteAccount(
   password: string,
 ): Promise<void> {
   await confirmCurrentPassword(password);
+  // The server refuses too, but check first so a refusal doesn't cost the
+  // avatar, which is removed before the account goes.
+  const { data: balances, error: balanceError } = await supabase.rpc(
+    'list_my_balances',
+  );
+  if (balanceError) {
+    throw toAppError(balanceError);
+  }
+  if ((balances ?? []).length > 0) {
+    throw new AppError(
+      'Settle up with everyone before deleting your account',
+      'not_settled',
+    );
+  }
   await supabase.storage.from('avatars').remove([`${userId}/avatar.jpg`]);
   const { error } = await supabase.rpc('delete_account');
   if (error) {
