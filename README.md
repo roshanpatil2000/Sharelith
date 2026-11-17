@@ -44,7 +44,7 @@ CI runs both on every pull request.
 | `npm run functions:deploy` | Deploys Edge Functions |
 | `npm run functions:secrets` | Uploads `supabase/functions/.env` |
 
-`web/` is the static page that forwards email links into the app. See [web/README.md](web/README.md).
+The website (sharelith.techbeas.co.in), which forwards email links into the app and hosts the privacy policy, lives in its own repo: [roshanpatil2000/Sharelith-deeplink](https://github.com/roshanpatil2000/Sharelith-deeplink).
 
 ## Layout
 
