@@ -143,6 +143,11 @@ export const supabaseMock = {
         data: { subscription: { unsubscribe: () => listeners.delete(cb) } },
       };
     }),
+    // The account still exists unless a test says otherwise.
+    getUser: jest.fn(async () => ({
+      data: { user: fakeSession().user },
+      error: null as unknown,
+    })),
     signUp: jest.fn(),
     signInWithPassword: jest.fn(),
     signOut: jest.fn(async () => {
