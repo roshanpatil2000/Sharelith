@@ -41,6 +41,7 @@ export function fakeProfile(overrides: Partial<Profile> = {}): Profile {
     email_verified_at: null,
     deleted_at: null,
     invited_by: null,
+    is_test_user: false,
     joined_at: '2026-10-28T00:00:00Z',
     created_at: '2026-10-28T00:00:00Z',
     updated_at: '2026-10-28T00:00:00Z',

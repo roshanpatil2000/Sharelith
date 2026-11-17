@@ -472,6 +472,7 @@ export type Database = {
           full_name: string;
           id: string;
           invited_by: string | null;
+          is_test_user: boolean;
           joined_at: string | null;
           phone: string | null;
           timezone: string;
@@ -487,6 +488,7 @@ export type Database = {
           full_name: string;
           id: string;
           invited_by?: string | null;
+          is_test_user?: boolean;
           joined_at?: string | null;
           phone?: string | null;
           timezone?: string;
@@ -502,6 +504,7 @@ export type Database = {
           full_name?: string;
           id?: string;
           invited_by?: string | null;
+          is_test_user?: boolean;
           joined_at?: string | null;
           phone?: string | null;
           timezone?: string;
@@ -586,6 +589,7 @@ export type Database = {
           full_name: string;
           id: string;
           invited_by: string | null;
+          is_test_user: boolean;
           joined_at: string | null;
           phone: string | null;
           timezone: string;
