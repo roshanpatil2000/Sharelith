@@ -48,8 +48,8 @@ Release builds run R8, which shrinks the code and can break libraries that rely 
 
 ## Store listings need
 
-- **Privacy policy URL:** `https://sharelith.techbeas.co.in/privacy`, once `web/privacy.html` is filled in and deployed.
-- **Data safety (Play) and App Privacy (App Store):** match `web/privacy.html`. The app collects name, email, optional phone, photo and financial records of what you split, with no tracking and no ads.
+- **Privacy policy URL:** `https://sharelith.techbeas.co.in/privacy`, deployed from the [Sharelith-deeplink](https://github.com/roshanpatil2000/Sharelith-deeplink) repo.
+- **Data safety (Play) and App Privacy (App Store):** match the privacy policy (`privacy.html` in Sharelith-deeplink). The app collects name, email, optional phone, photo and financial records of what you split, with no tracking and no ads.
 - **Account deletion:** in the app under Account → Delete account. Both stores require this.
 
 ## Still to do before a public release
