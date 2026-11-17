@@ -50,6 +50,14 @@ describe('describeActivity', () => {
     ).toBe('Asha added “Dinner”');
   });
 
+  it('says when a group expense does not involve you', () => {
+    expect(describeActivity(item({ net_minor: 0 }), me)).toMatchObject({
+      title: 'Asha added “Dinner” in Goa',
+      effect: 'not involved',
+      amount: null,
+    });
+  });
+
   it('says when an edit no longer involves you', () => {
     expect(
       describeActivity(item({ kind: 'expense_updated', net_minor: 0 }), me),

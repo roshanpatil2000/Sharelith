@@ -38,8 +38,10 @@ export function describeActivity(
   )} ${money}`;
 
   const net = item.net_minor;
+  // Group members hear about every group expense, including ones they're
+  // not on (net 0).
   const owes = {
-    effect: net > 0 ? 'you get back' : net < 0 ? 'you owe' : null,
+    effect: net > 0 ? 'you get back' : net < 0 ? 'you owe' : 'not involved',
     amount: net !== 0 ? Math.abs(net) : null,
   };
   const none = { effect: null, amount: null };
@@ -50,7 +52,7 @@ export function describeActivity(
     case 'expense_updated':
       return {
         title: `${actor} updated ${what}${inGroup}`,
-        ...(net === 0 ? { effect: 'not involved', amount: null } : owes),
+        ...owes,
       };
     case 'expense_deleted':
       return { title: `${actor} deleted ${what}${inGroup}`, ...none };
