@@ -83,6 +83,9 @@ export type ShareRow = {
   raw_value: number | null;
 };
 
+/** A name read with an expense; null when it isn't visible to you. */
+type NameRef = { full_name: string } | null;
+
 /** One expense with who paid and who owes, for editing. */
 export type ExpenseDetail = {
   id: string;
@@ -92,8 +95,13 @@ export type ExpenseDetail = {
   currency: string;
   expense_date: string;
   created_by: string;
-  expense_payers: PayerRow[];
-  expense_shares: ShareRow[];
+  expense_payers: (PayerRow & { profile?: NameRef })[];
+  expense_shares: (ShareRow & { profile?: NameRef })[];
+  // Read for the detail screen; the edit form doesn't need them.
+  is_payment?: boolean;
+  created_at?: string;
+  group?: { name: string } | null;
+  creator?: NameRef;
 };
 
 export const expenseKey = (userId: string | null, expenseId: string) =>
@@ -108,7 +116,7 @@ export function useExpense(expenseId: string | undefined) {
       const { data, error } = await supabase
         .from('expenses')
         .select(
-          'id, group_id, description, amount_minor, currency, expense_date, created_by, expense_payers(user_id, paid_minor), expense_shares(user_id, owed_minor, split_type, raw_value)',
+          'id, group_id, description, amount_minor, currency, expense_date, created_by, is_payment, created_at, group:groups(name), creator:profiles!expenses_created_by_fkey(full_name), expense_payers(user_id, paid_minor, profile:profiles!expense_payers_user_id_fkey(full_name)), expense_shares(user_id, owed_minor, split_type, raw_value, profile:profiles!expense_shares_user_id_fkey(full_name))',
         )
         .eq('id', expenseId!)
         .is('deleted_at', null)

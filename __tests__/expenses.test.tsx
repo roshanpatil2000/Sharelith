@@ -403,7 +403,14 @@ describe('Split types', () => {
       },
     });
     await openGroup();
-    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    // Tapping the row opens the detail screen; Edit opens the form.
+    await fireEvent(
+      await screen.findByTestId('expense-e-1'),
+      'accessibilityAction',
+      {
+        nativeEvent: { actionName: 'edit' },
+      },
+    );
     await screen.findByTestId('expense-description');
 
     expect(screen.getByRole('tab', { name: '%' })).toBeSelected();
@@ -532,11 +539,18 @@ describe('Edit expense', () => {
   const openEdit = async (detail: unknown) => {
     mockBackend({ expenses: [dinner], detail });
     await openGroup();
-    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    // Tapping the row opens the detail screen; Edit opens the form.
+    await fireEvent(
+      await screen.findByTestId('expense-e-1'),
+      'accessibilityAction',
+      {
+        nativeEvent: { actionName: 'edit' },
+      },
+    );
     await screen.findByTestId('expense-description');
   };
 
-  it('opens filled in when the row is tapped', async () => {
+  it('opens filled in from Edit', async () => {
     await openEdit(dinnerDetail);
     expect(screen.getByTestId('expense-description')).toHaveDisplayValue(
       'Dinner',
@@ -625,6 +639,122 @@ describe('Edit expense', () => {
       description: 'Asha’s dinner',
     });
     expect(rpcCall('update_expense')).toBeUndefined();
+  });
+});
+
+describe('Expense detail', () => {
+  const openDetail = async (detail: unknown) => {
+    mockBackend({ expenses: [dinner], detail });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    await screen.findByTestId('detail-description');
+  };
+  const named = (id: string, full_name: string) => ({
+    profile: { full_name },
+    user_id: id,
+  });
+
+  it('shows who paid, who owes and what it means for you', async () => {
+    await openDetail({
+      ...dinnerDetail,
+      group: { name: 'Goa trip' },
+      creator: { full_name: 'Me Myself' },
+      expense_payers: [{ ...named(me, 'Me Myself'), paid_minor: 90000 }],
+      expense_shares: [
+        [me, 'Me Myself'],
+        [asha, 'Asha Rao'],
+        [vik, 'Vikram Shah'],
+      ].map(([id, n]) => ({
+        ...named(id!, n!),
+        owed_minor: 30000,
+        split_type: 'equal',
+        raw_value: null,
+      })),
+    });
+
+    expect(screen.getByTestId('detail-description')).toHaveTextContent(
+      'Dinner',
+    );
+    expect(screen.getByTestId('detail-amount')).toHaveTextContent('₹900.00');
+    expect(screen.getByText(/Goa trip · 2 November 2026/)).toBeOnTheScreen();
+    expect(screen.getByTestId('detail-added-by')).toHaveTextContent(
+      'Added by You',
+    );
+    expect(screen.getByTestId('detail-effect')).toHaveTextContent(
+      /You lent ₹600\.00/,
+    );
+    expect(screen.getByText('Split equally')).toBeOnTheScreen();
+    expect(screen.getByTestId(`detail-share-${asha}`)).toHaveTextContent(
+      /Asha Rao.*₹300\.00/,
+    );
+    expect(screen.getByTestId('detail-edit')).toHaveTextContent('Edit expense');
+    expect(screen.getByTestId('detail-delete')).toBeOnTheScreen();
+  });
+
+  it('shows what was entered for each person', async () => {
+    await openDetail({
+      ...dinnerDetail,
+      expense_shares: [
+        {
+          ...named(me, 'Me'),
+          owed_minor: 54000,
+          split_type: 'percent',
+          raw_value: 60,
+        },
+        {
+          ...named(asha, 'Asha Rao'),
+          owed_minor: 36000,
+          split_type: 'percent',
+          raw_value: 40,
+        },
+      ],
+    });
+    expect(screen.getByText('Split by percentage')).toBeOnTheScreen();
+    expect(screen.getByTestId(`detail-share-${asha}`)).toHaveTextContent(
+      /40%.*₹360\.00/,
+    );
+  });
+
+  it('lets others rename but not delete', async () => {
+    await openDetail({
+      ...dinnerDetail,
+      created_by: asha,
+      creator: { full_name: 'Asha Rao' },
+    });
+    expect(screen.getByTestId('detail-edit')).toHaveTextContent('Rename');
+    expect(screen.queryByTestId('detail-delete')).toBeNull();
+    expect(
+      screen.getByText(/Only Asha Rao can change the amount or delete this/),
+    ).toBeOnTheScreen();
+  });
+
+  it('says when it does not involve you', async () => {
+    await openDetail({
+      ...dinnerDetail,
+      created_by: asha,
+      expense_payers: [{ user_id: asha, paid_minor: 90000 }],
+      expense_shares: [asha, vik].map(user_id => ({
+        user_id,
+        owed_minor: 45000,
+        split_type: 'equal',
+        raw_value: null,
+      })),
+    });
+    expect(screen.getByTestId('detail-effect')).toHaveTextContent(
+      'You’re not involved',
+    );
+  });
+
+  it('deletes after confirming', async () => {
+    await openDetail(dinnerDetail);
+    await fireEvent.press(screen.getByTestId('detail-delete'));
+    const buttons = screen.getAllByRole('button', { name: 'Delete' });
+    await fireEvent.press(buttons[buttons.length - 1]!);
+    expect(await screen.findByText('Deleted “Dinner”')).toBeOnTheScreen();
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('set_expense_deleted', {
+      eid: 'e-1',
+      deleted: true,
+    });
   });
 });
 

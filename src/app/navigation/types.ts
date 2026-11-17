@@ -25,6 +25,7 @@ export type RootStackParamList = {
   AddExpense:
     | { groupId?: string; friendId?: string; expenseId?: string }
     | undefined;
+  ExpenseDetail: { expenseId: string };
   /** Payments with this friend (any group), or yours in this group. */
   SettleUp:
     | { friendId: string; groupId?: undefined }

@@ -78,11 +78,14 @@ export function paidByLabel(
 function ExpenseRow({
   expense,
   names,
+  onOpen,
   onEdit,
   onDelete,
 }: {
   expense: ExpenseSummary;
   names: Record<string, string>;
+  /** Tapping the row: who paid, who owes and how it was split. */
+  onOpen: () => void;
   onEdit: () => void;
   /** Absent when someone else added it: only they can delete it. */
   onDelete?: () => void;
@@ -118,7 +121,7 @@ function ExpenseRow({
     >
       <ListRow
         testID={`expense-${expense.id}`}
-        onPress={onEdit}
+        onPress={onOpen}
         accessibilityActions={actions}
         onAccessibilityAction={action =>
           action === 'delete' ? onDelete?.() : onEdit()
@@ -229,6 +232,9 @@ export function ExpenseList({ names, emptyMessage, ...filter }: Props) {
             key={expense.id}
             expense={expense}
             names={names}
+            onOpen={() =>
+              navigation.navigate('ExpenseDetail', { expenseId: expense.id })
+            }
             onEdit={() =>
               navigation.navigate('AddExpense', { expenseId: expense.id })
             }

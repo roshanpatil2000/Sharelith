@@ -20,6 +20,7 @@ import { ChangePasswordScreen } from '@/features/account/screens/ChangePasswordS
 import { DeleteAccountScreen } from '@/features/account/screens/DeleteAccountScreen';
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { SettleUpScreen } from '@/features/expenses/screens/SettleUpScreen';
+import { ExpenseDetailScreen } from '@/features/expenses/screens/ExpenseDetailScreen';
 import { ComponentGalleryScreen } from '@/features/dev/ComponentGalleryScreen';
 import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
@@ -131,6 +132,11 @@ export function RootNavigator() {
               layout={modalLayout}
               component={AddExpenseScreen}
               options={{ presentation: 'modal', title: 'Add expense' }}
+            />
+            <Root.Screen
+              name="ExpenseDetail"
+              component={ExpenseDetailScreen}
+              options={{ title: 'Expense' }}
             />
             <Root.Screen
               name="SettleUp"
