@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
+import { AppState } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { clearQueryCache } from '@/lib/queryClient';
@@ -65,13 +66,43 @@ export const useUserId = () => useAuthStore(s => s.session?.user.id ?? null);
 export const useUserEmail = () =>
   useAuthStore(s => s.session?.user.email ?? null);
 
+/** What Supabase answers when the signed-in user or session no longer exists. */
+const goneAccountCodes = new Set(['user_not_found', 'session_not_found']);
+
+/**
+ * A saved session outlives its account: it keeps working on this device until
+ * it expires, even after the account is deleted elsewhere. Asks the server, and
+ * signs out only when it says the account or session is gone, never because
+ * the network failed.
+ */
+export async function signOutIfAccountGone(): Promise<void> {
+  if (!useAuthStore.getState().session) {
+    return;
+  }
+  const { error } = await supabase.auth.getUser();
+  if (error && 'code' in error && goneAccountCodes.has(String(error.code))) {
+    await supabase.auth.signOut({ scope: 'local' });
+  }
+}
+
 /** Loads the stored session and follows auth changes. Returns a cleanup. */
 export function startAuthListener(): () => void {
   const { setSession } = useAuthStore.getState();
+  const checkAccount = () => signOutIfAccountGone().catch(() => {});
   supabase.auth
     .getSession()
-    .then(({ data }) => setSession(data.session))
+    .then(({ data }) => {
+      setSession(data.session);
+      checkAccount();
+    })
     .catch(() => setSession(null));
+  // Coming back to the app is when a removal elsewhere is most likely to
+  // have happened.
+  const appState = AppState.addEventListener('change', state => {
+    if (state === 'active') {
+      checkAccount();
+    }
+  });
   const { data } = supabase.auth.onAuthStateChange((event, session) => {
     setSession(session);
     // Also covers sign-outs the app didn't start, like a revoked session.
@@ -79,5 +110,8 @@ export function startAuthListener(): () => void {
       clearQueryCache().catch(() => {});
     }
   });
-  return () => data.subscription.unsubscribe();
+  return () => {
+    data.subscription.unsubscribe();
+    appState.remove();
+  };
 }
