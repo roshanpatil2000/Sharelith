@@ -72,3 +72,15 @@ p { margin: 0 0 16px; color: var(--text-secondary); }
 .button:active { background: var(--primary-pressed); }
 
 .hint { margin: 16px 0 0; font-size: 13px; }
+
+/* Long-form pages such as the privacy policy. */
+body:has(.policy) { place-items: start center; }
+.policy {
+  max-width: 680px;
+  text-align: left;
+}
+.policy h2 { font-size: 17px; margin: 24px 0 8px; }
+.policy .hint { margin: 0 0 16px; }
+.policy ul { margin: 0 0 16px; padding-left: 20px; color: var(--text-secondary); }
+.policy li { margin-bottom: 6px; }
+.policy strong { color: var(--text); }

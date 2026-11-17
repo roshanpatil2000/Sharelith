@@ -58,7 +58,26 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
+
+/**
+ * One version for both apps: versionName comes from package.json, and
+ * versionCode is derived from it (1.2.3 -> 10203), so it always increases.
+ */
+def appVersion = new groovy.json.JsonSlurper()
+    .parse(file("../../package.json")).version
+def (major, minor, patch) = appVersion.tokenize(".").collect { it.toInteger() }
+def appVersionCode = major * 10000 + minor * 100 + patch
+
+/**
+ * Release signing reads the upload key from Gradle properties, normally in
+ * ~/.gradle/gradle.properties so nothing secret is in the repo:
+ *   SHARELITH_UPLOAD_STORE_FILE, SHARELITH_UPLOAD_STORE_PASSWORD,
+ *   SHARELITH_UPLOAD_KEY_ALIAS, SHARELITH_UPLOAD_KEY_PASSWORD
+ * Without them a release build is signed with the debug key, which is fine
+ * for testing on a device but is rejected by Google Play.
+ */
+def hasUploadKey = project.hasProperty("SHARELITH_UPLOAD_STORE_FILE")
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -83,8 +102,8 @@ android {
         applicationId "com.sharelith.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersion
     }
     signingConfigs {
         debug {
@@ -93,16 +112,26 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        if (hasUploadKey) {
+            release {
+                storeFile file(SHARELITH_UPLOAD_STORE_FILE)
+                storePassword SHARELITH_UPLOAD_STORE_PASSWORD
+                keyAlias SHARELITH_UPLOAD_KEY_ALIAS
+                keyPassword SHARELITH_UPLOAD_KEY_PASSWORD
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            if (!hasUploadKey) {
+                logger.warn("Sharelith: no upload key configured; signing the release build with the debug key.")
+            }
+            signingConfig hasUploadKey ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }

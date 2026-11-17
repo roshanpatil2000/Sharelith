@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" App.tsx",
     "pods": "cd ios && bundle exec pod install",
+    "version:sync": "node scripts/sync-version.js",
     "prepare": "husky",
     "verify": "npm run typecheck && npm run lint && npm test",
     "db:link": "supabase link",

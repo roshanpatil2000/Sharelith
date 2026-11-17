@@ -8,3 +8,7 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# react-native-config reads the .env values from BuildConfig fields by name at
+# runtime. Without this, R8 strips them and release builds lose SUPABASE_URL.
+-keep class com.sharelith.app.BuildConfig { *; }
