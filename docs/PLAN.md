@@ -5,28 +5,41 @@ Goal: build a React Native CLI app that reproduces Splitwise's feature set (free
 
 **Decisions:** TypeScript · Zustand (UI/session state) + TanStack Query (server state) · Supabase (Postgres, Auth, Realtime, Storage, Edge Functions) · iOS + Android from day one · Core + Pro scope.
 
-## Status (2 Nov 2026)
-Phases 0-3 are built. Phase 4 is next. A hardening pass came first; its open items are below.
+## Status (18 Nov 2026)
+Phases 0-7 are built for Android, plus most of the beta essentials from Phase 10. Next: build a signed release APK and share it with 2-3 testers.
+
+**Built**
+- Phases 0-3: foundation, auth, friends, groups (month-grouped lists included).
+- Phase 4: expenses with equal, exact, percent, shares and adjustment splits; several payers; add, edit, delete, restore; detail screen. The server checks that shares and payments add up.
+- Phase 5: record payments, simplify debts, payment reminders (once a day per friend).
+- Phase 6: group-wide activity feed with realtime updates.
+- Phase 7: Android push for activity that concerns you (`docs/PUSH.md`).
+- Phase 10 (part): Crashlytics on Android, privacy policy and Terms on the website with consent at sign-up, Android App Links for auth emails, R8, release builds that refuse the debug key.
+- Hardening: the 2 Nov review items, soft-leave (`left_at`), "Deleted user" anonymisation, settled-balance checks, FLAG_SECURE, Storage-only photo URLs.
+- CI runs typecheck, lint, Jest and pgTAP on every PR.
 
 **Changes from the original plan**
 - Storybook is replaced by the dev-only Component Gallery (Account → Developer).
 - Instant friends stay, Splitwise-style. Friends and group members can read only `id`, `full_name`, `email`, `avatar_url` and `joined_at`; the rest comes from `get_my_profile()`.
+- Crashlytics instead of Sentry, since Firebase was already in for push.
 - Pro (Phase 9) moves after the first release. Beta means Phases 4-7 plus the release essentials from Phase 10.
 
-**Needed before Phase 4 stores real data**
-- `group_members`: add `left_at` and soft-leave. Rows are hard-deleted today, and past expenses need them.
-- Empty groups: archive instead of deleting, since the trigger would otherwise destroy financial records.
-- `delete_account`: anonymize and keep the profile, so other people's balances survive.
-- `leave_group`, `remove_group_member`, `remove_friend`: require settled balances.
-- `create_expense`: reject shares that don't sum to the total, on the server.
+**Before public launch**
+- Encrypt the persisted query cache (names, emails, balances). Auth tokens are in the Keychain already.
+- Notification settings in the app (the privacy policy promises them).
+- One Maestro end-to-end flow: sign up → friend → expense → balance.
+- A one-time consent prompt for accounts created before 18 Nov 2026.
+- A staging Supabase project and confirmed backups.
+- Play Console account, store listing, Fastlane.
+- iOS push, Crashlytics and universal links (need the Apple developer account).
 
-**Before release**
-- Turn on Confirm email in hosted Supabase, or unverified accounts can claim someone else's address.
-- Add a release keystore and enable R8 (release builds use the debug keystore today).
-- Add universal/app links so tokens stop passing through the `sharelith://` scheme.
-- Add a staging Supabase project and confirm backups.
-- Encrypt the persisted query cache (names and emails). Auth tokens are in the Keychain already.
-- Consider `FLAG_SECURE` on Android: the privacy cover may appear too late for the recents screenshot.
+**Still open from the plan**
+- Phase 4: itemized split, comments, receipt photos, recurring expenses.
+- Phase 5: UPI pay links, Balances and Totals screens.
+- Phase 7: email reminders and weekly summary.
+- Phase 8: offline queue, translations.
+- Phase 9 (Pro): receipt scanning, charts, currency conversion, CSV export, templates. Analytics and ads: name the providers in the privacy policy first.
+- Social: Google/Apple sign-in, contacts import, invite link/QR, default split per group.
 
 ## Tech stack
 | Concern | Choice |
