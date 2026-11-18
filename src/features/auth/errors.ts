@@ -49,6 +49,8 @@ const userFacingHints = new Set([
   'is_payment',
   'not_party',
   'locked',
+  'not_owed',
+  'reminded',
 ]);
 
 /** Converts Supabase/network errors into an AppError with friendly text. */

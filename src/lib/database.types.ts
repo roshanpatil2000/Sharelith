@@ -731,6 +731,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      send_reminder: { Args: { friend: string }; Returns: undefined };
       set_expense_deleted: {
         Args: { deleted: boolean; eid: string };
         Returns: undefined;

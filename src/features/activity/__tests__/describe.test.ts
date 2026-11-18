@@ -137,3 +137,44 @@ describe('activityTime', () => {
     ).toMatch(/^28 Oct 2025, 9:02/);
   });
 });
+
+describe('reminders', () => {
+  const reminder = item({
+    kind: 'reminder',
+    actor_id: 'asha',
+    subject_id: me,
+    subject_name: 'Me',
+    group_id: null,
+    group_name: null,
+    expense_id: null,
+    description: null,
+    amount_minor: 50000,
+    net_minor: 0,
+  });
+
+  it('tells you who reminded you and what you owe', () => {
+    expect(describeActivity(reminder, me)).toEqual({
+      title: 'Asha reminded you to pay',
+      effect: 'you owe',
+      amount: 50000,
+    });
+  });
+
+  it('shows your own reminder as what they owe you', () => {
+    expect(
+      describeActivity(
+        {
+          ...reminder,
+          actor_id: me,
+          subject_id: 'vik',
+          subject_name: 'Vikram',
+        },
+        me,
+      ),
+    ).toEqual({
+      title: 'You reminded Vikram to pay',
+      effect: 'owes you',
+      amount: 50000,
+    });
+  });
+});

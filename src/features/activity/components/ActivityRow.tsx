@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
+  BellRing,
   HandCoins,
   Receipt,
   Trash2,
@@ -26,6 +27,7 @@ const ICONS: Record<ActivityKind, LucideIcon> = {
   member_added: UserPlus,
   member_left: UserMinus,
   member_removed: UserMinus,
+  reminder: BellRing,
 };
 
 type Props = {

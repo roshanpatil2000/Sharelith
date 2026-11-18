@@ -24,6 +24,7 @@ function messagingModule(): MessagingModule | null {
 export type PushTarget =
   | { screen: 'ExpenseDetail'; expenseId: string }
   | { screen: 'GroupDetail'; groupId: string }
+  | { screen: 'FriendDetail'; friendId: string }
   | { screen: 'Activity' };
 
 export function targetFor(
@@ -31,8 +32,12 @@ export function targetFor(
 ): PushTarget {
   const expenseId = data?.expense_id;
   const groupId = data?.group_id;
+  const friendId = data?.friend_id;
   if (typeof expenseId === 'string' && expenseId) {
     return { screen: 'ExpenseDetail', expenseId };
+  }
+  if (typeof friendId === 'string' && friendId) {
+    return { screen: 'FriendDetail', friendId };
   }
   // Removed from a group: it's no longer yours to open.
   if (

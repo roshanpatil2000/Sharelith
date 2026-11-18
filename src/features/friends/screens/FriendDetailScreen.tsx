@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HandCoins, UserMinus } from 'lucide-react-native';
+import { BellRing, HandCoins, UserMinus } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   Avatar,
@@ -15,6 +15,7 @@ import {
   FAB,
   Icon,
   ListRow,
+  Row,
   Screen,
   Stack,
   Text,
@@ -24,7 +25,7 @@ import type { RootStackParamList } from '@/app/navigation/types';
 import { toAppError } from '@/features/auth/errors';
 import { useRefreshExpenses } from '@/features/expenses/api';
 import { ExpenseList } from '@/features/expenses/components/ExpenseList';
-import { useFriend, useRemoveFriend } from '../api';
+import { useFriend, useRemoveFriend, useSendReminder } from '../api';
 import { useFriendBalances } from '../balances';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FriendDetail'>;
@@ -43,6 +44,7 @@ export function FriendDetailScreen({ route }: Props) {
   const friend = current ?? lastFriend.current;
   const balances = useFriendBalances();
   const removeFriend = useRemoveFriend();
+  const sendReminder = useSendReminder();
   const refreshExpenses = useRefreshExpenses();
   const [confirm, setConfirm] = useState(false);
 
@@ -67,6 +69,14 @@ export function FriendDetailScreen({ route }: Props) {
   }
 
   const first = friend.full_name.split(' ')[0];
+  const balance = balances[friend.id] ?? [];
+  const owesYou = balance.some(b => b.minor > 0);
+
+  const remind = () =>
+    sendReminder.mutate(friend.id, {
+      onSuccess: () => toast.show(`Reminded ${first}`),
+      onError: e => toast.show(toAppError(e).message, 'error'),
+    });
 
   const remove = () =>
     removeFriend.mutate(friend.id, {
@@ -105,19 +115,28 @@ export function FriendDetailScreen({ route }: Props) {
           ) : null}
           {friend.invited ? <Badge label="Invited" tone="neutral" /> : null}
         </Stack>
-        <BalanceSummary
-          balances={balances[friend.id] ?? []}
-          subject={`With ${first}`}
-        />
-        {(balances[friend.id] ?? []).length > 0 ? (
-          <Button
-            title="Settle up"
-            icon={HandCoins}
-            onPress={() =>
-              navigation.navigate('SettleUp', { friendId: friend.id })
-            }
-            testID="friend-settle-up"
-          />
+        <BalanceSummary balances={balance} subject={`With ${first}`} />
+        {balance.length > 0 ? (
+          <Row gap="sm">
+            <Button
+              title="Settle up"
+              icon={HandCoins}
+              onPress={() =>
+                navigation.navigate('SettleUp', { friendId: friend.id })
+              }
+              testID="friend-settle-up"
+            />
+            {owesYou ? (
+              <Button
+                title="Remind"
+                icon={BellRing}
+                variant="secondary"
+                loading={sendReminder.isPending}
+                onPress={remind}
+                testID="friend-remind"
+              />
+            ) : null}
+          </Row>
         ) : null}
       </View>
       <Divider />

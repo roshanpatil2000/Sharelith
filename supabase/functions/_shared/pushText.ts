@@ -70,6 +70,11 @@ export function pushText(a: PushActivity, net: number): PushText {
       return { title: group, body: `${actor} added you to the group.` };
     case 'member_removed':
       return { title: group, body: `${actor} removed you from the group.` };
+    case 'reminder':
+      return {
+        title: 'Payment reminder',
+        body: `${actor} reminded you that you owe them ${money(amount)}.`,
+      };
     default:
       return { title: 'Sharelith', body: 'Something changed.' };
   }

@@ -3,6 +3,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useUserId } from '@/features/auth/authStore';
 import { AppError, toAppError } from '@/features/auth/errors';
+import { activityKey } from '@/features/activity/api';
 
 export type Friend = {
   id: string;
@@ -104,5 +105,22 @@ export function useRemoveFriend() {
       }
     },
     onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  });
+}
+
+/** Nudges a friend who owes you; once a day per friend. */
+export function useSendReminder() {
+  const userId = useUserId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (friendId: string) => {
+      const { error } = await supabase.rpc('send_reminder', {
+        friend: friendId,
+      });
+      if (error) {
+        throw toAppError(error);
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: activityKey(userId) }),
   });
 }

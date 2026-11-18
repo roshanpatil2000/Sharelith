@@ -82,6 +82,14 @@ export function describeActivity(
         title: `${actor} removed ${subject('you')} from ${group}`,
         ...none,
       };
+    case 'reminder': {
+      const toMe = item.subject_id === me;
+      return {
+        title: `${actor} reminded ${subject('you')} to pay`,
+        effect: toMe ? 'you owe' : 'owes you',
+        amount: item.amount_minor,
+      };
+    }
   }
 }
 

@@ -16,6 +16,9 @@ export function openTarget(
     case 'ExpenseDetail':
       navigation.navigate('ExpenseDetail', { expenseId: target.expenseId });
       break;
+    case 'FriendDetail':
+      navigation.navigate('FriendDetail', { friendId: target.friendId });
+      break;
     case 'GroupDetail':
       navigation.navigate('GroupDetail', { groupId: target.groupId });
       break;

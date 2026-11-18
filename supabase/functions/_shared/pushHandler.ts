@@ -41,6 +41,7 @@ function sameSecret(a: string, b: string): boolean {
 }
 
 type ActivityRow = PushActivity & {
+  actor_id: string | null;
   group_id: string | null;
   expense_id: string | null;
   actor: { full_name: string } | null;
@@ -72,7 +73,7 @@ export async function handleSendPush(
   const { data: activity, error } = await admin
     .from('activities')
     .select(
-      'kind, group_id, expense_id, group_name, description, amount_minor, currency, actor:profiles!activities_actor_id_fkey(full_name)',
+      'kind, actor_id, group_id, expense_id, group_name, description, amount_minor, currency, actor:profiles!activities_actor_id_fkey(full_name)',
     )
     .eq('id', activityId)
     .maybeSingle<ActivityRow>();
@@ -95,6 +96,9 @@ export async function handleSendPush(
   const data: Record<string, string> = { kind: activity.kind };
   if (activity.group_id) {
     data.group_id = activity.group_id;
+  }
+  if (activity.kind === 'reminder' && activity.actor_id) {
+    data.friend_id = activity.actor_id;
   }
   if (activity.expense_id && !activity.kind.endsWith('_deleted')) {
     data.expense_id = activity.expense_id;
