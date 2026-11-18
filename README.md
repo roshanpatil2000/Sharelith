@@ -2,7 +2,7 @@
 
 A Splitwise-style expense splitter for iOS and Android, built with React Native and Supabase. The roadmap and data model are in [docs/PLAN.md](docs/PLAN.md).
 
-**Status:** accounts, friends and groups work. Adding and splitting expenses (Phase 4) is next.
+**Status:** friends, groups, expenses with every split type, settle up, activity, push notifications, payment reminders and crash reports work on Android. Next is a signed release APK for a few testers. iOS is missing push and crash reports until the Apple developer account is set up. See [docs/PLAN.md](docs/PLAN.md) for what's left.
 
 ## Setup
 
