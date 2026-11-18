@@ -28,7 +28,7 @@ Google Play signs the published app; you sign uploads with your own *upload key*
    SHARELITH_UPLOAD_KEY_PASSWORD=<key password>
    ```
 
-Without these settings, release builds are signed with the debug key and print a warning. That's fine for testing on a phone, but Play rejects it.
+Without these settings, release builds stop with an error instead of being signed with the debug key: Play rejects debug-signed builds, and Android App Links only verify for the upload key listed in the website's `/.well-known/assetlinks.json`. Debug builds are unaffected.
 
 ## Android: build
 
