@@ -29,6 +29,28 @@ describe('parseAuthLink', () => {
     ).toEqual({ kind: 'code', code: 'x', intent: 'reset' });
   });
 
+  it('reads the https link that Android App Links open directly', () => {
+    expect(
+      parseAuthLink(
+        'https://sharelith.techbeas.co.in/auth/callback?next=verify&code=abc',
+      ),
+    ).toEqual({ kind: 'code', code: 'abc', intent: 'verify' });
+  });
+
+  it('rejects look-alike hosts and paths', () => {
+    expect(
+      parseAuthLink(
+        'https://sharelith.techbeas.co.in.evil.example/auth/callback?code=x',
+      ),
+    ).toBeNull();
+    expect(
+      parseAuthLink('https://sharelith.techbeas.co.in/auth/callbackx?code=x'),
+    ).toBeNull();
+    expect(
+      parseAuthLink('http://sharelith.techbeas.co.in/auth/callback?code=x'),
+    ).toBeNull();
+  });
+
   it('ignores unknown intents and non-auth URLs', () => {
     expect(parseAuthLink('sharelith://auth/callback?code=x&next=evil')).toEqual(
       { kind: 'code', code: 'x', intent: null },

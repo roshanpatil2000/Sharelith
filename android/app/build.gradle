@@ -132,14 +132,26 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            if (!hasUploadKey) {
-                logger.warn("Sharelith: no upload key configured; signing the release build with the debug key.")
-            }
+            // Without the upload key the release task fails (below) rather
+            // than ship a debug-signed build, which App Links won't verify.
             signingConfig hasUploadKey ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def buildsRelease = graph.allTasks.any {
+        it.project == project && it.name ==~ /(assemble|bundle|package|install)Release/
+    }
+    if (buildsRelease && !hasUploadKey) {
+        throw new GradleException(
+            "Sharelith: release builds need the upload key. Set SHARELITH_UPLOAD_STORE_FILE, " +
+            "SHARELITH_UPLOAD_STORE_PASSWORD, SHARELITH_UPLOAD_KEY_ALIAS and SHARELITH_UPLOAD_KEY_PASSWORD " +
+            "in ~/.gradle/gradle.properties (see docs/RELEASE.md)."
+        )
     }
 }
 

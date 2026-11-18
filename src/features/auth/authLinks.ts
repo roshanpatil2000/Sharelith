@@ -31,13 +31,25 @@ const intents: readonly AuthLinkIntent[] = ['verify', 'reset', 'invite'];
 const toIntent = (v: string | null): AuthLinkIntent | null =>
   intents.includes(v as AuthLinkIntent) ? (v as AuthLinkIntent) : null;
 
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+
 /**
- * Parses sharelith://auth/callback?code=…&next=… (and Supabase's error
- * parameters, which may arrive in the query or the fragment).
+ * The emailed https link (opened directly by Android App Links) or the
+ * sharelith:// link the website's bridge page forwards to.
+ */
+const callbackPattern = new RegExp(
+  `^(?:sharelith://auth/callback|${escape(
+    env.authRedirectUrl.replace(/\/$/, ''),
+  )})/?(\\?[^#]*)?(#.*)?$`,
+);
+
+/**
+ * Parses the auth callback link: …/auth/callback?code=…&next=… (and Supabase's
+ * error parameters, which may arrive in the query or the fragment).
  * Returns null for any other URL.
  */
 export function parseAuthLink(url: string): ParsedAuthLink | null {
-  const match = url.match(/^sharelith:\/\/auth\/callback\/?(\?[^#]*)?(#.*)?$/);
+  const match = url.match(callbackPattern);
   if (!match) {
     return null;
   }

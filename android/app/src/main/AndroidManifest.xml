@@ -24,7 +24,18 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
-        <!-- sharelith://auth/callback from the web bridge page -->
+        <!-- Emailed links open the app directly once Android verifies the
+             site's /.well-known/assetlinks.json (Android App Links). -->
+        <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data
+                android:scheme="https"
+                android:host="sharelith.techbeas.co.in"
+                android:pathPrefix="/auth/callback" />
+        </intent-filter>
+        <!-- sharelith://auth/callback from the web bridge page (fallback) -->
         <intent-filter>
             <action android:name="android.intent.action.VIEW" />
             <category android:name="android.intent.category.DEFAULT" />
