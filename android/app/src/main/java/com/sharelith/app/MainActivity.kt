@@ -10,10 +10,6 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 class MainActivity : ReactActivity() {
 
   /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  /**
    * FLAG_SECURE keeps money and contact details out of screenshots, screen
    * recordings and the recent-apps thumbnail.
    */
@@ -23,6 +19,10 @@ class MainActivity : ReactActivity() {
         WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
   }
 
+  /**
+   * Returns the name of the main component registered from JavaScript. This is used to schedule
+   * rendering of the component.
+   */
   override fun getMainComponentName(): String = "Sharelith"
 
   /**
