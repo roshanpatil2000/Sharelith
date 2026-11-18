@@ -6,6 +6,9 @@ module.exports = {
   resolver: 'react-native-reanimated/jest/resolver',
   setupFiles: ['./node_modules/react-native-gesture-handler/jestSetup.js'],
   setupFilesAfterEnv: ['./jest.setup.ts'],
+  // Other sessions' git worktrees live under .claude/; they aren't this checkout.
+  modulePathIgnorePatterns: ['<rootDir>/.claude/'],
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/.claude/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     // Jest would otherwise pick lucide's ESM (.mjs) build.
