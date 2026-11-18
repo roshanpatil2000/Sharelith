@@ -30,10 +30,10 @@ export function pushText(a: PushActivity, net: number): PushText {
     formatMinor(Math.abs(minor), a.currency ?? 'INR');
   const what = a.description ?? 'An expense';
   const title = a.group_name ? `${what} · ${a.group_name}` : what;
-  const owe = (prefix = '') =>
+  const owe = (now = '') =>
     net > 0
-      ? `${prefix}You get back ${money(net)}.`
-      : `${prefix}You owe ${money(net)}.`;
+      ? `You ${now}get back ${money(net)}.`
+      : `You ${now}owe ${money(net)}.`;
   const group = a.group_name ?? 'a group';
   const amount = a.amount_minor ?? Math.abs(net);
 
@@ -41,7 +41,7 @@ export function pushText(a: PushActivity, net: number): PushText {
     case 'expense_added':
       return { title, body: `${actor} added it. ${owe()}` };
     case 'expense_updated':
-      return { title, body: `${actor} updated it. ${owe('Now: ')}` };
+      return { title, body: `${actor} updated it. ${owe('now ')}` };
     case 'expense_deleted':
       return { title, body: `${actor} deleted it.` };
     case 'expense_restored':
@@ -65,6 +65,7 @@ export function pushText(a: PushActivity, net: number): PushText {
         title: 'Payment',
         body: `${actor} restored a payment of ${money(amount)}.`,
       };
+    case 'group_created':
     case 'member_added':
       return { title: group, body: `${actor} added you to the group.` };
     case 'member_removed':

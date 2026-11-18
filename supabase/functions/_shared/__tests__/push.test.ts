@@ -31,7 +31,7 @@ describe('pushText', () => {
       body: 'Asha added it. You get back ₹800.00.',
     });
     expect(pushText(activity({ kind: 'expense_updated' }), -100).body).toBe(
-      'Asha updated it. Now: You owe ₹1.00.',
+      'Asha updated it. You now owe ₹1.00.',
     );
     expect(pushText(activity({ kind: 'expense_deleted' }), -100).body).toBe(
       'Asha deleted it.',
@@ -51,6 +51,9 @@ describe('pushText', () => {
       title: 'Goa',
       body: 'Asha added you to the group.',
     });
+    expect(pushText(activity({ kind: 'group_created' }), 0).body).toBe(
+      'Asha added you to the group.',
+    );
     expect(pushText(activity({ kind: 'member_removed' }), 0).body).toBe(
       'Asha removed you from the group.',
     );
