@@ -16,6 +16,8 @@ export const env = {
   authRedirectUrl:
     Config.AUTH_REDIRECT_URL ??
     'https://sharelith.techbeas.co.in/auth/callback',
+  privacyPolicyUrl: 'https://sharelith.techbeas.co.in/privacy',
+  termsUrl: 'https://sharelith.techbeas.co.in/terms',
 };
 
 export const isSupabaseConfigured =

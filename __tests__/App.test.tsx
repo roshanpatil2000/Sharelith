@@ -1,4 +1,5 @@
 import React from 'react';
+import { Linking } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import App from '../App';
 import {
@@ -86,6 +87,7 @@ describe('App auth flow', () => {
       'correct-horse',
     );
     await fireEvent.press(screen.getByTestId('signup-currency-option-USD'));
+    await fireEvent.press(screen.getByTestId('signup-terms'));
     await fireEvent.press(screen.getByTestId('signup-submit'));
 
     expect(supabaseMock.auth.signUp).toHaveBeenCalledWith({
@@ -98,6 +100,8 @@ describe('App auth flow', () => {
           full_name: 'Asha Rao',
           phone: null,
           default_currency: 'USD',
+          terms_accepted_at: expect.any(String),
+          terms_version: '2026-11-18',
         }),
       },
     });
@@ -130,6 +134,7 @@ describe('App auth flow', () => {
       screen.getByTestId('signup-password'),
       'correct-horse',
     );
+    await fireEvent.press(screen.getByTestId('signup-terms'));
     await fireEvent.press(screen.getByTestId('signup-submit'));
 
     expect(await screen.findByText('Check your email')).toBeOnTheScreen();
@@ -163,6 +168,14 @@ describe('App auth flow', () => {
     expect(
       screen.queryByText('Confirm your email so friends can find you.'),
     ).toBeNull();
+
+    const openURL = jest
+      .spyOn(Linking, 'openURL')
+      .mockResolvedValue(undefined as never);
+    await fireEvent.press(screen.getByTestId('account-privacy'));
+    expect(openURL).toHaveBeenCalledWith(
+      'https://sharelith.techbeas.co.in/privacy',
+    );
 
     await fireEvent.press(screen.getByTestId('account-logout'));
     // The row and the dialog's confirm button share the label; confirm is last.

@@ -37,6 +37,9 @@ export const signUpSchema = z.object({
   password: passwordSchema,
   phone: phoneSchema,
   defaultCurrency: currencySchema,
+  acceptedTerms: z.literal(true, {
+    error: 'Agree to the Terms and Privacy Policy to continue',
+  }),
 });
 export type SignUpValues = z.infer<typeof signUpSchema>;
 

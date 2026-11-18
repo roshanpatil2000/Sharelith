@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { env } from '@/lib/env';
 import {
   Clock,
   KeyRound,
@@ -10,6 +11,8 @@ import {
   Palette,
   Pencil,
   ScanFace,
+  ScrollText,
+  ShieldCheck,
   Trash2,
 } from 'lucide-react-native';
 import {
@@ -229,6 +232,23 @@ export function AccountScreen() {
           />
         </>
       ) : null}
+
+      <SectionHeader title="About" />
+      <ListRow
+        title="Privacy policy"
+        leading={<Icon icon={ShieldCheck} color="textSecondary" />}
+        chevron
+        onPress={() => Linking.openURL(env.privacyPolicyUrl)}
+        testID="account-privacy"
+      />
+      <Divider inset={52} />
+      <ListRow
+        title="Terms & Conditions"
+        leading={<Icon icon={ScrollText} color="textSecondary" />}
+        chevron
+        onPress={() => Linking.openURL(env.termsUrl)}
+        testID="account-terms"
+      />
 
       <SectionHeader title="Account" />
       <ListRow
