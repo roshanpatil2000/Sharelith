@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { setCrashUser } from '@/lib/crashReporting';
 import { clearQueryCache } from '@/lib/queryClient';
 import { zustandStorage } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
@@ -93,6 +94,7 @@ export function startAuthListener(): () => void {
     .getSession()
     .then(({ data }) => {
       setSession(data.session);
+      setCrashUser(data.session?.user.id ?? null);
       checkAccount();
     })
     .catch(() => setSession(null));
@@ -105,6 +107,7 @@ export function startAuthListener(): () => void {
   });
   const { data } = supabase.auth.onAuthStateChange((event, session) => {
     setSession(session);
+    setCrashUser(session?.user.id ?? null);
     // Also covers sign-outs the app didn't start, like a revoked session.
     if (event === 'SIGNED_OUT') {
       clearQueryCache().catch(() => {});
