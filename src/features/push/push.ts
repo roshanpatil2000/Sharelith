@@ -1,4 +1,5 @@
 import { PermissionsAndroid, Platform } from 'react-native';
+import { reportError } from '@/lib/crashReporting';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -96,7 +97,7 @@ export function startPush(): () => void {
         });
       }
     } catch (e) {
-      console.warn('Push registration failed', e);
+      reportError(e, 'Push registration failed');
     }
   })();
   return () => {
