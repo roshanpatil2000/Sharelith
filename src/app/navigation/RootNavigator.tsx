@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   type NativeStackNavigationOptions,
@@ -28,11 +31,13 @@ import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
 import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
 import { GroupSettingsScreen } from '@/features/groups/screens/GroupSettingsScreen';
 import { AddGroupMembersScreen } from '@/features/groups/screens/AddGroupMembersScreen';
+import { PushBridge } from '@/features/push/PushBridge';
 import { MainTabs } from './MainTabs';
 import { headerTitleStyle, toNavigationTheme } from './navigationTheme';
 import type { AuthStackParamList, RootStackParamList } from './types';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 /**
  * iOS shows modal screens above the app root, so bottom sheets hosted at the
@@ -103,7 +108,10 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer ref={navigationRef} theme={navTheme}>
+      {status === 'signedIn' && !resetPending ? (
+        <PushBridge navigation={navigationRef} />
+      ) : null}
       <Root.Navigator screenOptions={stackOptions(theme)}>
         {status === 'signedIn' && resetPending ? (
           // Opened a reset or invite link: choose a password before anything

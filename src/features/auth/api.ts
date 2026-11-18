@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { clearQueryCache } from '@/lib/queryClient';
 import { deviceTimezone } from '@/domain/timezones';
+import { stopPush } from '@/features/push/push';
 import { authRedirectFor, markProfileVerified } from './authLinks';
 import { useAuthStore } from './authStore';
 import { AppError, toAppError } from './errors';
@@ -79,6 +80,8 @@ export async function signIn(email: string, password: string): Promise<void> {
 
 /** Signs out and drops every cached query so the next user starts clean. */
 export async function signOut(): Promise<void> {
+  // While still signed in, so the server lets this device go.
+  await stopPush();
   await supabase.auth.signOut({ scope: 'local' });
   await clearQueryCache();
 }

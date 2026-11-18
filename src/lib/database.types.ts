@@ -713,6 +713,10 @@ export type Database = {
         Args: { gid: string; member: string };
         Returns: undefined;
       };
+      register_push_token: {
+        Args: { platform: string; token: string };
+        Returns: undefined;
+      };
       rename_expense: {
         Args: { description: string; eid: string };
         Returns: undefined;
@@ -731,6 +735,7 @@ export type Database = {
         Args: { deleted: boolean; eid: string };
         Returns: undefined;
       };
+      unregister_push_token: { Args: { token: string }; Returns: undefined };
       update_expense: {
         Args: {
           amount_minor: number;
