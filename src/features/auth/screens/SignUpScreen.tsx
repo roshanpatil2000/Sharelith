@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, Mail, Phone, User } from 'lucide-react-native';
-import { StyleSheet } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   Banner,
   Button,
   Card,
+  Checkbox,
   CurrencyPicker,
   FormTextField,
   Screen,
@@ -15,6 +16,7 @@ import {
   Text,
 } from '@/components';
 import type { AuthScreenProps } from '@/app/navigation/types';
+import { env } from '@/lib/env';
 import { signUp } from '../api';
 import { toAppError } from '../errors';
 import { signUpSchema, type SignUpValues } from '../schemas';
@@ -30,6 +32,7 @@ export function SignUpScreen({ navigation }: AuthScreenProps<'SignUp'>) {
       password: '',
       phone: '',
       defaultCurrency: 'INR',
+      acceptedTerms: false as unknown as true,
     },
   });
 
@@ -112,6 +115,46 @@ export function SignUpScreen({ navigation }: AuthScreenProps<'SignUp'>) {
             )}
           />
         </Card>
+        <Controller
+          control={control}
+          name="acceptedTerms"
+          render={({ field, fieldState }) => (
+            <Stack gap="xxs">
+              <View style={styles.consent}>
+                <Checkbox
+                  checked={field.value === true}
+                  onChange={field.onChange}
+                  testID="signup-terms"
+                />
+                <Text style={styles.consentText}>
+                  I agree to the{' '}
+                  <Text
+                    color="primary"
+                    onPress={() => Linking.openURL(env.termsUrl)}
+                    accessibilityRole="link"
+                    testID="signup-terms-link"
+                  >
+                    Terms & Conditions
+                  </Text>{' '}
+                  and{' '}
+                  <Text
+                    color="primary"
+                    onPress={() => Linking.openURL(env.privacyPolicyUrl)}
+                    accessibilityRole="link"
+                    testID="signup-privacy-link"
+                  >
+                    Privacy Policy
+                  </Text>
+                </Text>
+              </View>
+              {fieldState.error ? (
+                <Text variant="caption" color="danger">
+                  {fieldState.error.message}
+                </Text>
+              ) : null}
+            </Stack>
+          )}
+        />
       </Stack>
       <Stack gap="md" style={styles.actions}>
         <Button
@@ -137,4 +180,6 @@ const createStyles = (t: Theme) =>
     // ListRow brings its own padding; the card only frames it.
     flush: { padding: 0, overflow: 'hidden' },
     actions: { marginTop: t.spacing.xl },
+    consent: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm },
+    consentText: { flex: 1 },
   });

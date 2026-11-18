@@ -7,6 +7,9 @@ import { useAuthStore } from './authStore';
 import { AppError, toAppError } from './errors';
 import type { SignUpValues } from './schemas';
 
+/** Date of the current Terms and Privacy Policy, as published. */
+export const TERMS_VERSION = '2026-11-18';
+
 export async function signUp(values: SignUpValues): Promise<void> {
   const { data, error } = await supabase.auth.signUp({
     email: values.email,
@@ -19,6 +22,9 @@ export async function signUp(values: SignUpValues): Promise<void> {
         phone: values.phone || null,
         default_currency: values.defaultCurrency,
         timezone: deviceTimezone(),
+        // When they agreed, and to which version of the documents.
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: TERMS_VERSION,
       },
     },
   });

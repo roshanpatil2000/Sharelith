@@ -11,6 +11,7 @@ const validSignUp = {
   password: 'correct-horse',
   phone: '',
   defaultCurrency: 'INR',
+  acceptedTerms: true as const,
 };
 
 const firstError = (r: {

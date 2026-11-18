@@ -87,6 +87,7 @@ describe('App auth flow', () => {
       'correct-horse',
     );
     await fireEvent.press(screen.getByTestId('signup-currency-option-USD'));
+    await fireEvent.press(screen.getByTestId('signup-terms'));
     await fireEvent.press(screen.getByTestId('signup-submit'));
 
     expect(supabaseMock.auth.signUp).toHaveBeenCalledWith({
@@ -99,6 +100,8 @@ describe('App auth flow', () => {
           full_name: 'Asha Rao',
           phone: null,
           default_currency: 'USD',
+          terms_accepted_at: expect.any(String),
+          terms_version: '2026-11-18',
         }),
       },
     });
@@ -131,6 +134,7 @@ describe('App auth flow', () => {
       screen.getByTestId('signup-password'),
       'correct-horse',
     );
+    await fireEvent.press(screen.getByTestId('signup-terms'));
     await fireEvent.press(screen.getByTestId('signup-submit'));
 
     expect(await screen.findByText('Check your email')).toBeOnTheScreen();

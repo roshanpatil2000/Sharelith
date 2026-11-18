@@ -11,6 +11,7 @@ import {
   Palette,
   Pencil,
   ScanFace,
+  ScrollText,
   ShieldCheck,
   Trash2,
 } from 'lucide-react-native';
@@ -239,6 +240,14 @@ export function AccountScreen() {
         chevron
         onPress={() => Linking.openURL(env.privacyPolicyUrl)}
         testID="account-privacy"
+      />
+      <Divider inset={52} />
+      <ListRow
+        title="Terms & Conditions"
+        leading={<Icon icon={ScrollText} color="textSecondary" />}
+        chevron
+        onPress={() => Linking.openURL(env.termsUrl)}
+        testID="account-terms"
       />
 
       <SectionHeader title="Account" />

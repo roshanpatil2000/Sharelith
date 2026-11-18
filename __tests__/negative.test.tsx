@@ -48,6 +48,29 @@ describe('Sign up: invalid input never reaches Supabase', () => {
     expect(await screen.findByText('Enter your name')).toBeOnTheScreen();
     expect(screen.getByText('Enter your email')).toBeOnTheScreen();
     expect(screen.getByText('Use at least 8 characters')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Agree to the Terms and Privacy Policy to continue'),
+    ).toBeOnTheScreen();
+    expect(supabaseMock.auth.signUp).not.toHaveBeenCalled();
+  });
+
+  it('needs the Terms and Privacy Policy accepted', async () => {
+    await openSignUp();
+    await fireEvent.changeText(screen.getByTestId('signup-name'), 'Asha');
+    await fireEvent.changeText(
+      screen.getByTestId('signup-email'),
+      'asha@example.com',
+    );
+    await fireEvent.changeText(
+      screen.getByTestId('signup-password'),
+      'correct-horse',
+    );
+    await fireEvent.press(screen.getByTestId('signup-submit'));
+    expect(
+      await screen.findByText(
+        'Agree to the Terms and Privacy Policy to continue',
+      ),
+    ).toBeOnTheScreen();
     expect(supabaseMock.auth.signUp).not.toHaveBeenCalled();
   });
 
@@ -100,6 +123,7 @@ describe('Sign up: invalid input never reaches Supabase', () => {
       screen.getByTestId('signup-password'),
       'correct-horse',
     );
+    await fireEvent.press(screen.getByTestId('signup-terms'));
     await fireEvent.press(screen.getByTestId('signup-submit'));
     expect(
       await screen.findByText(
@@ -202,6 +226,7 @@ describe('Check your email: confirm with the code', () => {
       screen.getByTestId('signup-password'),
       'correct-horse',
     );
+    await fireEvent.press(screen.getByTestId('signup-terms'));
     await fireEvent.press(screen.getByTestId('signup-submit'));
     await screen.findByTestId('check-email-code');
   }
