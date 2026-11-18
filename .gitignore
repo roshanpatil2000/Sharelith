@@ -82,3 +82,7 @@ yarn-error.log
 # Supabase
 supabase/.branches
 supabase/.temp
+
+# Firebase config, per environment; see docs/PUSH.md.
+android/app/google-services.json
+ios/GoogleService-Info.plist
