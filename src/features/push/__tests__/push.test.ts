@@ -8,6 +8,13 @@ describe('targetFor', () => {
     });
   });
 
+  it('opens the friend who reminded you', () => {
+    expect(targetFor({ kind: 'reminder', friend_id: 'f1' })).toEqual({
+      screen: 'FriendDetail',
+      friendId: 'f1',
+    });
+  });
+
   it('opens the group you were added to', () => {
     expect(targetFor({ kind: 'member_added', group_id: 'g1' })).toEqual({
       screen: 'GroupDetail',

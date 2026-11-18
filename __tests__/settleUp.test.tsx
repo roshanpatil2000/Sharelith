@@ -360,3 +360,40 @@ describe('Payments in the list', () => {
     expect(await screen.findByText('2 payments')).toBeOnTheScreen();
   });
 });
+
+describe('Reminders', () => {
+  async function openAsha() {
+    await openApp();
+    await fireEvent.press(
+      await screen.findByRole('button', { name: /Friends/ }),
+    );
+    await fireEvent.press(await screen.findByTestId(`friend-${asha}`));
+  }
+
+  it('reminds a friend who owes you', async () => {
+    mockBackend({
+      balances: [
+        { friend_id: asha, group_id: null, currency: 'INR', net_minor: 5000 },
+      ],
+    });
+    await openAsha();
+    await fireEvent.press(await screen.findByTestId('friend-remind'));
+    await waitFor(() =>
+      expect(supabaseMock.rpc).toHaveBeenCalledWith('send_reminder', {
+        friend: asha,
+      }),
+    );
+    expect(await screen.findByText('Reminded Asha')).toBeOnTheScreen();
+  });
+
+  it('has no Remind button when you are the one who owes', async () => {
+    mockBackend({
+      balances: [
+        { friend_id: asha, group_id: null, currency: 'INR', net_minor: -5000 },
+      ],
+    });
+    await openAsha();
+    await screen.findByTestId('friend-settle-up');
+    expect(screen.queryByTestId('friend-remind')).toBeNull();
+  });
+});

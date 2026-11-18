@@ -46,6 +46,15 @@ describe('pushText', () => {
     );
   });
 
+  it('words a reminder', () => {
+    expect(
+      pushText(activity({ kind: 'reminder', amount_minor: 50000 }), 0),
+    ).toEqual({
+      title: 'Payment reminder',
+      body: 'Asha reminded you that you owe them ₹500.00.',
+    });
+  });
+
   it('covers group membership', () => {
     expect(pushText(activity({ kind: 'member_added' }), 0)).toEqual({
       title: 'Goa',
@@ -151,6 +160,22 @@ describe('handleSendPush', () => {
     });
     await call(body);
     expect(sent[0].data).toEqual({ kind: 'expense_deleted' });
+  });
+
+  it('links a reminder to whoever sent it', async () => {
+    const { call, sent } = setup({
+      row: {
+        kind: 'reminder',
+        actor_id: 'asha',
+        group_id: null,
+        expense_id: null,
+        amount_minor: 500,
+        currency: 'INR',
+        actor: { full_name: 'Asha' },
+      },
+    });
+    await call({ ...body, net_minor: 0 });
+    expect(sent[0].data).toEqual({ kind: 'reminder', friend_id: 'asha' });
   });
 
   it('does nothing without devices', async () => {

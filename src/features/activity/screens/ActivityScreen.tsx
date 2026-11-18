@@ -51,6 +51,14 @@ export function ActivityScreen() {
                     navigation.navigate('GroupDetail', {
                       groupId: item.group_id!,
                     })
+                : item.kind === 'reminder'
+                ? () =>
+                    navigation.navigate('FriendDetail', {
+                      friendId:
+                        item.actor_id === me
+                          ? item.subject_id!
+                          : item.actor_id!,
+                    })
                 : undefined
             }
           />
