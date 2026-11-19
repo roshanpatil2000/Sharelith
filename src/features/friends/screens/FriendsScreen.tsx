@@ -16,6 +16,13 @@ import {
   SegmentedControl,
 } from '@/components';
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
+import { useAdPlacement } from '@/features/ads/ads';
+import {
+  LIST_AD_SPACING,
+  NativeAdRow,
+  withAdSlots,
+  type FeedEntry,
+} from '@/features/ads/NativeAdRow';
 import {
   useRefreshExpenses,
   useRefreshExpensesOnFocus,
@@ -69,6 +76,10 @@ export function FriendsScreen() {
     [friends, balances, filter],
   );
 
+  const adsEnabled = useAdPlacement('friends');
+  const renderEntry = ({ item: entry }: { item: FeedEntry<Friend> }) =>
+    entry.type === 'ad' ? <NativeAdRow /> : renderItem({ item: entry.item });
+
   const renderItem = ({ item }: { item: Friend }) => (
     <ListRow
       testID={`friend-${item.id}`}
@@ -99,9 +110,9 @@ export function FriendsScreen() {
         <ErrorView onRetry={refetch} />
       ) : (
         <PullToRefreshList
-          data={visible}
-          keyExtractor={f => f.id}
-          renderItem={renderItem}
+          data={withAdSlots(visible, adsEnabled, LIST_AD_SPACING)}
+          keyExtractor={e => (e.type === 'ad' ? e.key : e.item.id)}
+          renderItem={renderEntry}
           loading={isLoading}
           onRefresh={refreshExpenses}
           empty={

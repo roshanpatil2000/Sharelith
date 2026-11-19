@@ -9,7 +9,7 @@ import {
   Screen,
 } from '@/components';
 import { useUserId } from '@/features/auth/authStore';
-import { useAdsEnabled } from '@/features/ads/ads';
+import { useAdPlacement } from '@/features/ads/ads';
 import { NativeAdRow, withAdSlots } from '@/features/ads/NativeAdRow';
 import { useActivity } from '../api';
 import { ActivityRow } from '../components/ActivityRow';
@@ -27,7 +27,7 @@ export function ActivityScreen() {
     isFetchingNextPage,
   } = useActivity();
   const items = data?.pages.flat() ?? [];
-  const adsEnabled = useAdsEnabled();
+  const adsEnabled = useAdPlacement('activity');
   const entries = withAdSlots(items, adsEnabled);
 
   if (isError && items.length === 0) {

@@ -16,12 +16,20 @@ export const remoteDefaults = {
   reminders_enabled: true,
   /** Ask for notification permission and register for push. */
   push_prompt_enabled: true,
-  /** Show ads in the free version. */
+  /** Master switch: off hides every ad. */
   ads_enabled: true,
-  /** Minutes between interstitial ads. */
-  interstitial_min_minutes: 5,
-  /** New expenses saved before the first interstitial. */
-  interstitial_after_saves: 3,
+  /** Full-screen ad at natural breaks (navigation, saving an expense). */
+  interstitial_enabled: true,
+  /** Native ad rows in the Activity feed. */
+  native_activity_enabled: true,
+  /** Native ad rows in the Groups list. */
+  native_groups_enabled: true,
+  /** Native ad rows in the Friends list. */
+  native_friends_enabled: true,
+  /** Minutes between full-screen ads. */
+  interstitial_min_minutes: 3,
+  /** Ad breaks (navigation, saved expenses) before the first full-screen ad. */
+  interstitial_skip_first: 3,
 };
 
 export type RemoteValues = typeof remoteDefaults;
@@ -51,7 +59,29 @@ function remoteConfigModule(): RemoteConfigModule | null {
   }
 }
 
-/** Fetches the latest values (at most hourly in release builds). */
+type Config = ReturnType<RemoteConfigModule['getRemoteConfig']>;
+
+/** Reads every key, typed by its default (string, boolean or number). */
+function readValues(m: RemoteConfigModule, config: Config): RemoteValues {
+  const out: Record<string, string | boolean | number> = {};
+  for (const [key, fallback] of Object.entries(remoteDefaults)) {
+    const value = m.getValue(config, key);
+    out[key] =
+      typeof fallback === 'boolean'
+        ? value.asBoolean()
+        : typeof fallback === 'number'
+        ? value.asNumber()
+        : value.asString();
+  }
+  return out as RemoteValues;
+}
+
+let unsubscribeUpdates: (() => void) | null = null;
+
+/**
+ * Fetches the latest values (at most hourly in release builds), then keeps
+ * listening: values published in the console arrive within seconds.
+ */
 export async function loadRemoteConfig(): Promise<void> {
   const m = remoteConfigModule();
   if (!m) {
@@ -65,22 +95,15 @@ export async function loadRemoteConfig(): Promise<void> {
     };
     config.defaultConfig = remoteDefaults;
     await m.fetchAndActivate(config);
-    useRemoteConfig.setState({
-      min_supported_version: m
-        .getValue(config, 'min_supported_version')
-        .asString(),
-      update_url: m.getValue(config, 'update_url').asString(),
-      reminders_enabled: m.getValue(config, 'reminders_enabled').asBoolean(),
-      push_prompt_enabled: m
-        .getValue(config, 'push_prompt_enabled')
-        .asBoolean(),
-      ads_enabled: m.getValue(config, 'ads_enabled').asBoolean(),
-      interstitial_min_minutes: m
-        .getValue(config, 'interstitial_min_minutes')
-        .asNumber(),
-      interstitial_after_saves: m
-        .getValue(config, 'interstitial_after_saves')
-        .asNumber(),
+    useRemoteConfig.setState(readValues(m, config));
+    unsubscribeUpdates ??= m.onConfigUpdate(config, {
+      next: () => {
+        m.activate(config)
+          .then(() => useRemoteConfig.setState(readValues(m, config)))
+          .catch(() => {});
+      },
+      error: () => {},
+      complete: () => {},
     });
   } catch {
     // Offline, or no Firebase config in this build: keep the defaults.

@@ -133,7 +133,6 @@ jest.mock('react-native-google-mobile-ads', () => ({
     setRequestConfiguration: jest.fn(async () => {}),
   }),
   TestIds: {
-    ADAPTIVE_BANNER: 'test-banner',
     INTERSTITIAL: 'test-interstitial',
     NATIVE: 'test-native',
   },
@@ -150,8 +149,6 @@ jest.mock('react-native-google-mobile-ads', () => ({
     getUserChoices: jest.fn(async () => ({ selectPersonalisedAds: false })),
     showPrivacyOptionsForm: jest.fn(async () => ({})),
   },
-  BannerAd: () => null,
-  BannerAdSize: { ANCHORED_ADAPTIVE_BANNER: 'ANCHORED_ADAPTIVE_BANNER' },
   AdEventType: { LOADED: 'loaded', ERROR: 'error', CLOSED: 'closed' },
   InterstitialAd: { createForAdRequest: jest.fn() },
   NativeAd: { createForAdRequest: jest.fn(() => new Promise(() => {})) },

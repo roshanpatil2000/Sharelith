@@ -27,15 +27,12 @@ type AdsState = {
   personalised: boolean;
   /** The law requires a way to change consent (shows "Ad choices"). */
   privacyOptionsRequired: boolean;
-  /** A banner is showing below the tab bar (it then owns the bottom inset). */
-  bannerLoaded: boolean;
 };
 
 export const useAdsStore = create<AdsState>(() => ({
   ready: false,
   personalised: false,
   privacyOptionsRequired: false,
-  bannerLoaded: false,
 }));
 
 /**
@@ -52,6 +49,21 @@ export function useAdsEnabled(): boolean {
   const ready = useAdsStore(s => s.ready);
   const pro = useIsPro();
   return Platform.OS === 'android' && remote && ready && !pro;
+}
+
+export type AdPlacement = 'interstitial' | 'activity' | 'groups' | 'friends';
+
+const placementKey = {
+  interstitial: 'interstitial_enabled',
+  activity: 'native_activity_enabled',
+  groups: 'native_groups_enabled',
+  friends: 'native_friends_enabled',
+} as const;
+
+/** Whether one placement shows ads: ads on, and its own switch on. */
+export function useAdPlacement(placement: AdPlacement): boolean {
+  const on = useRemoteConfig(s => s[placementKey[placement]]);
+  return useAdsEnabled() && on;
 }
 
 let started: Promise<void> | null = null;
@@ -101,13 +113,12 @@ export async function showAdChoices(): Promise<void> {
   });
 }
 
-export type AdKind = 'banner' | 'interstitial' | 'native';
+export type AdKind = 'interstitial' | 'native';
 
 /** Debug builds always use Google's test ads, as AdMob requires. */
 export function adUnitId(kind: AdKind): string {
   const m = adsModule();
   const test = {
-    banner: m?.TestIds.ADAPTIVE_BANNER ?? '',
     interstitial: m?.TestIds.INTERSTITIAL ?? '',
     native: m?.TestIds.NATIVE ?? '',
   }[kind];

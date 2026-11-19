@@ -15,6 +15,13 @@ import {
   Screen,
 } from '@/components';
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
+import { useAdPlacement } from '@/features/ads/ads';
+import {
+  LIST_AD_SPACING,
+  NativeAdRow,
+  withAdSlots,
+  type FeedEntry,
+} from '@/features/ads/NativeAdRow';
 import {
   useRefreshExpenses,
   useRefreshExpensesOnFocus,
@@ -56,6 +63,10 @@ export function GroupsScreen() {
     navigation.setOptions({ headerRight: renderCreateGroupButton });
   }, [navigation]);
 
+  const adsEnabled = useAdPlacement('groups');
+  const renderEntry = ({ item: entry }: { item: FeedEntry<GroupSummary> }) =>
+    entry.type === 'ad' ? <NativeAdRow /> : renderItem({ item: entry.item });
+
   const renderItem = ({ item }: { item: GroupSummary }) => (
     <ListRow
       testID={`group-${item.id}`}
@@ -83,9 +94,9 @@ export function GroupsScreen() {
         <ErrorView onRetry={refetch} />
       ) : (
         <PullToRefreshList
-          data={groups ?? []}
-          keyExtractor={g => g.id}
-          renderItem={renderItem}
+          data={withAdSlots(groups ?? [], adsEnabled, LIST_AD_SPACING)}
+          keyExtractor={e => (e.type === 'ad' ? e.key : e.item.id)}
+          renderItem={renderEntry}
           loading={isLoading}
           onRefresh={refreshExpenses}
           ListFooterComponent={

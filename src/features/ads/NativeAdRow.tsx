@@ -5,28 +5,64 @@ import { useStyles, type Theme } from '@/app/theme';
 import { Badge, Stack, Text } from '@/components';
 import { adRequestOptions, adsModule, adUnitId, useAdsEnabled } from './ads';
 
+/**
+ * Where ads go in a list: after item `first`, then every `every` items.
+ * `endIfShort`: a list shorter than `first` gets one ad at the end.
+ */
+export type AdSpacing = {
+  first: number;
+  every: number;
+  minItems: number;
+  endIfShort?: boolean;
+};
+
+/** Activity feed: after the 10th item, then every 10; none under 5 items. */
+export const FEED_AD_SPACING: AdSpacing = { first: 10, every: 10, minItems: 5 };
+/**
+ * Groups and Friends: short lists, so after the 3rd item, then every 8; a
+ * list of one or two gets the ad at the end.
+ */
+export const LIST_AD_SPACING: AdSpacing = {
+  first: 3,
+  every: 8,
+  minItems: 1,
+  endIfShort: true,
+};
+
 /** Activity feed: an ad after every this many items. */
-export const NATIVE_AD_EVERY = 10;
-/** No ads in short feeds. */
-export const NATIVE_AD_MIN_ITEMS = 5;
+export const NATIVE_AD_EVERY = FEED_AD_SPACING.every;
 
 export type FeedEntry<T> =
   | { type: 'item'; item: T }
   | { type: 'ad'; key: string };
 
-/** Interleaves ad slots into a feed: one after every NATIVE_AD_EVERY items. */
-export function withAdSlots<T>(items: T[], ads: boolean): FeedEntry<T>[] {
+/** Interleaves ad slots into a list, spaced as given. */
+export function withAdSlots<T>(
+  items: T[],
+  ads: boolean,
+  spacing: AdSpacing = FEED_AD_SPACING,
+): FeedEntry<T>[] {
   const out: FeedEntry<T>[] = [];
   items.forEach((item, i) => {
     out.push({ type: 'item', item });
+    const n = i + 1;
     if (
       ads &&
-      items.length >= NATIVE_AD_MIN_ITEMS &&
-      (i + 1) % NATIVE_AD_EVERY === 0
+      items.length >= spacing.minItems &&
+      n >= spacing.first &&
+      (n - spacing.first) % spacing.every === 0
     ) {
-      out.push({ type: 'ad', key: `ad-${i + 1}` });
+      out.push({ type: 'ad', key: `ad-${n}` });
     }
   });
+  if (
+    ads &&
+    spacing.endIfShort &&
+    items.length >= spacing.minItems &&
+    items.length < spacing.first
+  ) {
+    out.push({ type: 'ad', key: 'ad-end' });
+  }
   return out;
 }
 
