@@ -27,12 +27,15 @@ type AdsState = {
   personalised: boolean;
   /** The law requires a way to change consent (shows "Ad choices"). */
   privacyOptionsRequired: boolean;
+  /** A banner is showing below the tab bar (it then owns the bottom inset). */
+  bannerLoaded: boolean;
 };
 
 export const useAdsStore = create<AdsState>(() => ({
   ready: false,
   personalised: false,
   privacyOptionsRequired: false,
+  bannerLoaded: false,
 }));
 
 /**

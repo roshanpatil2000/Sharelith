@@ -13,6 +13,7 @@ export function StripTabBar({
   state,
   descriptors,
   navigation,
+  insets: barInsets,
   side,
 }: BottomTabBarProps & { side: 'left' | 'right' }) {
   const styles = useStyles(createStyles);
@@ -25,7 +26,7 @@ export function StripTabBar({
       style={[
         styles.strip,
         side === 'right' ? styles.right : styles.left,
-        { width, bottom: insets.bottom + t.spacing.md },
+        { width, bottom: barInsets.bottom + t.spacing.md },
       ]}
       accessibilityRole="tablist"
     >

@@ -9,7 +9,6 @@ import {
   Screen,
 } from '@/components';
 import { useUserId } from '@/features/auth/authStore';
-import { AdBanner } from '@/features/ads/AdBanner';
 import { useAdsEnabled } from '@/features/ads/ads';
 import { NativeAdRow, withAdSlots } from '@/features/ads/NativeAdRow';
 import { useActivity } from '../api';
@@ -40,10 +39,7 @@ export function ActivityScreen() {
   }
 
   return (
-    <Screen
-      overlay={<FAB onPress={() => navigation.navigate('AddExpense')} />}
-      footer={<AdBanner />}
-    >
+    <Screen overlay={<FAB onPress={() => navigation.navigate('AddExpense')} />}>
       <PullToRefreshList
         data={entries}
         loading={isLoading}
