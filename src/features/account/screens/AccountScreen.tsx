@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { env } from '@/lib/env';
+import { appVersion, buildNumber } from '@/lib/remoteConfig';
 import { showAdChoices, useAdsStore } from '@/features/ads/ads';
 import {
   Clock,
@@ -243,7 +244,16 @@ export function AccountScreen() {
         onPress={() => navigation.navigate('DeleteAccount')}
         testID="account-delete"
       />
-      <Box p="xxl" />
+      <Box p="xxl">
+        <Text
+          variant="caption"
+          color="textSecondary"
+          align="center"
+          testID="account-version"
+        >
+          Sharelith {appVersion} ({buildNumber(appVersion)})
+        </Text>
+      </Box>
 
       <ConfirmDialog
         visible={confirmLogout}

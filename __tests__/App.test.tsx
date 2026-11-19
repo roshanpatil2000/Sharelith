@@ -172,6 +172,9 @@ describe('App auth flow', () => {
     const openURL = jest
       .spyOn(Linking, 'openURL')
       .mockResolvedValue(undefined as never);
+    expect(screen.getByTestId('account-version')).toHaveTextContent(
+      /^Sharelith \d+\.\d+\.\d+ \(\d+\)$/,
+    );
     await fireEvent.press(screen.getByTestId('account-privacy'));
     expect(openURL).toHaveBeenCalledWith(
       'https://sharelith.techbeas.co.in/privacy',

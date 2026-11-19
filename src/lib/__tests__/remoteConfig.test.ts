@@ -1,4 +1,11 @@
-import { isOlderVersion } from '../remoteConfig';
+import { buildNumber, isOlderVersion } from '../remoteConfig';
+
+describe('buildNumber', () => {
+  it('matches the native build number formula', () => {
+    expect(buildNumber('1.0.2')).toBe(10002);
+    expect(buildNumber('2.13.7')).toBe(21307);
+  });
+});
 
 describe('isOlderVersion', () => {
   it('compares each part as a number', () => {
