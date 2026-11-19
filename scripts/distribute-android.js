@@ -5,6 +5,8 @@
  *
  *   npm run distribute:android -- "What's new in this build"
  *
+ * With no notes given, release-notes/<version>.txt is used if it exists.
+ *
  * Once: `npx firebase-tools login`, and add a tester group called "testers"
  * in the Firebase console (App Distribution → Testers & Groups).
  * Set FIREBASE_TESTER_GROUPS to use other groups (comma-separated).
@@ -29,8 +31,12 @@ if (!client) {
 }
 
 const { version } = require('../package.json');
+const notesFile = path.join(root, 'release-notes', `${version}.txt`);
 const notes =
-  process.argv.slice(2).join(' ').trim() || `Sharelith ${version} for testing.`;
+  process.argv.slice(2).join(' ').trim() ||
+  (fs.existsSync(notesFile)
+    ? fs.readFileSync(notesFile, 'utf8').trim()
+    : `Sharelith ${version} for testing.`);
 const groups = process.env.FIREBASE_TESTER_GROUPS || 'testers';
 
 console.log(`Building Sharelith ${version}…`);

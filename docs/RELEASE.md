@@ -43,7 +43,7 @@ Then, for each build:
 npm run distribute:android -- "What's new in this build"
 ```
 
-It builds a signed release APK and uploads it; testers get an email with an install link. Set `FIREBASE_TESTER_GROUPS` to send to other groups.
+It builds a signed release APK and uploads it; testers get an email with an install link. Without notes on the command line it sends `release-notes/<version>.txt`; write that file (and update `CHANGELOG.md`) before each release. Set `FIREBASE_TESTER_GROUPS` to send to other groups.
 
 ## Ads (AdMob)
 
