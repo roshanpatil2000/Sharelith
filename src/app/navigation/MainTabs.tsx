@@ -1,4 +1,5 @@
 import React from 'react';
+import { useWindowDimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   Activity,
@@ -18,6 +19,9 @@ import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+/** From this width (tablets, unfolded foldables, landscape) tabs become a side rail. */
+export const SIDE_RAIL_MIN_WIDTH = 600;
+
 type TabIconProps = { color: string; size: number };
 
 function tabIcon(IconComponent: LucideIcon) {
@@ -35,6 +39,8 @@ const tabIcons: Record<keyof MainTabParamList, ReturnType<typeof tabIcon>> = {
 
 export function MainTabs() {
   const t = useTheme();
+  const { width } = useWindowDimensions();
+  const sideRail = width >= SIDE_RAIL_MIN_WIDTH;
   // Signed in from here on: keep balances current as others change them.
   useLiveUpdates();
   return (
@@ -54,6 +60,10 @@ export function MainTabs() {
         headerTitleAlign: 'center',
         headerShadowVisible: false,
         tabBarIcon: tabIcons[route.name],
+        tabBarPosition: sideRail ? 'left' : 'bottom',
+        // A compact rail: label under the icon, so it stays narrow.
+        tabBarVariant: sideRail ? 'material' : 'uikit',
+        tabBarLabelPosition: sideRail ? 'below-icon' : undefined,
       })}
     >
       <Tab.Screen name="Groups" component={GroupsScreen} />
