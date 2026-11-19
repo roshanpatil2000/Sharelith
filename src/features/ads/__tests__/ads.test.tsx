@@ -2,7 +2,6 @@ import React from 'react';
 import { Text } from 'react-native';
 import { act, render, screen } from '@testing-library/react-native';
 import { useRemoteConfig } from '@/lib/remoteConfig';
-import { AdBanner } from '../AdBanner';
 import {
   adRequestOptions,
   adUnitId,
@@ -10,7 +9,7 @@ import {
   useAdsEnabled,
   useAdsStore,
 } from '../ads';
-import { interstitialDue } from '../interstitial';
+import { interstitialDue, isAdBreak } from '../interstitial';
 import { withAdSlots, NATIVE_AD_EVERY } from '../NativeAdRow';
 
 // Ads are Android only: run this file as Android.
@@ -20,9 +19,25 @@ jest.mock('react-native', () => {
   return rn;
 });
 
+describe('isAdBreak', () => {
+  it('counts moves between tabs and into or out of details', () => {
+    expect(isAdBreak('Groups', 'Friends')).toBe(true);
+    expect(isAdBreak('Groups', 'GroupDetail')).toBe(true);
+    expect(isAdBreak('ExpenseDetail', 'GroupDetail')).toBe(true);
+  });
+
+  it('never opening a form, signing in, or staying put', () => {
+    expect(isAdBreak('Groups', 'AddExpense')).toBe(false);
+    expect(isAdBreak('FriendDetail', 'SettleUp')).toBe(false);
+    expect(isAdBreak('Welcome', 'LogIn')).toBe(false);
+    expect(isAdBreak('Groups', 'Groups')).toBe(false);
+    expect(isAdBreak(undefined, 'Groups')).toBe(false);
+  });
+});
+
 describe('interstitialDue', () => {
   const now = 1_000_000_000;
-  it('waits for the first few saves', () => {
+  it('waits for the first few breaks', () => {
     expect(interstitialDue(3, 0, now, 3, 5)).toBe(false);
     expect(interstitialDue(4, 0, now, 3, 5)).toBe(true);
   });
@@ -52,22 +67,15 @@ describe('withAdSlots', () => {
 });
 
 describe('ads switch', () => {
-  const Probe = () => (
-    <>
-      <AdBanner />
-      <Text>{String(useAdsEnabled())}</Text>
-    </>
-  );
+  const Probe = () => <Text>{String(useAdsEnabled())}</Text>;
 
-  it('shows ads only after consent, and Remote Config can turn them off', async () => {
+  it('allows ads only after consent, and Remote Config can turn them off', async () => {
     const view = await render(<Probe />);
     expect(screen.getByText('false')).toBeOnTheScreen();
-    expect(screen.queryByTestId('ad-banner')).toBeNull();
 
     await act(() => initAds());
     await view.rerender(<Probe />);
     expect(screen.getByText('true')).toBeOnTheScreen();
-    expect(screen.getByTestId('ad-banner')).toBeOnTheScreen();
     expect(useAdsStore.getState()).toMatchObject({
       personalised: false,
       privacyOptionsRequired: true,
@@ -77,12 +85,11 @@ describe('ads switch', () => {
     });
 
     await act(() => useRemoteConfig.setState({ ads_enabled: false }));
-    expect(screen.queryByTestId('ad-banner')).toBeNull();
     expect(screen.getByText('false')).toBeOnTheScreen();
   });
 
   it('uses test ads in debug builds', () => {
-    expect(adUnitId('banner')).toBe('test-banner');
+    expect(adUnitId('interstitial')).toBe('test-interstitial');
     expect(adUnitId('native')).toBe('test-native');
   });
 });

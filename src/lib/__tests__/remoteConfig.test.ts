@@ -29,7 +29,7 @@ describe('loadRemoteConfig on Android', () => {
     push_prompt_enabled: true,
     ads_enabled: false,
     interstitial_min_minutes: 10,
-    interstitial_after_saves: 5,
+    interstitial_skip_first: 5,
   };
   const config: Record<string, unknown> = {};
   const rc = {

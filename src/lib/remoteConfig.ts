@@ -18,10 +18,10 @@ export const remoteDefaults = {
   push_prompt_enabled: true,
   /** Show ads in the free version. */
   ads_enabled: true,
-  /** Minutes between interstitial ads. */
-  interstitial_min_minutes: 5,
-  /** New expenses saved before the first interstitial. */
-  interstitial_after_saves: 3,
+  /** Minutes between full-screen ads. */
+  interstitial_min_minutes: 3,
+  /** Ad breaks (navigation, saved expenses) before the first full-screen ad. */
+  interstitial_skip_first: 3,
 };
 
 export type RemoteValues = typeof remoteDefaults;
@@ -78,8 +78,8 @@ export async function loadRemoteConfig(): Promise<void> {
       interstitial_min_minutes: m
         .getValue(config, 'interstitial_min_minutes')
         .asNumber(),
-      interstitial_after_saves: m
-        .getValue(config, 'interstitial_after_saves')
+      interstitial_skip_first: m
+        .getValue(config, 'interstitial_skip_first')
         .asNumber(),
     });
   } catch {

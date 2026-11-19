@@ -49,12 +49,12 @@ It builds a signed release APK and uploads it; testers get an email with an inst
 
 Real AdMob IDs are set: the app ID in `app.json`, the ad unit IDs in `src/lib/env.ts`. Debug builds always show test ads. To change them:
 
-1. In AdMob, add the Android app `com.sharelith.app` and create three ad units: Banner, Interstitial, Native advanced.
-2. Put the app ID in `app.json` → `react-native-google-mobile-ads.android_app_id`, and the unit IDs in `.env` (`ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID`, `ADMOB_NATIVE_ID`). Debug builds always show test ads.
+1. In AdMob, add the Android app `com.sharelith.app` and create the ad units: Interstitial and Native advanced (the Banner unit is no longer used).
+2. Put the app ID in `app.json` → `react-native-google-mobile-ads.android_app_id`, and the unit IDs in `.env` (`ADMOB_INTERSTITIAL_ID`, `ADMOB_NATIVE_ID`). Debug builds always show test ads.
 3. In AdMob → Privacy & messaging, create the GDPR (UMP) consent message.
 4. Publish `app-ads.txt` with your publisher ID on the website.
 
-Remote Config `ads_enabled` turns all ads off; `interstitial_min_minutes` and `interstitial_after_saves` tune the full-screen ad.
+Remote Config `ads_enabled` turns all ads off. The full-screen ad shows at natural breaks (moving between tabs, opening or leaving a group, friend or expense, saving a new expense); `interstitial_min_minutes` (default 3) spaces them out and `interstitial_skip_first` (default 3) skips the first few breaks.
 
 ## Android: build
 

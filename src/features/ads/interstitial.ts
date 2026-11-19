@@ -2,21 +2,21 @@ import { useRemoteConfig } from '@/lib/remoteConfig';
 import { storage } from '@/lib/storage';
 import { adRequestOptions, adsModule, adUnitId, useAdsStore } from './ads';
 
-const SAVES_KEY = 'ads.expenseSaves';
+const BREAKS_KEY = 'ads.breaks';
 const LAST_SHOWN_KEY = 'ads.interstitialShownAt';
 
 /**
- * Whether a new expense save may show an interstitial: never during the
- * first few saves, and at most once per few minutes.
+ * Whether an ad break may show an interstitial: never during the first few
+ * breaks, and at most once per few minutes.
  */
 export function interstitialDue(
-  saves: number,
+  breaks: number,
   lastShownAt: number,
   now: number,
-  afterSaves: number,
+  skipFirst: number,
   minMinutes: number,
 ): boolean {
-  return saves > afterSaves && now - lastShownAt >= minMinutes * 60_000;
+  return breaks > skipFirst && now - lastShownAt >= minMinutes * 60_000;
 }
 
 type Loaded = { show: () => Promise<void> } | null;
@@ -53,25 +53,47 @@ export function preloadInterstitial(): void {
 }
 
 /**
- * Call after a new expense is saved. Shows the preloaded interstitial when
- * one is due; otherwise just counts the save.
+ * Screens where moving to them is a natural break for a full-screen ad:
+ * the main tabs and the detail screens. Never forms or sign-in.
  */
-export async function afterExpenseSaved(adsEnabled: boolean): Promise<void> {
-  const saves = (Number(storage.getString(SAVES_KEY)) || 0) + 1;
-  storage.set(SAVES_KEY, String(saves));
+export const AD_BREAK_SCREENS = new Set([
+  'Groups',
+  'Friends',
+  'Activity',
+  'Account',
+  'GroupDetail',
+  'FriendDetail',
+  'ExpenseDetail',
+]);
+
+/** Whether moving from one screen to another is an ad break. */
+export function isAdBreak(from: string | undefined, to: string | undefined) {
+  return !!from && !!to && from !== to && AD_BREAK_SCREENS.has(to);
+}
+
+/**
+ * Counts an ad break (navigation, a saved expense) and shows the preloaded
+ * interstitial when one is due: never in the first few breaks, and at most
+ * once per few minutes, so it stays occasional.
+ */
+export async function maybeShowInterstitial(
+  adsEnabled: boolean,
+): Promise<void> {
+  const breaks = (Number(storage.getString(BREAKS_KEY)) || 0) + 1;
+  storage.set(BREAKS_KEY, String(breaks));
   if (!adsEnabled) {
     return;
   }
-  const { interstitial_after_saves, interstitial_min_minutes } =
+  const { interstitial_skip_first, interstitial_min_minutes } =
     useRemoteConfig.getState();
   const lastShownAt = Number(storage.getString(LAST_SHOWN_KEY)) || 0;
   if (
     loaded &&
     interstitialDue(
-      saves,
+      breaks,
       lastShownAt,
       Date.now(),
-      interstitial_after_saves,
+      interstitial_skip_first,
       interstitial_min_minutes,
     )
   ) {

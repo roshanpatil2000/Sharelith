@@ -23,7 +23,6 @@ export const env = {
    * them. Debug builds always use Google's test ads.
    */
   adUnits: {
-    banner: Config.ADMOB_BANNER_ID || 'ca-app-pub-8288956475423358/4426642114',
     interstitial:
       Config.ADMOB_INTERSTITIAL_ID || 'ca-app-pub-8288956475423358/4828424805',
     native: Config.ADMOB_NATIVE_ID || 'ca-app-pub-8288956475423358/9095359912',

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   createBottomTabNavigator,
@@ -18,8 +18,7 @@ import { FriendsScreen } from '@/features/friends/screens/FriendsScreen';
 import { GroupsScreen } from '@/features/groups/screens/GroupsScreen';
 import { ActivityScreen } from '@/features/activity/screens/ActivityScreen';
 import { useLiveUpdates } from '@/features/activity/liveUpdates';
-import { AdBanner } from '@/features/ads/AdBanner';
-import { initAds, useAdsStore } from '@/features/ads/ads';
+import { initAds } from '@/features/ads/ads';
 import { preloadInterstitial } from '@/features/ads/interstitial';
 import { AccountScreen } from '@/features/account/screens/AccountScreen';
 import { headerTitleStyle } from './navigationTheme';
@@ -61,9 +60,6 @@ export function MainTabs() {
       ? 'left'
       : null;
   const sideRail = !strip && width >= SIDE_RAIL_MIN_WIDTH;
-  // Below the tab bar sits the ad banner; once it shows, it covers the
-  // bottom safe area and the tab bar doesn't.
-  const bannerLoaded = useAdsStore(s => s.bannerLoaded);
   const renderTabBar = useCallback(
     (props: BottomTabBarProps) =>
       strip ? (
@@ -82,39 +78,33 @@ export function MainTabs() {
       .catch(() => {});
   }, []);
   return (
-    <View style={styles.root}>
-      <Tab.Navigator
-        initialRouteName="Groups"
-        tabBar={renderTabBar}
-        safeAreaInsets={bannerLoaded ? { bottom: 0 } : undefined}
-        screenOptions={({ route }) => ({
-          tabBarActiveTintColor: t.colors.primary,
-          tabBarInactiveTintColor: t.colors.textSecondary,
-          // No lineHeight here: the tab bar sizes the label itself, and a fixed
-          // line height clips descenders on Android.
-          tabBarLabelStyle: {
-            fontFamily: t.typography.label.fontFamily,
-            fontWeight: t.typography.label.fontWeight,
-            fontSize: 12,
-          },
-          headerTitleStyle: headerTitleStyle(t),
-          headerTitleAlign: 'center',
-          headerShadowVisible: false,
-          tabBarIcon: tabIcons[route.name],
-          tabBarPosition: sideRail ? 'left' : 'bottom',
-          // A compact rail: label under the icon, so it stays narrow.
-          tabBarVariant: sideRail ? 'material' : 'uikit',
-          tabBarLabelPosition: sideRail ? 'below-icon' : undefined,
-        })}
-      >
-        <Tab.Screen name="Groups" component={GroupsScreen} />
-        <Tab.Screen name="Friends" component={FriendsScreen} />
-        <Tab.Screen name="Activity" component={ActivityScreen} />
-        <Tab.Screen name="Account" component={AccountScreen} />
-      </Tab.Navigator>
-      <AdBanner />
-    </View>
+    <Tab.Navigator
+      initialRouteName="Groups"
+      tabBar={renderTabBar}
+      screenOptions={({ route }) => ({
+        tabBarActiveTintColor: t.colors.primary,
+        tabBarInactiveTintColor: t.colors.textSecondary,
+        // No lineHeight here: the tab bar sizes the label itself, and a fixed
+        // line height clips descenders on Android.
+        tabBarLabelStyle: {
+          fontFamily: t.typography.label.fontFamily,
+          fontWeight: t.typography.label.fontWeight,
+          fontSize: 12,
+        },
+        headerTitleStyle: headerTitleStyle(t),
+        headerTitleAlign: 'center',
+        headerShadowVisible: false,
+        tabBarIcon: tabIcons[route.name],
+        tabBarPosition: sideRail ? 'left' : 'bottom',
+        // A compact rail: label under the icon, so it stays narrow.
+        tabBarVariant: sideRail ? 'material' : 'uikit',
+        tabBarLabelPosition: sideRail ? 'below-icon' : undefined,
+      })}
+    >
+      <Tab.Screen name="Groups" component={GroupsScreen} />
+      <Tab.Screen name="Friends" component={FriendsScreen} />
+      <Tab.Screen name="Activity" component={ActivityScreen} />
+      <Tab.Screen name="Account" component={AccountScreen} />
+    </Tab.Navigator>
   );
 }
-
-const styles = StyleSheet.create({ root: { flex: 1 } });

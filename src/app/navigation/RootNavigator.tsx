@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import BootSplash from 'react-native-bootsplash';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import {
@@ -32,6 +32,8 @@ import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
 import { GroupSettingsScreen } from '@/features/groups/screens/GroupSettingsScreen';
 import { AddGroupMembersScreen } from '@/features/groups/screens/AddGroupMembersScreen';
 import { PushBridge } from '@/features/push/PushBridge';
+import { useAdsEnabled } from '@/features/ads/ads';
+import { isAdBreak, maybeShowInterstitial } from '@/features/ads/interstitial';
 import { MainTabs } from './MainTabs';
 import { headerTitleStyle, toNavigationTheme } from './navigationTheme';
 import type { AuthStackParamList, RootStackParamList } from './types';
@@ -102,6 +104,19 @@ export function RootNavigator() {
   const navTheme = useMemo(() => toNavigationTheme(theme), [theme]);
   const status = useAuthStatus();
   const resetPending = useAuthStore(s => s.passwordResetPending);
+  const adsEnabled = useAdsEnabled();
+  const lastRoute = useRef<string | undefined>(undefined);
+
+  // Moving between tabs or into and out of details is a natural break for
+  // an occasional full-screen ad (capped in maybeShowInterstitial).
+  const onNavigationChange = useCallback(() => {
+    const to = navigationRef.getCurrentRoute()?.name;
+    const from = lastRoute.current;
+    lastRoute.current = to;
+    if (status === 'signedIn' && isAdBreak(from, to)) {
+      maybeShowInterstitial(adsEnabled).catch(() => {});
+    }
+  }, [adsEnabled, status]);
 
   // The native splash stays up until we know whether someone is signed in.
   useEffect(() => {
@@ -115,7 +130,14 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} theme={navTheme}>
+    <NavigationContainer
+      ref={navigationRef}
+      theme={navTheme}
+      onReady={() => {
+        lastRoute.current = navigationRef.getCurrentRoute()?.name;
+      }}
+      onStateChange={onNavigationChange}
+    >
       {status === 'signedIn' && !resetPending ? (
         <PushBridge navigation={navigationRef} />
       ) : null}
