@@ -42,15 +42,21 @@ it.each([
   }
 });
 
-it('puts round tab buttons in a wide side strip (closed iPhone Duo)', async () => {
-  // The safe-area mock's hook is a jest.fn; give it a Duo-like right strip.
-  const hook = SafeArea.useSafeAreaInsets as jest.Mock;
-  const original = hook.getMockImplementation();
-  hook.mockImplementation(() => ({ top: 0, bottom: 20, left: 0, right: 80 }));
-  await openAt(466);
-  for (const tab of ['Groups', 'Friends', 'Activity', 'Account']) {
-    expect(screen.getByTestId(`strip-tab-${tab}`)).toBeOnTheScreen();
-  }
-  expect(screen.getByTestId('strip-tab-Groups')).toBeSelected();
-  hook.mockImplementation(original);
-});
+it.each([
+  ['closed', 466],
+  ['open', 951],
+])(
+  'puts round tab buttons in the side strip (%s iPhone Duo)',
+  async (_p, width) => {
+    // The safe-area mock's hook is a jest.fn; give it a Duo-like right strip.
+    const hook = SafeArea.useSafeAreaInsets as jest.Mock;
+    const original = hook.getMockImplementation();
+    hook.mockImplementation(() => ({ top: 0, bottom: 20, left: 0, right: 80 }));
+    await openAt(width);
+    for (const tab of ['Groups', 'Friends', 'Activity', 'Account']) {
+      expect(screen.getByTestId(`strip-tab-${tab}`)).toBeOnTheScreen();
+    }
+    expect(screen.getByTestId('strip-tab-Groups')).toBeSelected();
+    hook.mockImplementation(original);
+  },
+);

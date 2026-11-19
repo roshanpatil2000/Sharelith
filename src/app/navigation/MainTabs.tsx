@@ -50,14 +50,14 @@ export function MainTabs() {
   const t = useTheme();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const sideRail = width >= SIDE_RAIL_MIN_WIDTH;
-  const strip: 'left' | 'right' | null = sideRail
-    ? null
-    : insets.right >= STRIP_MIN_INSET
-    ? 'right'
-    : insets.left >= STRIP_MIN_INSET
-    ? 'left'
-    : null;
+  // A system strip (iPhone Duo, open or closed) wins over the side rail.
+  const strip: 'left' | 'right' | null =
+    insets.right >= STRIP_MIN_INSET
+      ? 'right'
+      : insets.left >= STRIP_MIN_INSET
+      ? 'left'
+      : null;
+  const sideRail = !strip && width >= SIDE_RAIL_MIN_WIDTH;
   const renderTabBar = useCallback(
     (props: BottomTabBarProps) =>
       strip ? (
