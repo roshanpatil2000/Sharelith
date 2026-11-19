@@ -10,7 +10,7 @@ import {
   useAdsStore,
 } from '../ads';
 import { interstitialDue, isAdBreak } from '../interstitial';
-import { withAdSlots, NATIVE_AD_EVERY } from '../NativeAdRow';
+import { LIST_AD_SPACING, NATIVE_AD_EVERY, withAdSlots } from '../NativeAdRow';
 
 // Ads are Android only: run this file as Android.
 jest.mock('react-native', () => {
@@ -58,6 +58,22 @@ describe('withAdSlots', () => {
       .filter(i => i >= 0);
     expect(adPositions).toEqual([NATIVE_AD_EVERY, NATIVE_AD_EVERY * 2 + 1]);
     expect(entries.filter(e => e.type === 'item')).toHaveLength(25);
+  });
+
+  it('puts one after the 3rd group or friend, then every 8, or at the end of a short list', () => {
+    const adsAt = (n: number) =>
+      withAdSlots(
+        Array.from({ length: n }, (_, i) => i),
+        true,
+        LIST_AD_SPACING,
+      )
+        .map((e, i) => (e.type === 'ad' ? i : -1))
+        .filter(i => i >= 0);
+    expect(adsAt(0)).toEqual([]);
+    expect(adsAt(1)).toEqual([1]);
+    expect(adsAt(2)).toEqual([2]);
+    expect(adsAt(3)).toEqual([3]);
+    expect(adsAt(12)).toEqual([3, 12]);
   });
 
   it('adds none when ads are off or the feed is short', () => {
