@@ -47,7 +47,7 @@ It builds a signed release APK and uploads it; testers get an email with an inst
 
 ## Ads (AdMob)
 
-The app uses Google's test ads until real IDs are set. To go live:
+Real AdMob IDs are set: the app ID in `app.json`, the ad unit IDs in `src/lib/env.ts`. Debug builds always show test ads. To change them:
 
 1. In AdMob, add the Android app `com.sharelith.app` and create three ad units: Banner, Interstitial, Native advanced.
 2. Put the app ID in `app.json` → `react-native-google-mobile-ads.android_app_id`, and the unit IDs in `.env` (`ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID`, `ADMOB_NATIVE_ID`). Debug builds always show test ads.

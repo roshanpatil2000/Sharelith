@@ -123,7 +123,9 @@ describe('Live updates', () => {
   it('listens only for your own activity', async () => {
     mockBackend([]);
     await openActivity();
-    expect(supabaseMock.channel).toHaveBeenCalledWith(`activity:${me}`);
+    expect(supabaseMock.channel).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`^activity:${me}:`)),
+    );
     const channel = supabaseMock.channel.mock.results.at(-1)!.value;
     expect(channel.on).toHaveBeenCalledWith(
       'postgres_changes',

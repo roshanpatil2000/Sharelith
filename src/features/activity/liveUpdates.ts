@@ -27,8 +27,11 @@ export function useLiveUpdates() {
       timer = setTimeout(refresh, SETTLE_MS);
     };
 
+    // A fresh name each time: removing the previous channel is async, and
+    // reusing its name hands back that already-subscribed channel, which
+    // throws when a listener is added (it crashed release builds).
     const channel = supabase
-      .channel(`activity:${userId}`)
+      .channel(`activity:${userId}:${Date.now()}:${Math.random()}`)
       .on(
         'postgres_changes',
         {

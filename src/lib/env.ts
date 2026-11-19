@@ -19,13 +19,14 @@ export const env = {
   privacyPolicyUrl: 'https://sharelith.techbeas.co.in/privacy',
   termsUrl: 'https://sharelith.techbeas.co.in/terms',
   /**
-   * AdMob ad unit IDs for release builds (not secret). Empty means Google's
-   * test ads; debug builds always use test ads.
+   * AdMob ad unit IDs for release builds (not secret); .env can override
+   * them. Debug builds always use Google's test ads.
    */
   adUnits: {
-    banner: Config.ADMOB_BANNER_ID ?? '',
-    interstitial: Config.ADMOB_INTERSTITIAL_ID ?? '',
-    native: Config.ADMOB_NATIVE_ID ?? '',
+    banner: Config.ADMOB_BANNER_ID || 'ca-app-pub-8288956475423358/4426642114',
+    interstitial:
+      Config.ADMOB_INTERSTITIAL_ID || 'ca-app-pub-8288956475423358/4828424805',
+    native: Config.ADMOB_NATIVE_ID || 'ca-app-pub-8288956475423358/9095359912',
   },
 };
 
