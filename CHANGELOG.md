@@ -2,6 +2,11 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## 1.0.3 (build 10003)
+
+- **Ads:** one banner pinned below the tab bar for every tab (was a footer on each list screen); it owns the bottom safe area once an ad loads.
+- **Account:** shows the app version and build number.
+
 ## 1.0.2 (build 10002)
 
 - **Ads (Android):** AdMob banner pinned below the tab bar; native ads in Activity every 10 items; an interstitial after a new expense (not in the first 3, at most every 5 minutes). Google's consent form first where required, non-personalised unless agreed; Account → About → Ad choices. Remote Config `ads_enabled`, `interstitial_min_minutes`, `interstitial_after_saves`.
