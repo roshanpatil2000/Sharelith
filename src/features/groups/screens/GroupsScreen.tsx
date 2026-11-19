@@ -1,5 +1,4 @@
 import React, { useLayoutEffect } from 'react';
-import { AdBanner } from '@/features/ads/AdBanner';
 import { useNavigation } from '@react-navigation/native';
 import { Plus, Receipt, Users } from 'lucide-react-native';
 import {
@@ -74,7 +73,7 @@ export function GroupsScreen() {
   );
 
   return (
-    <Screen footer={<AdBanner />}>
+    <Screen>
       <Box p="lg">
         <BalanceSummary balances={overall} />
       </Box>

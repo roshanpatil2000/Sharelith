@@ -1,0 +1,11 @@
+Sharelith 1.0.2
+
+New
+- Ads in the free version: a small banner below the tabs at the bottom of the screen, the occasional sponsored item in Activity (marked "Ad"), and rarely a full-screen ad after adding an expense (never in your first few, at most once every 5 minutes). Ads never appear while you're filling in a form.
+- Ad choices: in the EU, UK and Switzerland you're asked how ads may use your data, with a clear "Do not consent" option. You can change it any time under Account > About > Ad choices.
+
+Fixed
+- The app could close itself right after opening. That's fixed.
+
+Note
+- Ads may be blank for a while as they start up. If something looks wrong, please send a short description, since screenshots of the app are blocked to protect your data.
