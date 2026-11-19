@@ -416,8 +416,6 @@ enabled = true
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
 
 # Requires a signed-in user's JWT; the function emails only that user.
-[functions.send-test-email]
-verify_jwt = true
 
 # Called by Supabase Auth (Send Email Hook) with a webhook signature, not a
 # user JWT; the function verifies the signature itself.

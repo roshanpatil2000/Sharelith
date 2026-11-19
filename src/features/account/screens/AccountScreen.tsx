@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Linking } from 'react-native';
+import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { env } from '@/lib/env';
 import {
   Clock,
   KeyRound,
-  LayoutGrid,
-  Mail,
   LogOut,
   Palette,
   Pencil,
@@ -38,7 +36,6 @@ import {
 import { timezoneLabel, timezoneOptions } from '@/domain/timezones';
 import { signOut } from '@/features/auth/api';
 import { toAppError } from '@/features/auth/errors';
-import { sendTestEmail } from '@/features/dev/api';
 import { useAppLockToggle } from '@/features/lock/useAppLockToggle';
 import { useSettingsStore, type ThemePreference } from '@/lib/settingsStore';
 import { useProfile, useUpdateProfile } from '../api';
@@ -98,19 +95,6 @@ export function AccountScreen() {
   const appLock = useAppLockToggle();
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [sendingTest, setSendingTest] = useState(false);
-
-  const runTestEmail = async () => {
-    setSendingTest(true);
-    try {
-      const to = await sendTestEmail();
-      toast.show(`Test email sent to ${to}`, 'success');
-    } catch (e) {
-      toast.show(toAppError(e).message, 'error');
-    } finally {
-      setSendingTest(false);
-    }
-  };
 
   const zoneOptions = useMemo(
     () =>
@@ -210,28 +194,6 @@ export function AccountScreen() {
         chevron
         onPress={() => navigation.navigate('ChangePassword')}
       />
-
-      {__DEV__ ? (
-        <>
-          <SectionHeader title="Developer" />
-          <ListRow
-            title="Component gallery"
-            subtitle="Every design-system component, light and dark"
-            leading={<Icon icon={LayoutGrid} color="primary" />}
-            chevron
-            onPress={() => navigation.navigate('ComponentGallery')}
-          />
-          <Divider inset={52} />
-          <ListRow
-            title="Send test email"
-            subtitle="Mailtrap, to your own address"
-            leading={<Icon icon={Mail} color="primary" />}
-            trailing={sendingTest ? <ActivityIndicator /> : undefined}
-            onPress={sendingTest ? undefined : runTestEmail}
-            testID="account-test-email"
-          />
-        </>
-      ) : null}
 
       <SectionHeader title="About" />
       <ListRow

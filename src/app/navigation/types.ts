@@ -30,7 +30,6 @@ export type RootStackParamList = {
   SettleUp:
     | { friendId: string; groupId?: undefined }
     | { groupId: string; friendId?: undefined };
-  ComponentGallery: undefined;
   /** returnTo: a group member picker that should select the person added. */
   AddFriend:
     | {

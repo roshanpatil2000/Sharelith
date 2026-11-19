@@ -6,6 +6,7 @@ import {
   waitFor,
 } from '@testing-library/react-native';
 import App from '../App';
+import { remoteDefaults, useRemoteConfig } from '@/lib/remoteConfig';
 import {
   fakeProfile,
   fakeSession,
@@ -384,6 +385,19 @@ describe('Reminders', () => {
       }),
     );
     expect(await screen.findByText('Reminded Asha')).toBeOnTheScreen();
+  });
+
+  it('hides Remind when Remote Config turns reminders off', async () => {
+    useRemoteConfig.setState({ reminders_enabled: false });
+    mockBackend({
+      balances: [
+        { friend_id: asha, group_id: null, currency: 'INR', net_minor: 5000 },
+      ],
+    });
+    await openAsha();
+    await screen.findByTestId('friend-settle-up');
+    expect(screen.queryByTestId('friend-remind')).toBeNull();
+    useRemoteConfig.setState(remoteDefaults);
   });
 
   it('has no Remind button when you are the one who owes', async () => {

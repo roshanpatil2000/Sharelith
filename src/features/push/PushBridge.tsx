@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import type { NavigationContainerRefWithCurrent } from '@react-navigation/native';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { toast } from '@/components';
+import { useRemoteConfig } from '@/lib/remoteConfig';
 import { listenForPushes, startPush, type PushTarget } from './push';
 
 type Props = {
@@ -29,7 +30,8 @@ export function openTarget(
 
 /** While signed in: registers this device and opens tapped notifications. */
 export function PushBridge({ navigation }: Props) {
-  useEffect(() => startPush(), []);
+  const promptEnabled = useRemoteConfig(s => s.push_prompt_enabled);
+  useEffect(() => (promptEnabled ? startPush() : undefined), [promptEnabled]);
 
   useEffect(() => {
     let pending: PushTarget | null = null;

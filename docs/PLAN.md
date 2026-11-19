@@ -19,7 +19,7 @@ Phases 0-7 are built for Android, plus most of the beta essentials from Phase 10
 - CI runs typecheck, lint, Jest and pgTAP on every PR.
 
 **Changes from the original plan**
-- Storybook is replaced by the dev-only Component Gallery (Account → Developer).
+- No Storybook or in-app component gallery; components are covered by Jest tests.
 - Instant friends stay, Splitwise-style. Friends and group members can read only `id`, `full_name`, `email`, `avatar_url` and `joined_at`; the rest comes from `get_my_profile()`.
 - Crashlytics instead of Sentry, since Firebase was already in for push.
 - Pro (Phase 9) moves after the first release. Beta means Phases 4-7 plus the release essentials from Phase 10.
