@@ -1,0 +1,10 @@
+Sharelith 1.0.3
+
+Changed
+- The ad banner now sits below the tabs at the very bottom of the screen, instead of inside each list, so it never covers what you're reading.
+
+New
+- Your app version is shown at the bottom of the Account screen. Please mention it when you report a problem.
+
+Note
+- Ads may be blank for a while as they start up. Screenshots of the app are blocked to protect your data, so please describe anything that looks wrong.
