@@ -18,6 +18,15 @@ export const env = {
     'https://sharelith.techbeas.co.in/auth/callback',
   privacyPolicyUrl: 'https://sharelith.techbeas.co.in/privacy',
   termsUrl: 'https://sharelith.techbeas.co.in/terms',
+  /**
+   * AdMob ad unit IDs for release builds (not secret). Empty means Google's
+   * test ads; debug builds always use test ads.
+   */
+  adUnits: {
+    banner: Config.ADMOB_BANNER_ID ?? '',
+    interstitial: Config.ADMOB_INTERSTITIAL_ID ?? '',
+    native: Config.ADMOB_NATIVE_ID ?? '',
+  },
 };
 
 export const isSupabaseConfigured =

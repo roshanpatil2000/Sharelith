@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { env } from '@/lib/env';
+import { showAdChoices, useAdsStore } from '@/features/ads/ads';
 import {
   Clock,
   KeyRound,
@@ -9,6 +10,7 @@ import {
   Palette,
   Pencil,
   ScanFace,
+  Megaphone,
   ScrollText,
   ShieldCheck,
   Trash2,
@@ -94,6 +96,8 @@ export function AccountScreen() {
   const setThemePreference = useSettingsStore(s => s.setThemePreference);
   const appLock = useAppLockToggle();
   const [confirmLogout, setConfirmLogout] = useState(false);
+  // Shown where the law requires a way to change ad consent (EU/UK).
+  const adChoices = useAdsStore(s => s.privacyOptionsRequired);
   const [busy, setBusy] = useState(false);
 
   const zoneOptions = useMemo(
@@ -211,6 +215,19 @@ export function AccountScreen() {
         onPress={() => Linking.openURL(env.termsUrl)}
         testID="account-terms"
       />
+      {adChoices ? (
+        <>
+          <Divider inset={52} />
+          <ListRow
+            title="Ad choices"
+            subtitle="Change how ads use your data"
+            leading={<Icon icon={Megaphone} color="textSecondary" />}
+            chevron
+            onPress={() => showAdChoices().catch(() => {})}
+            testID="account-ad-choices"
+          />
+        </>
+      ) : null}
 
       <SectionHeader title="Account" />
       <ListRow

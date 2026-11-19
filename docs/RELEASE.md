@@ -45,6 +45,17 @@ npm run distribute:android -- "What's new in this build"
 
 It builds a signed release APK and uploads it; testers get an email with an install link. Set `FIREBASE_TESTER_GROUPS` to send to other groups.
 
+## Ads (AdMob)
+
+The app uses Google's test ads until real IDs are set. To go live:
+
+1. In AdMob, add the Android app `com.sharelith.app` and create three ad units: Banner, Interstitial, Native advanced.
+2. Put the app ID in `app.json` → `react-native-google-mobile-ads.android_app_id`, and the unit IDs in `.env` (`ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID`, `ADMOB_NATIVE_ID`). Debug builds always show test ads.
+3. In AdMob → Privacy & messaging, create the GDPR (UMP) consent message.
+4. Publish `app-ads.txt` with your publisher ID on the website.
+
+Remote Config `ads_enabled` turns all ads off; `interstitial_min_minutes` and `interstitial_after_saves` tune the full-screen ad.
+
 ## Android: build
 
 ```bash

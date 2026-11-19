@@ -16,6 +16,12 @@ export const remoteDefaults = {
   reminders_enabled: true,
   /** Ask for notification permission and register for push. */
   push_prompt_enabled: true,
+  /** Show ads in the free version. */
+  ads_enabled: true,
+  /** Minutes between interstitial ads. */
+  interstitial_min_minutes: 5,
+  /** New expenses saved before the first interstitial. */
+  interstitial_after_saves: 3,
 };
 
 export type RemoteValues = typeof remoteDefaults;
@@ -60,6 +66,13 @@ export async function loadRemoteConfig(): Promise<void> {
       push_prompt_enabled: m
         .getValue(config, 'push_prompt_enabled')
         .asBoolean(),
+      ads_enabled: m.getValue(config, 'ads_enabled').asBoolean(),
+      interstitial_min_minutes: m
+        .getValue(config, 'interstitial_min_minutes')
+        .asNumber(),
+      interstitial_after_saves: m
+        .getValue(config, 'interstitial_after_saves')
+        .asNumber(),
     });
   } catch {
     // Offline, or no Firebase config in this build: keep the defaults.

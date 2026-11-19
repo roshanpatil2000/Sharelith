@@ -15,11 +15,14 @@ describe('isOlderVersion', () => {
 });
 
 describe('loadRemoteConfig on Android', () => {
-  const values: Record<string, string | boolean> = {
+  const values: Record<string, string | boolean | number> = {
     min_supported_version: '1.2.0',
     update_url: 'https://example.com/update',
     reminders_enabled: false,
     push_prompt_enabled: true,
+    ads_enabled: false,
+    interstitial_min_minutes: 10,
+    interstitial_after_saves: 5,
   };
   const config: Record<string, unknown> = {};
   const rc = {
@@ -28,6 +31,7 @@ describe('loadRemoteConfig on Android', () => {
     getValue: jest.fn((_c: unknown, key: string) => ({
       asString: () => String(values[key]),
       asBoolean: () => values[key] === true,
+      asNumber: () => Number(values[key]),
     })),
   };
 

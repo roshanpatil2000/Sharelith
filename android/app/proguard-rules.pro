@@ -12,3 +12,7 @@
 # react-native-config reads the .env values from BuildConfig fields by name at
 # runtime. Without this, R8 strips them and release builds lose SUPABASE_URL.
 -keep class com.sharelith.app.BuildConfig { *; }
+
+# Room databases are created by name at runtime (WorkManager's, pulled in by
+# AdMob, crashed release builds on launch when R8 removed it).
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
