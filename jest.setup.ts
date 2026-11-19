@@ -118,3 +118,9 @@ jest.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
 afterAll(() => {
   require('@/lib/queryClient').queryClient.clear();
 });
+
+// Native splash screen: nothing to hide under Jest.
+jest.mock('react-native-bootsplash', () => ({
+  __esModule: true,
+  default: { hide: jest.fn(async () => {}), isVisible: jest.fn(() => false) },
+}));

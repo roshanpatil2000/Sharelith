@@ -2,11 +2,12 @@ apply plugin: "com.android.application"
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
-// Firebase (push, crash reports). Builds without google-services.json just
-// go without them.
+// Firebase (push, crash reports, performance). Builds without
+// google-services.json just go without them.
 if (file("google-services.json").exists()) {
     apply plugin: "com.google.gms.google-services"
     apply plugin: "com.google.firebase.crashlytics"
+    apply plugin: "com.google.firebase.firebase-perf"
 }
 
 /**

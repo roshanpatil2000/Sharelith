@@ -6,6 +6,8 @@ import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
+import com.zoontek.rnbootsplash.RNBootSplash
 
 class MainActivity : ReactActivity() {
 
@@ -14,6 +16,9 @@ class MainActivity : ReactActivity() {
    * recordings and the recent-apps thumbnail.
    */
   override fun onCreate(savedInstanceState: Bundle?) {
+    supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
+    // Keeps the splash up until JS calls BootSplash.hide().
+    RNBootSplash.init(this, R.style.BootTheme)
     super.onCreate(savedInstanceState)
     window.setFlags(
         WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)

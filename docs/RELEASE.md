@@ -30,6 +30,21 @@ Google Play signs the published app; you sign uploads with your own *upload key*
 
 Without these settings, release builds stop with an error instead of being signed with the debug key: Play rejects debug-signed builds, and Android App Links only verify for the upload key listed in the website's `/.well-known/assetlinks.json`. Debug builds are unaffected.
 
+## Android: send to testers (Firebase App Distribution)
+
+Once:
+
+1. In the Firebase console, open **App Distribution**, accept the terms, and under **Testers & Groups** create a group called `testers` with your testers' emails.
+2. Sign the CLI in to your Google account: `npx firebase-tools login`.
+
+Then, for each build:
+
+```bash
+npm run distribute:android -- "What's new in this build"
+```
+
+It builds a signed release APK and uploads it; testers get an email with an install link. Set `FIREBASE_TESTER_GROUPS` to send to other groups.
+
 ## Android: build
 
 ```bash

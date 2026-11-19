@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import BootSplash from 'react-native-bootsplash';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import {
   NavigationContainer,
@@ -24,7 +25,6 @@ import { DeleteAccountScreen } from '@/features/account/screens/DeleteAccountScr
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { SettleUpScreen } from '@/features/expenses/screens/SettleUpScreen';
 import { ExpenseDetailScreen } from '@/features/expenses/screens/ExpenseDetailScreen';
-import { ComponentGalleryScreen } from '@/features/dev/ComponentGalleryScreen';
 import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
 import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
@@ -102,6 +102,13 @@ export function RootNavigator() {
   const navTheme = useMemo(() => toNavigationTheme(theme), [theme]);
   const status = useAuthStatus();
   const resetPending = useAuthStore(s => s.passwordResetPending);
+
+  // The native splash stays up until we know whether someone is signed in.
+  useEffect(() => {
+    if (status !== 'loading') {
+      BootSplash.hide({ fade: true }).catch(() => {});
+    }
+  }, [status]);
 
   if (status === 'loading') {
     return <SplashScreen />;
@@ -204,11 +211,6 @@ export function RootNavigator() {
               layout={modalLayout}
               component={AddGroupMembersScreen}
               options={{ presentation: 'modal', title: 'Add people' }}
-            />
-            <Root.Screen
-              name="ComponentGallery"
-              component={ComponentGalleryScreen}
-              options={{ title: 'Component gallery' }}
             />
           </>
         ) : (

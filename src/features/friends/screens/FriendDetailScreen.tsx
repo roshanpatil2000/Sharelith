@@ -23,6 +23,7 @@ import {
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { toAppError } from '@/features/auth/errors';
+import { useRemoteConfig } from '@/lib/remoteConfig';
 import { useRefreshExpenses } from '@/features/expenses/api';
 import { ExpenseList } from '@/features/expenses/components/ExpenseList';
 import { useFriend, useRemoveFriend, useSendReminder } from '../api';
@@ -45,6 +46,7 @@ export function FriendDetailScreen({ route }: Props) {
   const balances = useFriendBalances();
   const removeFriend = useRemoveFriend();
   const sendReminder = useSendReminder();
+  const remindersEnabled = useRemoteConfig(s => s.reminders_enabled);
   const refreshExpenses = useRefreshExpenses();
   const [confirm, setConfirm] = useState(false);
 
@@ -70,7 +72,7 @@ export function FriendDetailScreen({ route }: Props) {
 
   const first = friend.full_name.split(' ')[0];
   const balance = balances[friend.id] ?? [];
-  const owesYou = balance.some(b => b.minor > 0);
+  const owesYou = remindersEnabled && balance.some(b => b.minor > 0);
 
   const remind = () =>
     sendReminder.mutate(friend.id, {
