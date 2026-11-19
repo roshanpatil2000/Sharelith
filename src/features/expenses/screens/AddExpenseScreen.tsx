@@ -35,6 +35,8 @@ import {
   useRenameExpense,
   useUpdateExpense,
 } from '../api';
+import { useAdsEnabled } from '@/features/ads/ads';
+import { afterExpenseSaved } from '@/features/ads/interstitial';
 import { PersonAmountRow } from '../components/PersonAmountRow';
 import {
   SPLIT_TYPES,
@@ -74,6 +76,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   const { data: groups } = useGroups();
   const { data: friends } = useFriends();
   const createExpense = useCreateExpense();
+  const adsEnabled = useAdsEnabled();
 
   const [target, setTarget] = useState(
     startGroup
@@ -308,6 +311,10 @@ export function AddExpenseScreen({ route, navigation }: Props) {
       }
       toast.show(existing ? 'Expense saved' : 'Expense added', 'success');
       navigation.goBack();
+      if (!existing) {
+        // New expenses only; capped so it stays rare.
+        afterExpenseSaved(adsEnabled).catch(() => {});
+      }
     } catch (e) {
       setFormError(toAppError(e).message);
     }

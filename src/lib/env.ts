@@ -18,6 +18,16 @@ export const env = {
     'https://sharelith.techbeas.co.in/auth/callback',
   privacyPolicyUrl: 'https://sharelith.techbeas.co.in/privacy',
   termsUrl: 'https://sharelith.techbeas.co.in/terms',
+  /**
+   * AdMob ad unit IDs for release builds (not secret); .env can override
+   * them. Debug builds always use Google's test ads.
+   */
+  adUnits: {
+    banner: Config.ADMOB_BANNER_ID || 'ca-app-pub-8288956475423358/4426642114',
+    interstitial:
+      Config.ADMOB_INTERSTITIAL_ID || 'ca-app-pub-8288956475423358/4828424805',
+    native: Config.ADMOB_NATIVE_ID || 'ca-app-pub-8288956475423358/9095359912',
+  },
 };
 
 export const isSupabaseConfigured =

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -18,6 +18,8 @@ import { FriendsScreen } from '@/features/friends/screens/FriendsScreen';
 import { GroupsScreen } from '@/features/groups/screens/GroupsScreen';
 import { ActivityScreen } from '@/features/activity/screens/ActivityScreen';
 import { useLiveUpdates } from '@/features/activity/liveUpdates';
+import { initAds } from '@/features/ads/ads';
+import { preloadInterstitial } from '@/features/ads/interstitial';
 import { AccountScreen } from '@/features/account/screens/AccountScreen';
 import { headerTitleStyle } from './navigationTheme';
 import { StripTabBar } from './StripTabBar';
@@ -69,6 +71,12 @@ export function MainTabs() {
   );
   // Signed in from here on: keep balances current as others change them.
   useLiveUpdates();
+  // Ads: consent first (Google's form where required), then preload.
+  useEffect(() => {
+    initAds()
+      .then(preloadInterstitial)
+      .catch(() => {});
+  }, []);
   return (
     <Tab.Navigator
       initialRouteName="Groups"

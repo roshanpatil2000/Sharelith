@@ -28,6 +28,8 @@ type Props = {
    * pull's promise is pending, never for background reloads.
    */
   onRefresh?: () => unknown;
+  /** Pinned below the content, e.g. a banner ad; overlays sit above it. */
+  footer?: React.ReactNode;
   testID?: string;
 };
 
@@ -39,6 +41,7 @@ export function Screen({
   contentStyle,
   overlay,
   onRefresh,
+  footer,
   testID,
 }: Props) {
   const styles = useStyles(createStyles);
@@ -80,8 +83,11 @@ export function Screen({
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {inner}
-        {overlay}
+        <View style={styles.flex}>
+          {inner}
+          {overlay}
+        </View>
+        {footer}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

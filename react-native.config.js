@@ -1,5 +1,5 @@
-// Firebase (push, crash reports, performance, remote config) is set up on Android only for now; keep it
-// out of iOS builds until iOS has its own Firebase config and APNs key.
+// Firebase and AdMob are set up on Android only for now; keep them out of
+// iOS builds until iOS has its own Firebase config, APNs key and AdMob app.
 module.exports = {
   dependencies: {
     '@react-native-firebase/app': { platforms: { ios: null } },
@@ -7,5 +7,6 @@ module.exports = {
     '@react-native-firebase/crashlytics': { platforms: { ios: null } },
     '@react-native-firebase/perf': { platforms: { ios: null } },
     '@react-native-firebase/remote-config': { platforms: { ios: null } },
+    'react-native-google-mobile-ads': { platforms: { ios: null } },
   },
 };

@@ -124,3 +124,38 @@ jest.mock('react-native-bootsplash', () => ({
   __esModule: true,
   default: { hide: jest.fn(async () => {}), isVisible: jest.fn(() => false) },
 }));
+
+// AdMob: no native SDK under Jest (and ads are Android only anyway).
+jest.mock('react-native-google-mobile-ads', () => ({
+  __esModule: true,
+  default: () => ({
+    initialize: jest.fn(async () => []),
+    setRequestConfiguration: jest.fn(async () => {}),
+  }),
+  TestIds: {
+    ADAPTIVE_BANNER: 'test-banner',
+    INTERSTITIAL: 'test-interstitial',
+    NATIVE: 'test-native',
+  },
+  MaxAdContentRating: { PG: 'PG' },
+  AdsConsentPrivacyOptionsRequirementStatus: {
+    REQUIRED: 'REQUIRED',
+    NOT_REQUIRED: 'NOT_REQUIRED',
+  },
+  AdsConsent: {
+    gatherConsent: jest.fn(async () => ({
+      canRequestAds: true,
+      privacyOptionsRequirementStatus: 'REQUIRED',
+    })),
+    getUserChoices: jest.fn(async () => ({ selectPersonalisedAds: false })),
+    showPrivacyOptionsForm: jest.fn(async () => ({})),
+  },
+  BannerAd: () => null,
+  BannerAdSize: { ANCHORED_ADAPTIVE_BANNER: 'ANCHORED_ADAPTIVE_BANNER' },
+  AdEventType: { LOADED: 'loaded', ERROR: 'error', CLOSED: 'closed' },
+  InterstitialAd: { createForAdRequest: jest.fn() },
+  NativeAd: { createForAdRequest: jest.fn(() => new Promise(() => {})) },
+  NativeAdView: ({ children }: { children: unknown }) => children,
+  NativeAsset: ({ children }: { children: unknown }) => children,
+  NativeAssetType: {},
+}));

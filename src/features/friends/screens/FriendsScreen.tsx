@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useMemo, useState } from 'react';
+import { AdBanner } from '@/features/ads/AdBanner';
 import { useNavigation } from '@react-navigation/native';
 import { UserPlus } from 'lucide-react-native';
 import {
@@ -81,7 +82,7 @@ export function FriendsScreen() {
   );
 
   return (
-    <Screen>
+    <Screen footer={<AdBanner />}>
       <Box p="lg" gap="md" bg="surface">
         <BalanceSummary balances={overallBalance(balances)} />
         {friends && friends.length > 0 ? (

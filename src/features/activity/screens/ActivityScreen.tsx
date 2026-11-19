@@ -9,6 +9,9 @@ import {
   Screen,
 } from '@/components';
 import { useUserId } from '@/features/auth/authStore';
+import { AdBanner } from '@/features/ads/AdBanner';
+import { useAdsEnabled } from '@/features/ads/ads';
+import { NativeAdRow, withAdSlots } from '@/features/ads/NativeAdRow';
 import { useActivity } from '../api';
 import { ActivityRow } from '../components/ActivityRow';
 
@@ -25,6 +28,8 @@ export function ActivityScreen() {
     isFetchingNextPage,
   } = useActivity();
   const items = data?.pages.flat() ?? [];
+  const adsEnabled = useAdsEnabled();
+  const entries = withAdSlots(items, adsEnabled);
 
   if (isError && items.length === 0) {
     return (
@@ -35,34 +40,45 @@ export function ActivityScreen() {
   }
 
   return (
-    <Screen overlay={<FAB onPress={() => navigation.navigate('AddExpense')} />}>
+    <Screen
+      overlay={<FAB onPress={() => navigation.navigate('AddExpense')} />}
+      footer={<AdBanner />}
+    >
       <PullToRefreshList
-        data={items}
+        data={entries}
         loading={isLoading}
         onRefresh={refetch}
-        keyExtractor={item => String(item.id)}
-        renderItem={({ item }) => (
-          <ActivityRow
-            item={item}
-            me={me}
-            onPress={
-              item.group_id
-                ? () =>
-                    navigation.navigate('GroupDetail', {
-                      groupId: item.group_id!,
-                    })
-                : item.kind === 'reminder'
-                ? () =>
-                    navigation.navigate('FriendDetail', {
-                      friendId:
-                        item.actor_id === me
-                          ? item.subject_id!
-                          : item.actor_id!,
-                    })
-                : undefined
-            }
-          />
-        )}
+        keyExtractor={entry =>
+          entry.type === 'ad' ? entry.key : String(entry.item.id)
+        }
+        renderItem={({ item: entry }) => {
+          if (entry.type === 'ad') {
+            return <NativeAdRow />;
+          }
+          const item = entry.item;
+          return (
+            <ActivityRow
+              item={item}
+              me={me}
+              onPress={
+                item.group_id
+                  ? () =>
+                      navigation.navigate('GroupDetail', {
+                        groupId: item.group_id!,
+                      })
+                  : item.kind === 'reminder'
+                  ? () =>
+                      navigation.navigate('FriendDetail', {
+                        friendId:
+                          item.actor_id === me
+                            ? item.subject_id!
+                            : item.actor_id!,
+                      })
+                  : undefined
+              }
+            />
+          );
+        }}
         onEndReached={() => {
           if (hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
