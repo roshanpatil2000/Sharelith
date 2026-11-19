@@ -85,4 +85,5 @@ supabase/.temp
 
 # Firebase config, per environment; see docs/PUSH.md.
 android/app/google-services.json
+android/app/src/*/google-services.json
 ios/GoogleService-Info.plist
