@@ -54,7 +54,17 @@ Real AdMob IDs are set: the app ID in `app.json`, the ad unit IDs in `src/lib/en
 3. In AdMob → Privacy & messaging, create the GDPR (UMP) consent message.
 4. Publish `app-ads.txt` with your publisher ID on the website.
 
-Remote Config `ads_enabled` turns all ads off. The full-screen ad shows at natural breaks (moving between tabs, opening or leaving a group, friend or expense, saving a new expense); `interstitial_min_minutes` (default 3) spaces them out and `interstitial_skip_first` (default 3) skips the first few breaks.
+Ads are controlled from Firebase Remote Config; changes reach open apps within seconds (real-time updates), no new build needed:
+
+| Key | Default | What it does |
+|---|---|---|
+| `ads_enabled` | true | Master switch: off hides every ad |
+| `interstitial_enabled` | true | Full-screen ad at natural breaks (moving between tabs, opening or leaving a group, friend or expense, saving a new expense) |
+| `native_activity_enabled` | true | Native ad rows in Activity |
+| `native_groups_enabled` | true | Native ad rows in Groups |
+| `native_friends_enabled` | true | Native ad rows in Friends |
+| `interstitial_min_minutes` | 3 | Minutes between full-screen ads |
+| `interstitial_skip_first` | 3 | Breaks before the first full-screen ad |
 
 ## Android: build
 

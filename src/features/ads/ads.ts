@@ -51,6 +51,21 @@ export function useAdsEnabled(): boolean {
   return Platform.OS === 'android' && remote && ready && !pro;
 }
 
+export type AdPlacement = 'interstitial' | 'activity' | 'groups' | 'friends';
+
+const placementKey = {
+  interstitial: 'interstitial_enabled',
+  activity: 'native_activity_enabled',
+  groups: 'native_groups_enabled',
+  friends: 'native_friends_enabled',
+} as const;
+
+/** Whether one placement shows ads: ads on, and its own switch on. */
+export function useAdPlacement(placement: AdPlacement): boolean {
+  const on = useRemoteConfig(s => s[placementKey[placement]]);
+  return useAdsEnabled() && on;
+}
+
 let started: Promise<void> | null = null;
 
 /** Gathers consent (showing Google's form only where required), then starts the SDK. */

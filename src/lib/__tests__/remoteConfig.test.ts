@@ -28,13 +28,23 @@ describe('loadRemoteConfig on Android', () => {
     reminders_enabled: false,
     push_prompt_enabled: true,
     ads_enabled: false,
+    interstitial_enabled: true,
+    native_activity_enabled: true,
+    native_groups_enabled: false,
+    native_friends_enabled: true,
     interstitial_min_minutes: 10,
     interstitial_skip_first: 5,
   };
   const config: Record<string, unknown> = {};
+  let onUpdate: (() => void) | undefined;
   const rc = {
     getRemoteConfig: jest.fn(() => config),
     fetchAndActivate: jest.fn(async () => true),
+    activate: jest.fn(async () => true),
+    onConfigUpdate: jest.fn((_c: unknown, observer: { next: () => void }) => {
+      onUpdate = observer.next;
+      return () => {};
+    }),
     getValue: jest.fn((_c: unknown, key: string) => ({
       asString: () => String(values[key]),
       asBoolean: () => values[key] === true,
@@ -56,6 +66,17 @@ describe('loadRemoteConfig on Android', () => {
     await m.loadRemoteConfig();
     expect(config.defaultConfig).toEqual(m.remoteDefaults);
     expect(m.useRemoteConfig.getState()).toEqual(values);
+
+    // Publishing in the console reaches the app without a relaunch.
+    values.native_groups_enabled = true;
+    values.ads_enabled = true;
+    onUpdate!();
+    await new Promise<void>(r => setTimeout(r, 0));
+    expect(rc.activate).toHaveBeenCalled();
+    expect(m.useRemoteConfig.getState()).toMatchObject({
+      native_groups_enabled: true,
+      ads_enabled: true,
+    });
     jest.dontMock('react-native');
   });
 });

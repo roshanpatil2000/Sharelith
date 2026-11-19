@@ -16,7 +16,7 @@ import {
   SegmentedControl,
 } from '@/components';
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
-import { useAdsEnabled } from '@/features/ads/ads';
+import { useAdPlacement } from '@/features/ads/ads';
 import {
   LIST_AD_SPACING,
   NativeAdRow,
@@ -76,7 +76,7 @@ export function FriendsScreen() {
     [friends, balances, filter],
   );
 
-  const adsEnabled = useAdsEnabled();
+  const adsEnabled = useAdPlacement('friends');
   const renderEntry = ({ item: entry }: { item: FeedEntry<Friend> }) =>
     entry.type === 'ad' ? <NativeAdRow /> : renderItem({ item: entry.item });
 

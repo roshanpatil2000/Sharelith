@@ -32,7 +32,7 @@ import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
 import { GroupSettingsScreen } from '@/features/groups/screens/GroupSettingsScreen';
 import { AddGroupMembersScreen } from '@/features/groups/screens/AddGroupMembersScreen';
 import { PushBridge } from '@/features/push/PushBridge';
-import { useAdsEnabled } from '@/features/ads/ads';
+import { useAdPlacement } from '@/features/ads/ads';
 import { isAdBreak, maybeShowInterstitial } from '@/features/ads/interstitial';
 import { MainTabs } from './MainTabs';
 import { headerTitleStyle, toNavigationTheme } from './navigationTheme';
@@ -104,7 +104,7 @@ export function RootNavigator() {
   const navTheme = useMemo(() => toNavigationTheme(theme), [theme]);
   const status = useAuthStatus();
   const resetPending = useAuthStore(s => s.passwordResetPending);
-  const adsEnabled = useAdsEnabled();
+  const adsEnabled = useAdPlacement('interstitial');
   const lastRoute = useRef<string | undefined>(undefined);
 
   // Moving between tabs or into and out of details is a natural break for

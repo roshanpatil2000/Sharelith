@@ -35,7 +35,7 @@ import {
   useRenameExpense,
   useUpdateExpense,
 } from '../api';
-import { useAdsEnabled } from '@/features/ads/ads';
+import { useAdPlacement } from '@/features/ads/ads';
 import { maybeShowInterstitial } from '@/features/ads/interstitial';
 import { PersonAmountRow } from '../components/PersonAmountRow';
 import {
@@ -76,7 +76,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   const { data: groups } = useGroups();
   const { data: friends } = useFriends();
   const createExpense = useCreateExpense();
-  const adsEnabled = useAdsEnabled();
+  const adsEnabled = useAdPlacement('interstitial');
 
   const [target, setTarget] = useState(
     startGroup

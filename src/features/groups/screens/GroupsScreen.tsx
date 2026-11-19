@@ -15,7 +15,7 @@ import {
   Screen,
 } from '@/components';
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
-import { useAdsEnabled } from '@/features/ads/ads';
+import { useAdPlacement } from '@/features/ads/ads';
 import {
   LIST_AD_SPACING,
   NativeAdRow,
@@ -63,7 +63,7 @@ export function GroupsScreen() {
     navigation.setOptions({ headerRight: renderCreateGroupButton });
   }, [navigation]);
 
-  const adsEnabled = useAdsEnabled();
+  const adsEnabled = useAdPlacement('groups');
   const renderEntry = ({ item: entry }: { item: FeedEntry<GroupSummary> }) =>
     entry.type === 'ad' ? <NativeAdRow /> : renderItem({ item: entry.item });
 

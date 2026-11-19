@@ -26,7 +26,15 @@ let loading = false;
 /** Loads one interstitial in the background so it's ready when needed. */
 export function preloadInterstitial(): void {
   const m = adsModule();
-  if (!m || loaded || loading || !useAdsStore.getState().ready) {
+  const { ads_enabled, interstitial_enabled } = useRemoteConfig.getState();
+  if (
+    !m ||
+    loaded ||
+    loading ||
+    !useAdsStore.getState().ready ||
+    !ads_enabled ||
+    !interstitial_enabled
+  ) {
     return;
   }
   loading = true;

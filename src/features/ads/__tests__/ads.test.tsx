@@ -1,11 +1,12 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { act, render, screen } from '@testing-library/react-native';
-import { useRemoteConfig } from '@/lib/remoteConfig';
+import { remoteDefaults, useRemoteConfig } from '@/lib/remoteConfig';
 import {
   adRequestOptions,
   adUnitId,
   initAds,
+  useAdPlacement,
   useAdsEnabled,
   useAdsStore,
 } from '../ads';
@@ -102,6 +103,52 @@ describe('ads switch', () => {
 
     await act(() => useRemoteConfig.setState({ ads_enabled: false }));
     expect(screen.getByText('false')).toBeOnTheScreen();
+  });
+
+  it('each switch hides only its own placement; ads_enabled hides all', async () => {
+    await act(() => initAds());
+    const Placements = () => {
+      const interstitial = useAdPlacement('interstitial');
+      const activity = useAdPlacement('activity');
+      const groups = useAdPlacement('groups');
+      const friends = useAdPlacement('friends');
+      return (
+        <Text>
+          {`interstitial:${interstitial} activity:${activity} groups:${groups} friends:${friends}`}
+        </Text>
+      );
+    };
+    await act(() => useRemoteConfig.setState(remoteDefaults));
+    const view = await render(<Placements />);
+    expect(
+      screen.getByText(
+        'interstitial:true activity:true groups:true friends:true',
+      ),
+    ).toBeOnTheScreen();
+
+    await act(() =>
+      useRemoteConfig.setState({
+        native_groups_enabled: false,
+        interstitial_enabled: false,
+      }),
+    );
+    await view.rerender(<Placements />);
+    expect(
+      screen.getByText(
+        'interstitial:false activity:true groups:false friends:true',
+      ),
+    ).toBeOnTheScreen();
+
+    await act(() =>
+      useRemoteConfig.setState({ ...remoteDefaults, ads_enabled: false }),
+    );
+    await view.rerender(<Placements />);
+    expect(
+      screen.getByText(
+        'interstitial:false activity:false groups:false friends:false',
+      ),
+    ).toBeOnTheScreen();
+    await act(() => useRemoteConfig.setState(remoteDefaults));
   });
 
   it('uses test ads in debug builds', () => {
