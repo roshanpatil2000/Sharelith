@@ -2,9 +2,10 @@ apply plugin: "com.android.application"
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
-// Firebase (push, crash reports, performance). Builds without
-// google-services.json just go without them.
-if (file("google-services.json").exists()) {
+// Firebase (push, crash reports, performance). Each flavour reads src/<flavour>/google-services.json; a flavour without
+// one builds without Firebase (see googleServices below).
+def hasGoogleServices = ["src/prod", "src/dev", "."].any { file("$it/google-services.json").exists() }
+if (hasGoogleServices) {
     apply plugin: "com.google.gms.google-services"
     apply plugin: "com.google.firebase.crashlytics"
     apply plugin: "com.google.firebase.firebase-perf"
@@ -111,6 +112,31 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode
         versionName appVersion
+        // react-native-config finds BuildConfig here, whatever the flavour's
+        // application ID (the dev flavour adds .dev).
+        resValue "string", "build_config_package", "com.sharelith.app"
+    }
+    // dev: for testing, installs beside the store app (com.sharelith.app.dev,
+    // "Sharelith Dev", orange icon, always test ads). prod: the store app.
+    flavorDimensions "env"
+    productFlavors {
+        dev {
+            dimension "env"
+            applicationIdSuffix ".dev"
+            versionNameSuffix "-dev"
+            resValue "string", "app_name", "Sharelith Dev"
+            // No Firebase app for dev until src/dev/google-services.json
+            // exists: skip Crashlytics' symbol upload, which needs one.
+            if (hasGoogleServices && !file("src/dev/google-services.json").exists()) {
+                firebaseCrashlytics {
+                    mappingFileUploadEnabled false
+                }
+            }
+        }
+        prod {
+            dimension "env"
+            resValue "string", "app_name", "Sharelith"
+        }
     }
     signingConfigs {
         debug {
@@ -145,7 +171,7 @@ android {
 
 gradle.taskGraph.whenReady { graph ->
     def buildsRelease = graph.allTasks.any {
-        it.project == project && it.name ==~ /(assemble|bundle|package|install)Release/
+        it.project == project && it.name ==~ /(assemble|bundle|package|install)\w*Release/
     }
     if (buildsRelease && !hasUploadKey) {
         throw new GradleException(
@@ -153,6 +179,12 @@ gradle.taskGraph.whenReady { graph ->
             "SHARELITH_UPLOAD_STORE_PASSWORD, SHARELITH_UPLOAD_KEY_ALIAS and SHARELITH_UPLOAD_KEY_PASSWORD " +
             "in ~/.gradle/gradle.properties (see docs/RELEASE.md)."
         )
+    }
+}
+
+if (hasGoogleServices) {
+    googleServices {
+        missingGoogleServicesStrategy = 'WARN'
     }
 }
 

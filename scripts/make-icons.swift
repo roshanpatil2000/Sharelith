@@ -4,6 +4,9 @@
 import AppKit
 
 let teal = NSColor(srgbRed: 0x00 / 255, green: 0x83 / 255, blue: 0x8A / 255, alpha: 1)
+// The dev flavour's icon is orange, so it's never mistaken for the store app.
+let devOrange = NSColor(srgbRed: 0xE6 / 255, green: 0x51 / 255, blue: 0x00 / 255, alpha: 1)
+var fill = teal
 
 enum Shape { case square, rounded, circle, none }
 
@@ -18,7 +21,7 @@ func render(_ path: String, size: Int, shape: Shape, letterScale: CGFloat, backg
   NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
   let rect = NSRect(x: 0, y: 0, width: s, height: s)
   if background {
-    teal.setFill()
+    fill.setFill()
     switch shape {
     case .square: NSBezierPath(rect: rect).fill()
     case .rounded: NSBezierPath(roundedRect: rect, xRadius: s * 0.2, yRadius: s * 0.2).fill()
@@ -41,7 +44,9 @@ func render(_ path: String, size: Int, shape: Shape, letterScale: CGFloat, backg
   try! rep.representation(using: .png, properties: [:])!.write(to: url)
 }
 
-let res = "android/app/src/main/res"
+for (flavourRes, color) in [("android/app/src/main/res", teal), ("android/app/src/dev/res", devOrange)] {
+  fill = color
+  let res = flavourRes
 // Legacy launcher icons (Android 7 and older) and the adaptive foreground.
 for (dpi, scale) in [("mdpi", 1.0), ("hdpi", 1.5), ("xhdpi", 2.0), ("xxhdpi", 3.0), ("xxxhdpi", 4.0)] {
   render("\(res)/mipmap-\(dpi)/ic_launcher.png", size: Int(48 * scale), shape: .rounded, letterScale: 0.5)
@@ -49,6 +54,8 @@ for (dpi, scale) in [("mdpi", 1.0), ("hdpi", 1.5), ("xhdpi", 2.0), ("xxhdpi", 3.
   // 108dp canvas; the visible area is the middle 72dp, so keep the S inside it.
   render("\(res)/mipmap-\(dpi)/ic_launcher_foreground.png", size: Int(108 * scale), shape: .none, letterScale: 0.32, background: false)
 }
+}
+fill = teal
 // iOS uses one 1024×1024 opaque icon; the system rounds the corners.
 // App Store icons must not have an alpha channel.
 render("ios/Sharelith/Images.xcassets/AppIcon.appiconset/AppIcon-1024.png", size: 1024, shape: .square, letterScale: 0.5, alpha: false)

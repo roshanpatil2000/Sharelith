@@ -1,5 +1,19 @@
 # Releasing Sharelith
 
+## Flavours (Android)
+
+| Flavour | App ID | Name | For |
+|---|---|---|---|
+| `dev` | `com.sharelith.app.dev` | Sharelith Dev (orange icon) | Everyday testing; always Google's test ads |
+| `prod` | `com.sharelith.app` | Sharelith | Testers (App Distribution) and the Play Store |
+
+Both use the same Supabase project for now and install side by side.
+
+- Run: `npm run android` (dev) or `npm run android:prod`.
+- Build: `./gradlew :app:assembleDevRelease`, `:app:assembleProdRelease`, `:app:bundleProdRelease`.
+- Firebase: each flavour reads `android/app/src/<flavour>/google-services.json`. Register `com.sharelith.app.dev` as another Android app in the Firebase project and save its file to `src/dev/` for push, Crashlytics and Remote Config in dev; without it dev builds run without Firebase.
+- App Links only verify for prod (the website's `assetlinks.json` lists `com.sharelith.app`). Dev opens auth links through the website's bridge page instead.
+
 ## Version
 
 `package.json` holds the one version for both apps.
@@ -69,10 +83,10 @@ Ads are controlled from Firebase Remote Config; changes reach open apps within s
 ## Android: build
 
 ```bash
-cd android && ./gradlew :app:bundleRelease
+cd android && ./gradlew :app:bundleProdRelease
 ```
 
-The bundle to upload is `android/app/build/outputs/bundle/release/app-release.aab`. Use `assembleRelease` instead for an APK you can install directly.
+The bundle to upload is `android/app/build/outputs/bundle/prodRelease/app-prod-release.aab`. Use `assembleProdRelease` instead for an APK you can install directly.
 
 Release builds run R8, which shrinks the code and can break libraries that rely on reflection. Always install a release build and check sign-in, adding an expense and the app lock before uploading.
 
