@@ -1,8 +1,34 @@
 import * as Keychain from 'react-native-keychain';
-import { createMMKV, deleteMMKV, type MMKV } from 'react-native-mmkv';
+import {
+  createMMKV,
+  deleteMMKV,
+  existsMMKV,
+  type MMKV,
+} from 'react-native-mmkv';
 import type { StateStorage } from 'zustand/middleware';
 
-export const storage = createMMKV({ id: 'sharelith' });
+/**
+ * Small app settings. Older versions also kept the offline cache here,
+ * unencrypted, in the "sharelith" file. Removing a key doesn't erase its
+ * bytes from an MMKV file, so the settings move to a new file and the old
+ * file is deleted.
+ */
+function openMainStore(): MMKV {
+  const store = createMMKV({ id: 'sharelith-main' });
+  if (existsMMKV('sharelith')) {
+    try {
+      const old = createMMKV({ id: 'sharelith' });
+      // Drop it before copying, so the cache never reaches the new file.
+      old.remove('query-cache');
+      store.importAllFrom(old);
+    } finally {
+      deleteMMKV('sharelith');
+    }
+  }
+  return store;
+}
+
+export const storage = openMainStore();
 
 /** Adapter so Zustand's `persist` middleware can write to MMKV. */
 export const zustandStorage: StateStorage = {
@@ -70,25 +96,6 @@ export function randomKey(): string {
 let cacheStore: Promise<MMKV | null> | null = null;
 
 /**
- * Older versions kept the cache unencrypted in the main file. Removing a key
- * leaves its old bytes in MMKV's file, so rebuild the file from what's left:
- * copy it out, clear (which wipes the file), and copy it back.
- */
-function scrubOldCache(): void {
-  if (!storage.contains('query-cache')) {
-    return;
-  }
-  storage.remove('query-cache');
-  const temp = createMMKV({ id: 'sharelith-scrub' });
-  temp.clearAll();
-  temp.importAllFrom(storage);
-  storage.clearAll();
-  storage.importAllFrom(temp);
-  temp.clearAll();
-  deleteMMKV('sharelith-scrub');
-}
-
-/**
  * The offline cache (balances, expenses, names) lives in its own MMKV file,
  * encrypted with AES-256. The key is generated on this device and kept in
  * the Keychain / Android Keystore. If the Keychain can't be used, nothing is
@@ -96,7 +103,6 @@ function scrubOldCache(): void {
  */
 function openCacheStore(): Promise<MMKV | null> {
   cacheStore ??= (async () => {
-    scrubOldCache();
     try {
       const service = keychainService('cacheKey');
       const saved = await Keychain.getGenericPassword({ service });

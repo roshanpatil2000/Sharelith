@@ -35,7 +35,11 @@ jest.mock('react-native-mmkv', () => {
       },
     };
   });
-  return { createMMKV, deleteMMKV: jest.fn(() => true) };
+  return {
+    createMMKV,
+    deleteMMKV: jest.fn(() => true),
+    existsMMKV: jest.fn(() => false),
+  };
 });
 
 jest.mock('react-native-keychain', () => {
