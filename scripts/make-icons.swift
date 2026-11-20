@@ -111,4 +111,6 @@ colors = prod
 render("ios/Sharelith/Images.xcassets/AppIcon.appiconset/AppIcon-1024.png", size: 1024, shape: .square, markScale: 0.52, alpha: false)
 // Splash logo: the white mark on transparent, for react-native-bootsplash.
 render("assets/bootsplash-logo.png", size: 1024, shape: .none, markScale: 0.6, background: false)
+// In-app logo (Welcome and loading screens): the rounded icon at 3x of 96pt.
+render("assets/app-logo.png", size: 288, shape: .rounded, markScale: 0.52)
 print("Icons written.")

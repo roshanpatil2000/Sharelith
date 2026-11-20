@@ -1,31 +1,20 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useStyles, type Theme } from '@/app/theme';
-import { Text } from '@/components';
+import { Image, StyleSheet } from 'react-native';
 
-/** The "S" app mark used on Welcome and the launch splash. */
-export function AuthLogo({ size = 88 }: { size?: number }) {
-  const styles = useStyles(createStyles);
+const logo = require('../../../../assets/app-logo.png');
+
+/** The app icon, used on Welcome and the loading screen. */
+export function AuthLogo({ size = 96 }: { size?: number }) {
   return (
-    <View
+    <Image
+      source={logo}
       style={[styles.logo, { width: size, height: size }]}
       accessibilityLabel="Sharelith"
       accessible
-    >
-      <Text variant="display" color="textOnPrimary">
-        S
-      </Text>
-    </View>
+    />
   );
 }
 
-const createStyles = (t: Theme) =>
-  StyleSheet.create({
-    logo: {
-      borderRadius: t.radius.lg,
-      backgroundColor: t.colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...t.elevation[2],
-    },
-  });
+const styles = StyleSheet.create({
+  logo: { resizeMode: 'contain' },
+});
