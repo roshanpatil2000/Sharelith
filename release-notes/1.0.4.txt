@@ -1,0 +1,11 @@
+Sharelith 1.0.4
+
+New
+- A fresh app icon and launch screen: a coin split in two, for shared bills.
+
+Changed
+- The ad banner is gone. Instead, an occasional full-screen ad may appear at a natural break, such as after adding an expense or moving between screens. It never shows during your first few moves and at most once every few minutes.
+- Groups and Friends now show the same small in-list ads as Activity, spaced well apart.
+
+Note
+- Please mention your app version (Account screen) when you report a problem.
