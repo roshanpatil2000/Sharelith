@@ -14,6 +14,33 @@ export type Database = {
   };
   public: {
     Tables: {
+      subscriptions: {
+        Row: {
+          expires_at: string;
+          product_id: string;
+          purchase_token: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          expires_at: string;
+          product_id: string;
+          purchase_token: string;
+          status: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          expires_at?: string;
+          product_id?: string;
+          purchase_token?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       activities: {
         Row: {
           actor_id: string | null;
@@ -479,6 +506,7 @@ export type Database = {
           notify_payments: boolean;
           notify_reminders: boolean;
           phone: string | null;
+          pro_override: boolean;
           timezone: string;
           updated_at: string;
         };
@@ -499,6 +527,7 @@ export type Database = {
           notify_payments?: boolean;
           notify_reminders?: boolean;
           phone?: string | null;
+          pro_override?: boolean;
           timezone?: string;
           updated_at?: string;
         };
@@ -519,6 +548,7 @@ export type Database = {
           notify_payments?: boolean;
           notify_reminders?: boolean;
           phone?: string | null;
+          pro_override?: boolean;
           timezone?: string;
           updated_at?: string;
         };
@@ -537,6 +567,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      my_pro_status: {
+        Args: never;
+        Returns: {
+          expires_at: string | null;
+          is_pro: boolean;
+          product_id: string | null;
+          status: string | null;
+        }[];
+      };
+      require_pro: { Args: never; Returns: undefined };
       active_member_ids: { Args: { gid: string }; Returns: string[] };
       add_group_members: {
         Args: { gid: string; member_ids: string[] };
@@ -608,6 +648,7 @@ export type Database = {
           notify_payments: boolean;
           notify_reminders: boolean;
           phone: string | null;
+          pro_override: boolean;
           timezone: string;
           updated_at: string;
         }[];

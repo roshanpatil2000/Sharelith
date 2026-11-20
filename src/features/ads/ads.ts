@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { env } from '@/lib/env';
 import { useRemoteConfig } from '@/lib/remoteConfig';
+import { useIsPro } from '@/features/pro/pro';
 
 /**
  * Google AdMob, Android only for now. Ads load only after Google's consent
@@ -34,14 +35,6 @@ export const useAdsStore = create<AdsState>(() => ({
   personalised: false,
   privacyOptionsRequired: false,
 }));
-
-/**
- * Pro removes ads. There is no Pro yet; when there is, this is the one
- * place to read it.
- */
-export function useIsPro(): boolean {
-  return false;
-}
 
 /** Whether to show any ads right now. */
 export function useAdsEnabled(): boolean {
