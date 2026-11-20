@@ -274,6 +274,7 @@ export type Database = {
           id: string;
           is_payment: boolean;
           notes: string | null;
+          receipt_path: string | null;
           updated_at: string;
         };
         Insert: {
@@ -289,6 +290,7 @@ export type Database = {
           id?: string;
           is_payment?: boolean;
           notes?: string | null;
+          receipt_path?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -304,6 +306,7 @@ export type Database = {
           id?: string;
           is_payment?: boolean;
           notes?: string | null;
+          receipt_path?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -567,6 +570,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      set_expense_receipt: {
+        Args: { eid: string; path: string | null };
+        Returns: undefined;
+      };
       my_pro_status: {
         Args: never;
         Returns: {

@@ -102,6 +102,7 @@ export type ExpenseDetail = {
   created_at?: string;
   group?: { name: string } | null;
   creator?: NameRef;
+  receipt_path?: string | null;
 };
 
 export const expenseKey = (userId: string | null, expenseId: string) =>
@@ -116,7 +117,7 @@ export function useExpense(expenseId: string | undefined) {
       const { data, error } = await supabase
         .from('expenses')
         .select(
-          'id, group_id, description, amount_minor, currency, expense_date, created_by, is_payment, created_at, group:groups(name), creator:profiles!expenses_created_by_fkey(full_name), expense_payers(user_id, paid_minor, profile:profiles!expense_payers_user_id_fkey(full_name)), expense_shares(user_id, owed_minor, split_type, raw_value, profile:profiles!expense_shares_user_id_fkey(full_name))',
+          'id, group_id, description, amount_minor, currency, expense_date, created_by, is_payment, created_at, receipt_path, group:groups(name), creator:profiles!expenses_created_by_fkey(full_name), expense_payers(user_id, paid_minor, profile:profiles!expense_payers_user_id_fkey(full_name)), expense_shares(user_id, owed_minor, split_type, raw_value, profile:profiles!expense_shares_user_id_fkey(full_name))',
         )
         .eq('id', expenseId!)
         .is('deleted_at', null)
