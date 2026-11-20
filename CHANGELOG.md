@@ -2,6 +2,12 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## 1.0.4 (build 10004)
+
+- **Ads:** banner removed; interstitials at natural breaks (navigation and after adding an expense), capped by `interstitial_min_minutes` and `interstitial_skip_first`. Native ads in Groups and Friends as well as Activity. Remote Config switches per placement (`interstitial_enabled`, `native_*_enabled`) under the `ads_enabled` master switch, applied in real time.
+- **Android flavours:** `dev` (`com.sharelith.app.dev`, orange icon, test ads) and `prod`. Testers get prod.
+- **Icon and splash:** split coin on a teal-to-green gradient.
+
 ## 1.0.3 (build 10003)
 
 - **Ads:** one banner pinned below the tab bar for every tab (was a footer on each list screen); it owns the bottom safe area once an ad loads.
