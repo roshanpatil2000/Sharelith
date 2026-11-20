@@ -132,7 +132,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.json().access_token) {",
+                  "const body = pm.response.json();",
+                  "if (body.access_token) {",
                   "  pm.collectionVariables.set('access_token', body.access_token);",
                   "  pm.collectionVariables.set('refresh_token', body.refresh_token);",
                   "  pm.collectionVariables.set('user_id', body.user.id);",
