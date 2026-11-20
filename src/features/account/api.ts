@@ -7,7 +7,15 @@ import { AppError, toAppError } from '@/features/auth/errors';
 export type Profile = Tables<'profiles'>;
 export type ProfileUpdate = Pick<
   TablesUpdate<'profiles'>,
-  'full_name' | 'phone' | 'avatar_url' | 'default_currency' | 'timezone'
+  | 'full_name'
+  | 'phone'
+  | 'avatar_url'
+  | 'default_currency'
+  | 'timezone'
+  | 'notify_expenses'
+  | 'notify_payments'
+  | 'notify_groups'
+  | 'notify_reminders'
 >;
 
 export const profileKey = (userId: string | null) =>

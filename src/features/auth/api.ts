@@ -10,6 +10,26 @@ import type { SignUpValues } from './schemas';
 /** Date of the current Terms and Privacy Policy, as published. */
 export const TERMS_VERSION = '2026-11-18';
 
+type ConsentUser = { user_metadata?: Record<string, unknown> };
+
+/** Whether this user still has to agree to the current Terms and Privacy Policy. */
+export function needsTermsConsent(user: ConsentUser): boolean {
+  return user.user_metadata?.terms_version !== TERMS_VERSION;
+}
+
+/** Records agreement to the current documents, as sign-up does. */
+export async function acceptTerms(): Promise<void> {
+  const { error } = await supabase.auth.updateUser({
+    data: {
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: TERMS_VERSION,
+    },
+  });
+  if (error) {
+    throw toAppError(error);
+  }
+}
+
 export async function signUp(values: SignUpValues): Promise<void> {
   const { data, error } = await supabase.auth.signUp({
     email: values.email,

@@ -21,6 +21,8 @@ import { VerifyEmailScreen } from '@/features/auth/screens/VerifyEmailScreen';
 import { SplashScreen } from '@/features/auth/screens/SplashScreen';
 import { EditProfileScreen } from '@/features/account/screens/EditProfileScreen';
 import { ChangePasswordScreen } from '@/features/account/screens/ChangePasswordScreen';
+import { NotificationsScreen } from '@/features/account/screens/NotificationsScreen';
+import { TermsPrompt } from '@/features/auth/components/TermsPrompt';
 import { DeleteAccountScreen } from '@/features/account/screens/DeleteAccountScreen';
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { SettleUpScreen } from '@/features/expenses/screens/SettleUpScreen';
@@ -141,6 +143,7 @@ export function RootNavigator() {
       {status === 'signedIn' && !resetPending ? (
         <PushBridge navigation={navigationRef} />
       ) : null}
+      {status === 'signedIn' && !resetPending ? <TermsPrompt /> : null}
       <Root.Navigator screenOptions={stackOptions(theme)}>
         {status === 'signedIn' && resetPending ? (
           // Opened a reset or invite link: choose a password before anything
@@ -195,6 +198,11 @@ export function RootNavigator() {
               name="ChangePassword"
               component={ChangePasswordScreen}
               options={{ title: 'Change password' }}
+            />
+            <Root.Screen
+              name="Notifications"
+              component={NotificationsScreen}
+              options={{ title: 'Notifications' }}
             />
             <Root.Screen
               name="DeleteAccount"

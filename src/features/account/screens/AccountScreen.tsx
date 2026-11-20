@@ -5,6 +5,7 @@ import { env } from '@/lib/env';
 import { appVersion, buildNumber } from '@/lib/remoteConfig';
 import { showAdChoices, useAdsStore } from '@/features/ads/ads';
 import {
+  Bell,
   Clock,
   KeyRound,
   LogOut,
@@ -159,6 +160,14 @@ export function AccountScreen() {
           <Divider inset={52} />
         </>
       ) : null}
+      <ListRow
+        title="Notifications"
+        leading={<Icon icon={Bell} color="textSecondary" />}
+        chevron
+        onPress={() => navigation.navigate('Notifications')}
+        testID="account-notifications"
+      />
+      <Divider inset={52} />
       <Stack gap="sm" px="lg" py="md" bg="surface">
         <Row gap="md">
           <Icon icon={Palette} color="textSecondary" />

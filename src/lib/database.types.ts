@@ -474,6 +474,10 @@ export type Database = {
           invited_by: string | null;
           is_test_user: boolean;
           joined_at: string | null;
+          notify_expenses: boolean;
+          notify_groups: boolean;
+          notify_payments: boolean;
+          notify_reminders: boolean;
           phone: string | null;
           timezone: string;
           updated_at: string;
@@ -490,6 +494,10 @@ export type Database = {
           invited_by?: string | null;
           is_test_user?: boolean;
           joined_at?: string | null;
+          notify_expenses?: boolean;
+          notify_groups?: boolean;
+          notify_payments?: boolean;
+          notify_reminders?: boolean;
           phone?: string | null;
           timezone?: string;
           updated_at?: string;
@@ -506,6 +514,10 @@ export type Database = {
           invited_by?: string | null;
           is_test_user?: boolean;
           joined_at?: string | null;
+          notify_expenses?: boolean;
+          notify_groups?: boolean;
+          notify_payments?: boolean;
+          notify_reminders?: boolean;
           phone?: string | null;
           timezone?: string;
           updated_at?: string;
@@ -591,6 +603,10 @@ export type Database = {
           invited_by: string | null;
           is_test_user: boolean;
           joined_at: string | null;
+          notify_expenses: boolean;
+          notify_groups: boolean;
+          notify_payments: boolean;
+          notify_reminders: boolean;
           phone: string | null;
           timezone: string;
           updated_at: string;
