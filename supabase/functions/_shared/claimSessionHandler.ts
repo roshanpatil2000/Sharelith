@@ -1,6 +1,7 @@
 // The claim-session request handler: the app calls it right after signing in.
 // It keeps the caller's session and ends every other one, tells the old
-// devices by push, and emails the person if anything was signed out.
+// devices by push, and emails the person about the sign-in (time, device,
+// IP and approximate location).
 // Clients, FCM and email are passed in (no Deno APIs), so Jest can test it.
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import type { EmailMessage } from './mailtrap.ts';
@@ -13,7 +14,48 @@ export type ClaimSessionDeps = {
   admin: SupabaseClient;
   send: (message: FcmMessage) => Promise<FcmResult>;
   sendEmail: (message: EmailMessage) => Promise<unknown>;
+  /** Approximate place for an IP ("Pune, Maharashtra, IN"), or null. */
+  locate: (ip: string) => Promise<string | null>;
 };
+
+/** What the app says about the device it signed in on. */
+export type LoginDevice = {
+  platform?: string;
+  model?: string;
+  os?: string;
+  app_version?: string;
+};
+
+export type LoginDetails = {
+  when: Date;
+  ip: string | null;
+  location: string | null;
+  device: LoginDevice;
+  /** How many other devices this sign-in signed out. */
+  signedOut: number;
+};
+
+/** The caller's public IP, as the edge network saw it. */
+export function clientIp(headers: Headers): string | null {
+  const forwarded = headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return forwarded || headers.get('x-real-ip') || null;
+}
+
+const clean = (v: unknown, max = 80) =>
+  typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined;
+
+export function parseDevice(raw: unknown): LoginDevice {
+  const d = (raw ?? {}) as Record<string, unknown>;
+  return {
+    platform: clean(d.platform, 20),
+    model: clean(d.model),
+    os: clean(d.os, 40),
+    app_version: clean(d.app_version, 30),
+  };
+}
+
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -46,31 +88,63 @@ export const SIGNED_OUT_TITLE = 'Signed out of Sharelith';
 export const SIGNED_OUT_BODY =
   'Your account was signed in on another device, so this one was signed out.';
 
-export function buildSignedOutElsewhereEmail(
+export function buildLoginEmail(
   to: { email: string; name?: string },
-  when: Date,
+  login: LoginDetails,
 ): EmailMessage {
-  const time = when.toUTCString();
   const name = to.name ? ` ${to.name}` : '';
+  const device = [login.device.model, login.device.os]
+    .filter(Boolean)
+    .join(', ');
+  const rows: [string, string][] = [
+    ['Time', `${login.when.toUTCString()}`],
+    ['Device', device || 'Unknown device'],
+    [
+      'App',
+      login.device.app_version
+        ? `Sharelith ${login.device.app_version}`
+        : 'Sharelith',
+    ],
+    ['IP address', login.ip ?? 'Unknown'],
+    ['Approximate location', login.location ?? 'Unknown'],
+  ];
+  const signedOut =
+    login.signedOut > 0
+      ? 'Sharelith stays signed in on one device at a time, so your other devices were signed out.'
+      : null;
   const text = [
     `Hi${name},`,
     '',
-    `Your Sharelith account was signed in on a new device (${time}).`,
-    'Sharelith stays signed in on one device at a time, so your other devices were signed out.',
+    'Your Sharelith account was just signed in:',
     '',
+    ...rows.map(([k, v]) => `${k}: ${v}`),
+    '',
+    ...(signedOut ? [signedOut, ''] : []),
     'If this was you, there’s nothing to do.',
     'If it wasn’t, reset your password from the Sharelith login screen right away.',
     '',
+    'Location is estimated from the IP address and may not be exact.',
+    '',
     '— Sharelith',
   ].join('\n');
-  const html = `<p>Hi${name},</p>
-<p>Your Sharelith account was signed in on a new device (${time}).</p>
-<p>Sharelith stays signed in on one device at a time, so your other devices were signed out.</p>
+  const table = rows
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:4px 16px 4px 0;color:#5f6b6d">${k}</td><td style="padding:4px 0"><strong>${escapeHtml(
+          v,
+        )}</strong></td></tr>`,
+    )
+    .join('');
+  const html = `<p>Hi${escapeHtml(name)},</p>
+<p>Your Sharelith account was just signed in:</p>
+<table style="border-collapse:collapse">${table}</table>
+${signedOut ? `<p>${signedOut}</p>` : ''}
 <p>If this was you, there’s nothing to do. If it wasn’t, <strong>reset your password</strong> from the Sharelith login screen right away.</p>
+<p style="color:#5f6b6d;font-size:12px">Location is estimated from the IP address and may not be exact.</p>
 <p>— Sharelith</p>`;
   return {
     to: [to],
-    subject: 'Your Sharelith account was signed in on a new device',
+    subject: 'New sign-in to your Sharelith account',
     text,
     html,
     category: 'Security',
@@ -79,7 +153,7 @@ export function buildSignedOutElsewhereEmail(
 
 export async function handleClaimSession(
   req: Request,
-  { caller, admin, send, sendEmail }: ClaimSessionDeps,
+  { caller, admin, send, sendEmail, locate }: ClaimSessionDeps,
 ): Promise<Response> {
   if (req.method !== 'POST') {
     return fail(405, 'method_not_allowed', 'Method not allowed');
@@ -124,11 +198,22 @@ export async function handleClaimSession(
   }
 
   const count = Number(ended ?? 0);
-  if (count > 0 && me.email) {
+  if (me.email) {
+    const ip = clientIp(req.headers);
+    const location = ip ? await locate(ip).catch(() => null) : null;
     const name = (me.user_metadata as { full_name?: string } | undefined)
       ?.full_name;
     await sendEmail(
-      buildSignedOutElsewhereEmail({ email: me.email, name }, new Date()),
+      buildLoginEmail(
+        { email: me.email, name },
+        {
+          when: new Date(),
+          ip,
+          location,
+          device: parseDevice(body?.device),
+          signedOut: count,
+        },
+      ),
     ).catch(() => {});
   }
   return json({ signed_out: count });

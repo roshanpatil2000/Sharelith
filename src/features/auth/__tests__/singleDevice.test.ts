@@ -30,7 +30,10 @@ it('claims each new session once, with this device’s push token', async () => 
   await claimSession(token('s1'));
   expect(invoke).toHaveBeenCalledTimes(1);
   expect(invoke).toHaveBeenCalledWith('claim-session', {
-    body: { push_token: 'tok' },
+    body: {
+      push_token: 'tok',
+      device: expect.objectContaining({ platform: 'ios' }),
+    },
   });
   await claimSession(token('s2'));
   expect(invoke).toHaveBeenCalledTimes(2);

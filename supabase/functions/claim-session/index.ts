@@ -1,12 +1,13 @@
-// Keeps one signed-in device per account. The app calls this right after a
-// sign-in; see _shared/claimSessionHandler.ts.
+// Keeps one signed-in device per account and emails a sign-in alert. The app
+// calls this right after a sign-in; see _shared/claimSessionHandler.ts.
 //
 // Secrets: FCM_SERVICE_ACCOUNT and MAILTRAP_API_TOKEN (already set for
-// send-push and the auth emails).
+// send-push and the auth emails). Optional: IPINFO_TOKEN for locations.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { handleClaimSession } from '../_shared/claimSessionHandler.ts';
 import { createFcmSender } from '../_shared/fcm.ts';
 import { sendEmail } from '../_shared/mailtrap.ts';
+import { locateIp } from '../_shared/geoip.ts';
 
 const url = Deno.env.get('SUPABASE_URL')!;
 const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
@@ -24,5 +25,6 @@ Deno.serve(req =>
     admin,
     send,
     sendEmail,
+    locate: ip => locateIp(ip),
   }),
 );
