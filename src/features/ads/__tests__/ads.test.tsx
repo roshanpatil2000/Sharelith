@@ -13,6 +13,9 @@ import {
 import { interstitialDue, isAdBreak } from '../interstitial';
 import { LIST_AD_SPACING, NATIVE_AD_EVERY, withAdSlots } from '../NativeAdRow';
 
+const mockIsPro = jest.fn(() => false);
+jest.mock('@/features/pro/pro', () => ({ useIsPro: () => mockIsPro() }));
+
 // Ads are Android only: run this file as Android.
 jest.mock('react-native', () => {
   const rn = jest.requireActual('react-native');
@@ -103,6 +106,14 @@ describe('ads switch', () => {
 
     await act(() => useRemoteConfig.setState({ ads_enabled: false }));
     expect(screen.getByText('false')).toBeOnTheScreen();
+  });
+
+  it('shows no ads to Pro users', async () => {
+    await act(() => initAds());
+    mockIsPro.mockReturnValue(true);
+    await render(<Probe />);
+    expect(screen.getByText('false')).toBeOnTheScreen();
+    mockIsPro.mockReturnValue(false);
   });
 
   it('each switch hides only its own placement; ads_enabled hides all', async () => {
