@@ -4,6 +4,8 @@ import { emitAuth, fakeSession, supabaseMock } from '@/test/supabaseMock';
 import { queryClient } from '@/lib/queryClient';
 import { selectStatus, startAuthListener, useAuthStore } from '../authStore';
 import { resetPassword } from '../api';
+import { AuthSessionMissingError } from '@supabase/supabase-js';
+import { toast } from '@/components/feedback/Toast';
 
 const status = () => selectStatus(useAuthStore.getState());
 
@@ -56,6 +58,19 @@ describe('authStore', () => {
       answer({ name: 'AuthApiError', status: 403, code: 'session_not_found' });
       const stop = startAuthListener();
       await waitFor(() => expect(status()).toBe('signedOut'));
+      stop();
+    });
+
+    it('explains when another device signed in and ended this session', async () => {
+      const show = jest.spyOn(toast, 'show');
+      restore();
+      // What supabase-js returns when the server says the session is gone.
+      answer(new AuthSessionMissingError());
+      const stop = startAuthListener();
+      await waitFor(() => expect(status()).toBe('signedOut'));
+      expect(show).toHaveBeenCalledWith(
+        expect.stringMatching(/signed in on another device/),
+      );
       stop();
     });
 

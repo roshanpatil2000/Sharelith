@@ -3,6 +3,7 @@ import type { NavigationContainerRefWithCurrent } from '@react-navigation/native
 import type { RootStackParamList } from '@/app/navigation/types';
 import { toast } from '@/components';
 import { useRemoteConfig } from '@/lib/remoteConfig';
+import { signOutIfAccountGone } from '@/features/auth/authStore';
 import { listenForPushes, startPush, type PushTarget } from './push';
 
 type Props = {
@@ -55,6 +56,10 @@ export function PushBridge({ navigation }: Props) {
     const stop = listenForPushes({
       open,
       foreground: (title, body) => toast.show(body || title),
+      // Signed in elsewhere: the server already ended this session.
+      signedOut: () => {
+        signOutIfAccountGone().catch(() => {});
+      },
     });
     return () => {
       stop();
