@@ -1,4 +1,4 @@
-import type { Session } from '@supabase/supabase-js';
+import { isAuthSessionMissingError, type Session } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -83,13 +83,21 @@ export async function signOutIfAccountGone(): Promise<void> {
     return;
   }
   const { error } = await supabase.auth.getUser();
-  if (error && 'code' in error && goneAccountCodes.has(String(error.code))) {
+  if (!error) {
+    return;
+  }
+  // The server ended this session: someone signed in on another device.
+  // supabase-js reports that as AuthSessionMissingError and has already
+  // cleared the session.
+  if (isAuthSessionMissingError(error)) {
     await supabase.auth.signOut({ scope: 'local' });
-    if (error.code === 'session_not_found') {
-      toast.show(
-        'You were signed out because your account was signed in on another device.',
-      );
-    }
+    toast.show(
+      'You were signed out because your account was signed in on another device.',
+    );
+    return;
+  }
+  if ('code' in error && goneAccountCodes.has(String(error.code))) {
+    await supabase.auth.signOut({ scope: 'local' });
   }
 }
 
