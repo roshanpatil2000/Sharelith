@@ -15,17 +15,31 @@ jest.mock(
 );
 
 jest.mock('react-native-mmkv', () => {
-  const createMMKV = () => {
+  const createMMKV = jest.fn((_options?: unknown) => {
     const store = new Map<string, string | number | boolean>();
     return {
       getString: (k: string) => store.get(k) as string | undefined,
       set: (k: string, v: string | number | boolean) => store.set(k, v),
       remove: (k: string) => store.delete(k),
+      contains: (k: string) => store.has(k),
+      trim: () => {},
       clearAll: () => store.clear(),
       getAllKeys: () => [...store.keys()],
+      importAllFrom: (other: {
+        getAllKeys: () => string[];
+        getString: (k: string) => string | undefined;
+      }) => {
+        const keys = other.getAllKeys();
+        keys.forEach(k => store.set(k, other.getString(k) as string));
+        return keys.length;
+      },
     };
+  });
+  return {
+    createMMKV,
+    deleteMMKV: jest.fn(() => true),
+    existsMMKV: jest.fn(() => false),
   };
-  return { createMMKV };
 });
 
 jest.mock('react-native-keychain', () => {

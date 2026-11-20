@@ -1,7 +1,7 @@
 import { AppState, Platform } from 'react-native';
 import { QueryClient, focusManager } from '@tanstack/react-query';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { asyncStorage } from './storage';
+import { encryptedCacheStorage } from './storage';
 
 // React Native has no window focus events: treat returning to the foreground
 // as "focus" so stale queries (e.g. the profile) refetch.
@@ -26,7 +26,7 @@ export const queryClient = new QueryClient({
 });
 
 export const queryPersister = createAsyncStoragePersister({
-  storage: asyncStorage,
+  storage: encryptedCacheStorage,
   key: 'query-cache',
   throttleTime: 1000,
 });

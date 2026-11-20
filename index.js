@@ -2,6 +2,8 @@
  * @format
  */
 
+// Secure random numbers (crypto.getRandomValues) for the cache key.
+import 'react-native-get-random-values';
 import { AppRegistry } from 'react-native';
 import './src/app/devWarnings';
 import App from './App';
