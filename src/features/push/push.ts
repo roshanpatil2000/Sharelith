@@ -106,6 +106,19 @@ export function startPush(): () => void {
   };
 }
 
+/** This device's push token, without asking for permission; null if none. */
+export async function currentPushToken(): Promise<string | null> {
+  const m = messagingModule();
+  if (!m) {
+    return null;
+  }
+  try {
+    return await m.getToken(m.getMessaging());
+  } catch {
+    return null;
+  }
+}
+
 /** Stops pushes to this device. Call while still signed in. */
 export async function stopPush(): Promise<void> {
   const m = messagingModule();
@@ -127,10 +140,16 @@ type Handlers = {
   open: (target: PushTarget) => void;
   /** A push arrived while the app is open; Android doesn't show it. */
   foreground: (title: string, body: string) => void;
+  /** The account was signed in on another device. */
+  signedOut?: () => void;
 };
 
 /** Follows taps on notifications and pushes that arrive in the foreground. */
-export function listenForPushes({ open, foreground }: Handlers): () => void {
+export function listenForPushes({
+  open,
+  foreground,
+  signedOut,
+}: Handlers): () => void {
   const m = messagingModule();
   if (!m) {
     return () => {};
@@ -144,6 +163,10 @@ export function listenForPushes({ open, foreground }: Handlers): () => void {
       open(targetFor(message.data)),
     );
     const offMessage = m.onMessage(messaging, message => {
+      if (message.data?.type === 'signed_out') {
+        signedOut?.();
+        return;
+      }
       const { title, body } = message.notification ?? {};
       if (title || body) {
         foreground(title ?? '', body ?? '');

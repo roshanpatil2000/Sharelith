@@ -6,6 +6,8 @@ import { setCrashUser } from '@/lib/crashReporting';
 import { clearQueryCache } from '@/lib/queryClient';
 import { zustandStorage } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
+import { toast } from '@/components/feedback/Toast';
+import { claimSession } from './singleDevice';
 
 export type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 
@@ -83,6 +85,11 @@ export async function signOutIfAccountGone(): Promise<void> {
   const { error } = await supabase.auth.getUser();
   if (error && 'code' in error && goneAccountCodes.has(String(error.code))) {
     await supabase.auth.signOut({ scope: 'local' });
+    if (error.code === 'session_not_found') {
+      toast.show(
+        'You were signed out because your account was signed in on another device.',
+      );
+    }
   }
 }
 
@@ -108,6 +115,10 @@ export function startAuthListener(): () => void {
   const { data } = supabase.auth.onAuthStateChange((event, session) => {
     setSession(session);
     setCrashUser(session?.user.id ?? null);
+    // A new sign-in (any method): sign out every other device.
+    if (event === 'SIGNED_IN' && session) {
+      claimSession(session.access_token).catch(() => {});
+    }
     // Also covers sign-outs the app didn't start, like a revoked session.
     if (event === 'SIGNED_OUT') {
       clearQueryCache().catch(() => {});

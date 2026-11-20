@@ -429,3 +429,7 @@ verify_jwt = false
 # Adds friends / sends invites for the signed-in user.
 [functions.add-friend]
 verify_jwt = true
+
+# Ends the signed-in user's other sessions right after they sign in.
+[functions.claim-session]
+verify_jwt = true
