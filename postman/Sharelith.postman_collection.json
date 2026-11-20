@@ -41,6 +41,12 @@
       "description": "Test account password. Prefer setting it as the current value only, so it isn't saved or shared."
     },
     {
+      "key": "otp",
+      "value": "",
+      "type": "string",
+      "description": "The 6-digit code from the confirmation email. Set it as the current value only."
+    },
+    {
       "key": "access_token",
       "value": "",
       "type": "string"
@@ -142,6 +148,103 @@
               }
             }
           ]
+        },
+        {
+          "name": "Verify sign-up code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/verify",
+              "host": [
+                "{{supabase_url}}"
+              ],
+              "path": [
+                "auth",
+                "v1",
+                "verify"
+              ]
+            },
+            "description": "With \"Confirm email\" on, Sign up returns no session and emails a 6-digit code. Put the code in the otp variable (current value) and send this: it confirms the email and signs you in, saving access_token, refresh_token and user_id.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"signup\",\n  \"email\": \"{{email}}\",\n  \"token\": \"{{otp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('confirmed and signed in', () => pm.expect(body.access_token).to.be.a('string'));",
+                  "if (body.access_token) {",
+                  "  pm.collectionVariables.set('access_token', body.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', body.refresh_token);",
+                  "  pm.collectionVariables.set('user_id', body.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resend confirmation email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "apikey",
+                "value": "{{anon_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/resend",
+              "host": [
+                "{{supabase_url}}"
+              ],
+              "path": [
+                "auth",
+                "v1",
+                "resend"
+              ]
+            },
+            "description": "Sends a new sign-up confirmation email (code and link). Supabase rate-limits this to about one a minute.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"signup\",\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
         },
         {
           "name": "Sign in (password)",
