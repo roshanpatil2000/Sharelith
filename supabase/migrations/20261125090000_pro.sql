@@ -44,6 +44,8 @@ as $$
 $$;
 
 revoke execute on function public.is_pro(uuid) from public, anon, authenticated;
+-- The purchase edge functions (service role) check it after saving.
+grant execute on function public.is_pro(uuid) to service_role;
 
 -- Your own Pro status, for the app.
 create or replace function public.my_pro_status()

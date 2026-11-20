@@ -1,6 +1,6 @@
 -- Pro: subscriptions and the override decide it; only the server can grant it.
 begin;
-select plan(11);
+select plan(12);
 
 insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-00000000000a', 'a@test.co', '{"full_name":"A"}'),
@@ -38,6 +38,13 @@ select throws_ok(
   '42501', null, 'you cannot give yourself Pro'
 );
 select throws_ok($$select public.require_pro()$$, '42501', null, 'Pro-only actions refuse free users');
+
+reset role;
+select ok(
+  has_function_privilege('service_role', 'public.is_pro(uuid)', 'execute')
+    and not has_function_privilege('authenticated', 'public.is_pro(uuid)', 'execute'),
+  'the server can check anyone''s Pro; the app cannot'
+);
 
 select * from finish();
 rollback;
