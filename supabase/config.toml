@@ -433,3 +433,11 @@ verify_jwt = true
 # Ends the signed-in user's other sessions right after they sign in.
 [functions.claim-session]
 verify_jwt = true
+
+# Verifies a Play subscription for the signed-in user.
+[functions.verify-purchase]
+verify_jwt = true
+
+# Called by Google Pub/Sub with a shared secret in the URL, not a user JWT.
+[functions.play-notifications]
+verify_jwt = false

@@ -49,6 +49,7 @@
     "react-native-gesture-handler": "^3.4.0",
     "react-native-get-random-values": "^1.11.0",
     "react-native-google-mobile-ads": "17.3.1",
+    "react-native-iap": "^17.4.1",
     "react-native-image-picker": "^8.3.0",
     "react-native-keychain": "^10.0.0",
     "react-native-mmkv": "^4.3.2",

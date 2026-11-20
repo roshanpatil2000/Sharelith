@@ -1,0 +1,15 @@
+{
+  "originHash" : "d52259b290547f2fe08b80102cbdf607b36315804386812a5be18adba8d68d90",
+  "pins" : [
+    {
+      "identity" : "openiap",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hyodotdev/openiap.git",
+      "state" : {
+        "revision" : "7029622e7a0ec785c68e616baf89cf0e2c13520e",
+        "version" : "4.2.1"
+      }
+    }
+  ],
+  "version" : 3
+}

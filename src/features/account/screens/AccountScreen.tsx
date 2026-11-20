@@ -6,6 +6,7 @@ import { appVersion, buildNumber } from '@/lib/remoteConfig';
 import { showAdChoices, useAdsStore } from '@/features/ads/ads';
 import {
   Bell,
+  Crown,
   Clock,
   KeyRound,
   LogOut,
@@ -43,6 +44,7 @@ import { toAppError } from '@/features/auth/errors';
 import { useAppLockToggle } from '@/features/lock/useAppLockToggle';
 import { useSettingsStore, type ThemePreference } from '@/lib/settingsStore';
 import { useProfile, useUpdateProfile } from '../api';
+import { useIsPro } from '@/features/pro/pro';
 import { VerifyEmailBanner } from '../components/VerifyEmailBanner';
 
 const themeSegments = [
@@ -97,6 +99,7 @@ export function AccountScreen() {
   const themePreference = useSettingsStore(s => s.themePreference);
   const setThemePreference = useSettingsStore(s => s.setThemePreference);
   const appLock = useAppLockToggle();
+  const isPro = useIsPro();
   const [confirmLogout, setConfirmLogout] = useState(false);
   // Shown where the law requires a way to change ad consent (EU/UK).
   const adChoices = useAdsStore(s => s.privacyOptionsRequired);
@@ -137,6 +140,17 @@ export function AccountScreen() {
         chevron
         onPress={() => navigation.navigate('EditProfile')}
         testID="account-edit-profile"
+      />
+
+      <ListRow
+        title="Sharelith Pro"
+        subtitle={
+          isPro ? 'You have Pro' : 'No ads, receipts, export and insights'
+        }
+        leading={<Icon icon={Crown} color="primary" />}
+        chevron
+        onPress={() => navigation.navigate('Pro')}
+        testID="account-pro"
       />
 
       <SectionHeader title="Preferences" />

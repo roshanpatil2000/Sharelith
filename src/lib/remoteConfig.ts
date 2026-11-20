@@ -30,6 +30,9 @@ export const remoteDefaults = {
   interstitial_min_minutes: 3,
   /** Ad breaks (navigation, saved expenses) before the first full-screen ad. */
   interstitial_skip_first: 3,
+  /** Google Play subscription IDs for Sharelith Pro. */
+  pro_monthly_sku: 'pro_monthly',
+  pro_yearly_sku: 'pro_yearly',
 };
 
 export type RemoteValues = typeof remoteDefaults;

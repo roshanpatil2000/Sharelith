@@ -23,6 +23,7 @@ import { EditProfileScreen } from '@/features/account/screens/EditProfileScreen'
 import { ChangePasswordScreen } from '@/features/account/screens/ChangePasswordScreen';
 import { NotificationsScreen } from '@/features/account/screens/NotificationsScreen';
 import { TermsPrompt } from '@/features/auth/components/TermsPrompt';
+import { ProScreen } from '@/features/pro/screens/ProScreen';
 import { DeleteAccountScreen } from '@/features/account/screens/DeleteAccountScreen';
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { SettleUpScreen } from '@/features/expenses/screens/SettleUpScreen';
@@ -203,6 +204,11 @@ export function RootNavigator() {
               name="Notifications"
               component={NotificationsScreen}
               options={{ title: 'Notifications' }}
+            />
+            <Root.Screen
+              name="Pro"
+              component={ProScreen}
+              options={{ title: 'Sharelith Pro' }}
             />
             <Root.Screen
               name="DeleteAccount"
