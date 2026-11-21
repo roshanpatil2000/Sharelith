@@ -28,6 +28,7 @@ import {
 } from '@/features/expenses/api';
 import { overallBalance, useFriendBalances } from '@/features/friends/balances';
 import { FriendBalanceText } from '@/features/friends/components/FriendBalanceText';
+import { ConvertedTotal } from '@/features/currency/ConvertedTotal';
 import { renderSearchButton } from '@/features/search/SearchHeaderButton';
 import { useGroups, type GroupSummary } from '../api';
 import { useGroupBalances, useNonGroupBalance } from '../balances';
@@ -91,6 +92,7 @@ export function GroupsScreen() {
     <Screen>
       <Box p="lg">
         <BalanceSummary balances={overall} />
+        <ConvertedTotal balances={overall} />
       </Box>
       <Divider />
       <VerifyEmailBanner />
