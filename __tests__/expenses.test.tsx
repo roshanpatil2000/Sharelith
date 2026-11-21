@@ -484,6 +484,60 @@ describe('Add expense button', () => {
   });
 });
 
+describe('Date and notes', () => {
+  it('saves today and the notes for a new expense', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Dinner', '90');
+    expect(screen.getByTestId('expense-date')).toHaveTextContent(/Today/);
+    await fireEvent.changeText(
+      screen.getByTestId('expense-notes'),
+      '  Birthday dinner  ',
+    );
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    await screen.findByText('Expense added');
+    const today = new Date();
+    const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}-${String(today.getDate()).padStart(2, '0')}`;
+    expect(createCall()).toMatchObject({
+      expense_date: iso,
+      notes: 'Birthday dinner',
+    });
+  });
+
+  it('keeps an expense’s date and notes when editing', async () => {
+    mockBackend({
+      expenses: [dinner],
+      detail: {
+        ...dinnerDetail,
+        expense_date: '2026-11-02',
+        notes: 'Paid in cash',
+      },
+    });
+    await openGroup();
+    await fireEvent(
+      await screen.findByTestId('expense-e-1'),
+      'accessibilityAction',
+      {
+        nativeEvent: { actionName: 'edit' },
+      },
+    );
+    await screen.findByTestId('expense-description');
+    expect(screen.getByTestId('expense-date')).toHaveTextContent(/2 Nov 2026/);
+    expect(screen.getByTestId('expense-notes')).toHaveDisplayValue(
+      'Paid in cash',
+    );
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    await screen.findByText('Expense saved');
+    expect(rpcCall('update_expense')).toMatchObject({
+      expense_date: '2026-11-02',
+      notes: 'Paid in cash',
+    });
+  });
+});
+
 describe('Category', () => {
   it('picks a category from the description and saves it', async () => {
     mockBackend({});
