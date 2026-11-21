@@ -68,6 +68,7 @@ type Backend = {
   comments?: unknown[];
   repeat?: unknown;
   deleted?: unknown[];
+  defaultSplit?: unknown;
 };
 
 function mockBackend({
@@ -78,6 +79,7 @@ function mockBackend({
   comments = [],
   repeat = null,
   deleted = [],
+  defaultSplit = null,
 }: Backend) {
   supabaseMock.from.mockImplementation(((table: string) => {
     if (table === 'expenses') {
@@ -96,6 +98,7 @@ function mockBackend({
     builder.maybeSingle.mockResolvedValue({
       data: {
         ...groupRow,
+        default_split: defaultSplit,
         group_members: [
           member(me, 'Me Myself'),
           member(asha, 'Asha Rao'),
@@ -1204,5 +1207,65 @@ describe('Recently deleted', () => {
       }),
     );
     expect(await screen.findByText('Restored “Old dinner”')).toBeOnTheScreen();
+  });
+});
+
+describe('Default and itemized splits', () => {
+  it('starts a new group expense from the group’s default split', async () => {
+    mockBackend({
+      defaultSplit: {
+        type: 'percent',
+        values: { [me]: 50, [asha]: 30, [vik]: 20 },
+      },
+    });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('group-add-expense'));
+    expect(
+      await screen.findByTestId(`expense-split-${asha}`),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId(`expense-include-${asha}`)).toBeNull();
+    await fill('Groceries', '1000');
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    await screen.findByText('Expense added');
+    expect(createCall()?.shares).toEqual([
+      { user_id: me, owed_minor: 50000, split_type: 'percent', raw_value: 50 },
+      {
+        user_id: asha,
+        owed_minor: 30000,
+        split_type: 'percent',
+        raw_value: 30,
+      },
+      { user_id: vik, owed_minor: 20000, split_type: 'percent', raw_value: 20 },
+    ]);
+  });
+
+  it('splits by items, with tax shared in proportion, saved as exact amounts', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Dinner', '1000');
+    await fireEvent.press(screen.getByText('Items'));
+    await fireEvent.press(screen.getByTestId('item-add'));
+    await fireEvent.changeText(screen.getByTestId('item-amount-0'), '600');
+    // Only I had the first item.
+    await fireEvent.press(screen.getByTestId(`item-0-person-${asha}`));
+    await fireEvent.press(screen.getByTestId(`item-0-person-${vik}`));
+    await fireEvent.press(screen.getByTestId('item-add'));
+    await fireEvent.changeText(screen.getByTestId('item-amount-1'), '300');
+    await fireEvent.changeText(screen.getByTestId('item-extra'), '90');
+    // 990 of items vs a 1000 total: offer to fix the total.
+    await fireEvent.press(await screen.findByTestId('item-use-total'));
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    await screen.findByText('Expense added');
+    expect(createCall()).toMatchObject({ amount_minor: 99000 });
+    expect(createCall()?.shares).toEqual([
+      { user_id: me, owed_minor: 77000, split_type: 'exact', raw_value: null },
+      {
+        user_id: asha,
+        owed_minor: 11000,
+        split_type: 'exact',
+        raw_value: null,
+      },
+      { user_id: vik, owed_minor: 11000, split_type: 'exact', raw_value: null },
+    ]);
   });
 });

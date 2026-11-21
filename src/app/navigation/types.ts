@@ -50,6 +50,7 @@ export type RootStackParamList = {
   GroupDetail: { groupId: string };
   GroupSettings: { groupId: string };
   GroupTotals: { groupId: string };
+  DefaultSplit: { groupId: string };
   AddGroupMembers: { groupId: string; addedFriendId?: string };
   VerifyEmail: undefined;
   EditProfile: undefined;

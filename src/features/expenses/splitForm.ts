@@ -10,6 +10,7 @@ import {
   parseToMinor,
 } from '@/domain/money';
 import {
+  allocate,
   splitByAdjustment,
   splitByPercent,
   splitByShares,
@@ -18,7 +19,16 @@ import {
 } from '@/domain/split';
 import type { ExpenseDetail, PayerRow, ShareRow } from './api';
 
-export type SplitType = 'equal' | 'exact' | 'percent' | 'shares' | 'adjustment';
+export type SplitType =
+  | 'equal'
+  | 'exact'
+  | 'percent'
+  | 'shares'
+  | 'adjustment'
+  | 'itemized';
+
+/** How a split is saved: itemized is worked out here and saved as exact. */
+type SavedSplitType = Exclude<SplitType, 'itemized'>;
 
 export const SPLIT_TYPES: readonly { value: SplitType; label: string }[] = [
   { value: 'equal', label: 'Equal' },
@@ -26,14 +36,29 @@ export const SPLIT_TYPES: readonly { value: SplitType; label: string }[] = [
   { value: 'percent', label: '%' },
   { value: 'shares', label: 'Shares' },
   { value: 'adjustment', label: '+/−' },
+  { value: 'itemized', label: 'Items' },
 ];
+
+/** One line of an itemized bill: its price and who had it (shared equally). */
+export type ItemDraft = {
+  key: string;
+  name: string;
+  amount: string;
+  people: string[];
+};
 
 /** What was typed per person, for each split type, so switching keeps it. */
 export type SplitDraft = {
   type: SplitType;
   /** For equal: who's left out. Everyone else is in, even people still loading. */
   excluded: string[];
-  values: Record<Exclude<SplitType, 'equal'>, Record<string, string>>;
+  values: Record<
+    Exclude<SplitType, 'equal' | 'itemized'>,
+    Record<string, string>
+  >;
+  items: ItemDraft[];
+  /** Tax, tip or service charge: shared in proportion to what each had. */
+  extra: string;
 };
 
 export type PayerDraft =
@@ -44,7 +69,56 @@ export const emptySplit = (): SplitDraft => ({
   type: 'equal',
   excluded: [],
   values: { exact: {}, percent: {}, shares: {}, adjustment: {} },
+  items: [],
+  extra: '',
 });
+
+/** A group's default split, as saved on the group. */
+export type DefaultSplit = {
+  type: 'percent' | 'shares';
+  values: Record<string, number>;
+};
+
+/** Reads a group's saved default; anything unexpected counts as none. */
+export function asDefaultSplit(value: unknown): DefaultSplit | null {
+  const v = value as Partial<DefaultSplit> | null;
+  return v &&
+    (v.type === 'percent' || v.type === 'shares') &&
+    v.values &&
+    typeof v.values === 'object'
+    ? (v as DefaultSplit)
+    : null;
+}
+
+/**
+ * The form's starting split for a group with a default: its percentages or
+ * shares for current members (0 for anyone added since).
+ */
+export function draftFromDefault(
+  def: DefaultSplit,
+  people: string[],
+): SplitDraft {
+  const draft = emptySplit();
+  draft.type = def.type;
+  draft.values[def.type] = Object.fromEntries(
+    people.map(id => [id, String(def.values[id] ?? 0)]),
+  );
+  return draft;
+}
+
+/** What the items and extra add up to, or null if one isn't a number. */
+export function itemsTotal(draft: SplitDraft, currency: string): number | null {
+  let sum = 0;
+  for (const item of draft.items) {
+    const minor = parseToMinor(item.amount, currency);
+    if (minor === null) {
+      return null;
+    }
+    sum += minor;
+  }
+  const extra = parseToMinor(draft.extra, currency);
+  return extra === null ? null : sum + extra;
+}
 
 /**
  * owed is always filled in as far as it can be worked out, so the form can show
@@ -78,7 +152,7 @@ function remainingMessage(left: number, currency: string): string {
 }
 
 function rowsFrom(
-  type: SplitType,
+  type: SavedSplitType,
   people: string[],
   owed: Shares,
   raw: (id: string) => number | null,
@@ -122,6 +196,10 @@ export function computeSplit(
       ),
       error: null,
     };
+  }
+
+  if (draft.type === 'itemized') {
+    return computeItemized(total, currency, people, draft, zero, fail);
   }
 
   const typed = draft.values[draft.type];
@@ -232,6 +310,72 @@ export function computeSplit(
   };
 }
 
+function computeItemized(
+  total: number,
+  currency: string,
+  people: string[],
+  draft: SplitDraft,
+  zero: Shares,
+  fail: (error: string, owed?: Shares) => SplitResult,
+): SplitResult {
+  if (draft.items.length === 0) {
+    return fail('Add the items on the bill.');
+  }
+  const subtotal: Shares = { ...zero };
+  for (const item of draft.items) {
+    const label = item.name.trim() ? `“${item.name.trim()}”` : 'an item';
+    const minor = parseToMinor(item.amount, currency);
+    if (minor === null) {
+      return fail(`Check the price of ${label}.`);
+    }
+    const who = item.people.filter(id => people.includes(id));
+    if (minor > 0 && who.length === 0) {
+      return fail(`Choose who had ${label}.`);
+    }
+    if (minor > 0) {
+      for (const [id, part] of Object.entries(splitEqually(minor, who))) {
+        subtotal[id] = (subtotal[id] ?? 0) + part;
+      }
+    }
+  }
+  const extra = parseToMinor(draft.extra, currency);
+  if (extra === null) {
+    return fail('Check the tax or tip: it isn’t a valid amount.');
+  }
+  const itemsSum = people.reduce((acc, id) => acc + subtotal[id]!, 0);
+  if (itemsSum === 0) {
+    return fail('Add a price to at least one item.');
+  }
+  const owed: Shares = { ...subtotal };
+  if (extra > 0) {
+    const shared = allocate(extra, subtotal);
+    for (const id of people) {
+      owed[id] = (owed[id] ?? 0) + (shared[id] ?? 0);
+    }
+  }
+  const left = total - (itemsSum + extra);
+  if (left !== 0) {
+    return fail(
+      `Items come to ${formatMoney(
+        itemsSum + extra,
+        currency,
+      )}; the total is ${formatMoney(total, currency)}.`,
+      owed,
+    );
+  }
+  return {
+    owed,
+    rows: rowsFrom(
+      'exact',
+      people,
+      owed,
+      () => null,
+      id => owed[id]! > 0,
+    ),
+    error: null,
+  };
+}
+
 export type PayerResult = {
   rows: PayerRow[] | null;
   error: string | null;
@@ -278,8 +422,9 @@ export function computePayers(
   };
 }
 
-const isSplitType = (t: string): t is SplitType =>
-  SPLIT_TYPES.some(s => s.value === t);
+// Itemized is never saved as such, so a saved split is never "itemized".
+const isSplitType = (t: string): t is SavedSplitType =>
+  t !== 'itemized' && SPLIT_TYPES.some(s => s.value === t);
 
 /**
  * The form's choices for a saved expense, or null if this form can't show it:

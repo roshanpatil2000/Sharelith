@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { asDefaultSplit } from '@/features/expenses/splitForm';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -8,6 +9,7 @@ import {
   UserMinus,
   QrCode,
   UserPlus,
+  PieChart,
 } from 'lucide-react-native';
 import {
   Avatar,
@@ -55,6 +57,16 @@ type Confirm =
   | { kind: 'remove'; member: GroupMember };
 
 const firstName = (name: string) => name.split(' ')[0];
+
+/** "Equal", or "By percentage" / "By shares" for a saved default. */
+const defaultSplitLabel = (value: unknown) => {
+  const def = asDefaultSplit(value);
+  return !def
+    ? 'Equal'
+    : def.type === 'percent'
+    ? 'By percentage'
+    : 'By shares';
+};
 
 export function GroupSettingsScreen({ route, navigation }: Props) {
   const { groupId } = route.params;
@@ -248,6 +260,14 @@ export function GroupSettingsScreen({ route, navigation }: Props) {
       })}
 
       <SectionHeader title="Settings" />
+      <ListRow
+        title="Default split"
+        subtitle={defaultSplitLabel(group.default_split)}
+        leading={<Icon icon={PieChart} color="textSecondary" />}
+        chevron
+        onPress={() => navigation.navigate('DefaultSplit', { groupId })}
+        testID="group-default-split"
+      />
       <ListRow
         title="Simplify group debts"
         subtitle="Combine debts to reduce the number of repayments."
