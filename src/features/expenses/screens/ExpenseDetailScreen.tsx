@@ -27,6 +27,7 @@ import { useExpense, useSetExpenseDeleted } from '../api';
 import { myNet, shareNote, splitTitle } from '../detail';
 import { ReceiptSection } from '@/features/pro/components/ReceiptSection';
 import { CommentBox, CommentsSection } from '../components/CommentsSection';
+import { RepeatRow } from '../components/RepeatRow';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseDetail'>;
 
@@ -161,6 +162,10 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
           </Text>
         </>
       ) : null}
+
+      {expense.is_payment ? null : (
+        <RepeatRow expenseId={expense.id} canChange={mine} />
+      )}
 
       {expense.is_payment ? null : (
         <ReceiptSection expenseId={expense.id} path={expense.receipt_path} />

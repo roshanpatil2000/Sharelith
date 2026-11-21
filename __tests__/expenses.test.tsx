@@ -66,6 +66,7 @@ type Backend = {
   /** What useExpense loads, for editing. */
   detail?: unknown;
   comments?: unknown[];
+  repeat?: unknown;
 };
 
 function mockBackend({
@@ -74,6 +75,7 @@ function mockBackend({
   createError,
   detail = null,
   comments = [],
+  repeat = null,
 }: Backend) {
   supabaseMock.from.mockImplementation(((table: string) => {
     if (table === 'expenses') {
@@ -81,6 +83,9 @@ function mockBackend({
     }
     if (table === 'expense_comments') {
       return queryBuilder<unknown>({ data: comments, error: null });
+    }
+    if (table === 'recurring_expenses') {
+      return queryBuilder<unknown>({ data: repeat, error: null });
     }
     const builder = queryBuilder<unknown>({
       data: [{ ...groupRow, group_members: [{ count: 3 }] }],
@@ -1087,5 +1092,41 @@ describe('Comments', () => {
     await waitFor(() =>
       expect(screen.getByTestId('comment-input')).toHaveDisplayValue(''),
     );
+  });
+});
+
+describe('Repeat', () => {
+  it('lets the creator make an expense repeat monthly', async () => {
+    mockBackend({
+      expenses: [dinner],
+      detail: { ...dinnerDetail, created_by: me },
+    });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    await fireEvent.press(await screen.findByTestId('detail-repeat-select'));
+    await fireEvent.press(await screen.findByText('Every month'));
+    await waitFor(() =>
+      expect(supabaseMock.rpc).toHaveBeenCalledWith('set_expense_repeat', {
+        eid: 'e-1',
+        frequency: 'monthly',
+      }),
+    );
+    expect(
+      await screen.findByText('We’ll add it again on schedule'),
+    ).toBeOnTheScreen();
+  });
+
+  it('shows others when it repeats, without the option to change it', async () => {
+    mockBackend({
+      expenses: [dinner],
+      detail: { ...dinnerDetail, created_by: asha },
+      repeat: { frequency: 'monthly', next_date: '2026-12-21' },
+    });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    expect(
+      await screen.findByText('Repeats monthly · next on 21 December 2026'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId('detail-repeat-select')).toBeNull();
   });
 });
