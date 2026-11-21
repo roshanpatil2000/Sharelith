@@ -31,13 +31,19 @@ export type RootStackParamList = {
     | { friendId: string; groupId?: undefined }
     | { groupId: string; friendId?: undefined };
   /** returnTo: a group member picker that should select the person added. */
+  /** contact: picked in ChooseContact, fills in the form. */
   AddFriend:
     | {
         returnTo?:
           | { screen: 'CreateGroup' }
           | { screen: 'AddGroupMembers'; groupId: string };
+        contact?: { email: string; name: string };
       }
     | undefined;
+  /** Gets the AddFriend params back, plus the contact picked. */
+  ChooseContact: RootStackParamList['AddFriend'];
+  /** A QR code and link: befriends you, or joins this group too. */
+  Invite: { groupId?: string } | undefined;
   FriendDetail: { friendId: string };
   /** addedFriendId: set by AddFriend so the picker selects them. */
   CreateGroup: { addedFriendId?: string } | undefined;

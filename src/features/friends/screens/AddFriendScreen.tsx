@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, User } from 'lucide-react-native';
+import { Contact, Mail, QrCode, User } from 'lucide-react-native';
 import {
   Banner,
   Button,
@@ -32,10 +32,22 @@ export function AddFriendScreen({ route, navigation }: Props) {
   // Set when the email isn't on Sharelith yet: we need a name to invite them.
   const [needsName, setNeedsName] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const { control, handleSubmit, formState, setError } = useForm<Values>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: '', name: '' },
-  });
+  const { control, handleSubmit, formState, setError, setValue } =
+    useForm<Values>({
+      resolver: zodResolver(schema),
+      defaultValues: { email: '', name: '' },
+    });
+
+  // Picked in ChooseContact: fill both fields, ready to add.
+  const contact = route.params?.contact;
+  useEffect(() => {
+    if (contact) {
+      setNeedsName(false);
+      setFormError(null);
+      setValue('email', contact.email, { shouldValidate: true });
+      setValue('name', contact.name);
+    }
+  }, [contact, setValue]);
 
   const onSubmit = handleSubmit(async ({ email, name }) => {
     setFormError(null);
@@ -49,7 +61,7 @@ export function AddFriendScreen({ route, navigation }: Props) {
     try {
       const result = await addFriend.mutateAsync({
         email,
-        name: needsName ? name.trim() : undefined,
+        name: needsName || contact ? name.trim() || undefined : undefined,
       });
       if (result.status === 'needs_name') {
         setNeedsName(true);
@@ -121,6 +133,26 @@ export function AddFriendScreen({ route, navigation }: Props) {
           onPress={onSubmit}
           testID="add-friend-submit"
         />
+        {needsName ? null : (
+          <>
+            <Button
+              title="Choose from contacts"
+              icon={Contact}
+              variant="secondary"
+              fullWidth
+              onPress={() => navigation.navigate('ChooseContact', { returnTo })}
+              testID="add-friend-contacts"
+            />
+            <Button
+              title="Invite with a link or QR code"
+              icon={QrCode}
+              variant="ghost"
+              fullWidth
+              onPress={() => navigation.navigate('Invite')}
+              testID="add-friend-invite"
+            />
+          </>
+        )}
       </Stack>
     </Screen>
   );

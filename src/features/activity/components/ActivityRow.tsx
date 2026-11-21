@@ -26,6 +26,7 @@ const ICONS: Record<ActivityKind, LucideIcon> = {
   group_created: Users,
   member_added: UserPlus,
   member_left: UserMinus,
+  member_joined: UserPlus,
   member_removed: UserMinus,
   reminder: BellRing,
 };

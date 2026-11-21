@@ -15,6 +15,7 @@ export type ActivityKind =
   | 'member_added'
   | 'member_left'
   | 'member_removed'
+  | 'member_joined'
   | 'reminder';
 
 /** One line of your feed. Names and amounts are as they were at the time. */

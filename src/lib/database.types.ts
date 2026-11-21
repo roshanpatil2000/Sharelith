@@ -570,6 +570,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      redeem_invite_link: {
+        Args: { token: string };
+        Returns: {
+          already: boolean;
+          friend_id: string;
+          group_id: string | null;
+        }[];
+      };
       spending_insights: {
         Args: { months?: number };
         Returns: {
@@ -635,6 +643,7 @@ export type Database = {
         };
         Returns: string;
       };
+      create_invite_link: { Args: { gid?: string }; Returns: string };
       create_group: {
         Args: {
           description?: string;

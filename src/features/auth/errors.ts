@@ -51,6 +51,9 @@ const userFacingHints = new Set([
   'locked',
   'not_owed',
   'reminded',
+  'invite_expired',
+  'own_invite',
+  'group_gone',
 ]);
 
 /** Converts Supabase/network errors into an AppError with friendly text. */

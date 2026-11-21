@@ -4,6 +4,7 @@ import { env } from '@/lib/env';
 import { queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
 import { profileKey, type Profile } from '@/features/account/api';
+import { captureInviteLink } from '@/features/invites/links';
 import { useAuthStore } from './authStore';
 import { toAppError } from './errors';
 
@@ -209,11 +210,14 @@ export async function markProfileVerified(userId: string): Promise<void> {
 
 /** Handles the link that launched the app and any opened while running. */
 export function startAuthLinkListener(): () => void {
+  // Invite links are saved and used once signed in (see InviteBridge).
+  const open = (url: string) =>
+    captureInviteLink(url) ? undefined : handleAuthLink(url);
   Linking.getInitialURL()
-    .then(url => (url ? handleAuthLink(url) : undefined))
+    .then(url => (url ? open(url) : undefined))
     .catch(() => {});
   const sub = Linking.addEventListener('url', ({ url }) => {
-    handleAuthLink(url);
+    open(url);
   });
   return () => sub.remove();
 }

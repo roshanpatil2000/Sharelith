@@ -111,6 +111,9 @@ describe('describeActivity', () => {
       'Vikram left “Goa”',
     );
     expect(
+      describeActivity({ ...member, kind: 'member_joined' }, me).title,
+    ).toBe('Vikram joined “Goa”');
+    expect(
       describeActivity({ ...member, kind: 'member_removed' }, me).title,
     ).toBe('Asha removed Vikram from “Goa”');
     expect(

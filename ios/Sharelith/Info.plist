@@ -44,6 +44,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSContactsUsageDescription</key>
+	<string>Pick friends from your contacts to add them on Sharelith. Contacts stay on your phone.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Sharelith uses Face ID to unlock the app when App lock is on.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

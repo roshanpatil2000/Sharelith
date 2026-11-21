@@ -190,3 +190,19 @@ jest.mock('react-native-device-info', () => ({
   getVersion: jest.fn(() => require('./package.json').version),
   default: { getBuildNumber: jest.fn(() => '1795196400') },
 }));
+
+jest.mock('react-native-contacts', () => ({
+  __esModule: true,
+  default: {
+    requestPermission: jest.fn(async () => 'authorized'),
+    getAllWithoutPhotos: jest.fn(async () => []),
+  },
+}));
+jest.mock('react-native-qrcode-svg', () => {
+  const { View } = require('react-native');
+  const React = require('react');
+  return {
+    __esModule: true,
+    default: () => React.createElement(View, { testID: 'qr-code' }),
+  };
+});
