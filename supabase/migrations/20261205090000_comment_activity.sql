@@ -27,7 +27,7 @@ as $$
   select recipient is distinct from actor and (
     net <> 0
     or kind in ('group_created', 'comment_added')
-    or (kind in ('member_added', 'member_removed') and subject = recipient)
+    or (kind in ('member_added', 'member_removed', 'reminder') and subject = recipient)
   );
 $$;
 
