@@ -108,7 +108,11 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
         </Text>
         <View testID="detail-effect">
           {net === 0 ? (
-            <Text color="textSecondary">You’re not involved</Text>
+            <Text color="textSecondary">
+              {expense.expense_payers.some(p => p.user_id === me)
+                ? 'You paid exactly your share'
+                : 'You’re not involved'}
+            </Text>
           ) : (
             <Text variant="bodyStrong">
               {net > 0 ? 'You lent ' : 'You borrowed '}
