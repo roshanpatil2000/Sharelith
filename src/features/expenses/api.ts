@@ -131,9 +131,13 @@ export function useExpense(expenseId: string | undefined) {
   });
 }
 
+/** Spending insights (Pro); refreshed with everything else that shows expenses. */
+export const insightsKey = (userId: string | null) =>
+  ['insights', userId] as const;
+
 /**
  * Reloads everything other people can change: balances, expenses (and any
- * open for editing), friends, groups and the activity feed.
+ * open for editing), friends, groups, the activity feed and insights.
  */
 export function useRefreshExpenses() {
   const userId = useUserId();
@@ -147,6 +151,7 @@ export function useRefreshExpenses() {
         qc.invalidateQueries({ queryKey: groupsKey(userId) }),
         qc.invalidateQueries({ queryKey: ['expense', userId] }),
         qc.invalidateQueries({ queryKey: activityKey(userId) }),
+        qc.invalidateQueries({ queryKey: insightsKey(userId) }),
       ]),
     [qc, userId],
   );
@@ -180,6 +185,7 @@ function useInvalidateExpenses() {
       qc.invalidateQueries({ queryKey: expensesKey(userId) }),
       qc.invalidateQueries({ queryKey: ['expense', userId] }),
       qc.invalidateQueries({ queryKey: activityKey(userId) }),
+      qc.invalidateQueries({ queryKey: insightsKey(userId) }),
     ]);
 }
 

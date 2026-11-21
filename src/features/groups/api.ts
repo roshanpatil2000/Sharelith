@@ -103,7 +103,10 @@ export function useGroup(groupId: string) {
   });
 }
 
-/** Membership changes add friendships too, so both lists refresh. */
+/**
+ * Membership changes add friendships too, so both lists refresh. Deleting or
+ * leaving a group changes what insights count, so they refresh as well.
+ */
 function useInvalidateGroups() {
   const userId = useUserId();
   const qc = useQueryClient();
@@ -111,6 +114,7 @@ function useInvalidateGroups() {
     Promise.all([
       qc.invalidateQueries({ queryKey: groupsKey(userId) }),
       qc.invalidateQueries({ queryKey: friendsKey(userId) }),
+      qc.invalidateQueries({ queryKey: ['insights', userId] }),
     ]);
 }
 
