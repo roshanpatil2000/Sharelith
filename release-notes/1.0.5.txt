@@ -1,0 +1,18 @@
+Sharelith 1.0.5
+
+Important
+- Test accounts and data were reset. Please sign up again (it takes a minute), and re-add your friends and groups.
+
+New
+- Sharelith Pro: no ads, receipt photos, export to CSV or PDF, and spending insights. Account > Sharelith Pro shows what's included. Buying isn't open yet in this test build.
+- Categories are picked for you from what you type: "Lunch" is Food, "Uber" is Transport, "Netflix" is Entertainment. You can still change it.
+- Sign-in alerts: we email you after every sign-in with the device and approximate location.
+
+Changed
+- Sharelith stays signed in on one device at a time. Signing in on another phone signs the old one out, with a message saying why.
+- A new logo on the welcome and loading screens.
+- Your cached data on the phone is now encrypted.
+- Signing up with an email that already has an account now says so.
+
+Note
+- Please mention your app version (Account screen) when you report a problem.

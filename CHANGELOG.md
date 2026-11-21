@@ -2,6 +2,18 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## 1.0.5
+
+Build numbers are now the build time in epoch seconds (see docs/RELEASE.md), so this heading no longer lists one.
+
+- **Pro:** status on the server (`subscriptions`, `pro_override`, `is_pro`), Pro screen with Google Play Billing (`verify-purchase`, `play-notifications`; not deployed until Play Console is set up), receipt photos, CSV/PDF export, and spending insights (live, deleted groups excluded). Pro hides all ads.
+- **Sign-in:** one signed-in device per account (`claim-session`), sign-in alert email with device, IP and approximate location.
+- **Categories:** picked from the description (`guessCategory`), sent on create and update.
+- **Security:** offline cache encrypted with AES-256; old plain cache erased.
+- **Build:** one Android app (flavours removed); epoch-second build numbers on Android and iOS.
+- **Fixed:** signing up with an existing email showed Check your email.
+- **Data:** the Supabase project was reset, so testers sign up again.
+
 ## 1.0.4 (build 10004)
 
 - **Ads:** banner removed; interstitials at natural breaks (navigation and after adding an expense), capped by `interstitial_min_minutes` and `interstitial_skip_first`. Native ads in Groups and Friends as well as Activity. Remote Config switches per placement (`interstitial_enabled`, `native_*_enabled`) under the `ads_enabled` master switch, applied in real time.
