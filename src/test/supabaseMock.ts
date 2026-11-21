@@ -61,6 +61,8 @@ export function fakeProfile(overrides: Partial<Profile> = {}): Profile {
 type QueryBuilder<T> = {
   select: jest.Mock<QueryBuilder<T>>;
   update: jest.Mock<QueryBuilder<T>>;
+  insert: jest.Mock<QueryBuilder<T>>;
+  delete: jest.Mock<QueryBuilder<T>>;
   eq: jest.Mock<QueryBuilder<T>>;
   is: jest.Mock<QueryBuilder<T>>;
   order: jest.Mock<QueryBuilder<T>>;
@@ -95,6 +97,8 @@ export function queryBuilder<T>(result: {
   const builder: QueryBuilder<T> = {
     select: jest.fn(() => builder),
     update: jest.fn(() => builder),
+    insert: jest.fn(() => builder),
+    delete: jest.fn(() => builder),
     eq: jest.fn(() => builder),
     is: jest.fn(() => builder),
     order: jest.fn(() => builder),

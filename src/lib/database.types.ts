@@ -14,6 +14,45 @@ export type Database = {
   };
   public: {
     Tables: {
+      expense_comments: {
+        Row: {
+          author_id: string | null;
+          body: string;
+          created_at: string;
+          expense_id: string;
+          id: string;
+        };
+        Insert: {
+          author_id?: string | null;
+          body: string;
+          created_at?: string;
+          expense_id: string;
+          id?: string;
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string;
+          created_at?: string;
+          expense_id?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_comments_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_comments_expense_id_fkey';
+            columns: ['expense_id'];
+            isOneToOne: false;
+            referencedRelation: 'expenses';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       subscriptions: {
         Row: {
           expires_at: string;

@@ -26,6 +26,7 @@ import { toAppError } from '@/features/auth/errors';
 import { useExpense, useSetExpenseDeleted } from '../api';
 import { myNet, shareNote, splitTitle } from '../detail';
 import { ReceiptSection } from '@/features/pro/components/ReceiptSection';
+import { CommentsSection } from '../components/CommentsSection';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseDetail'>;
 
@@ -160,6 +161,8 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
       {expense.is_payment ? null : (
         <ReceiptSection expenseId={expense.id} path={expense.receipt_path} />
       )}
+
+      <CommentsSection expenseId={expense.id} />
 
       <Divider />
       <Stack gap="sm" style={styles.actions}>
