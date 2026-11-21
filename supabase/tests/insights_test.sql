@@ -1,7 +1,7 @@
 -- Insights: Pro only; your share and what you paid, per month and category;
 -- payments and other people's expenses left out.
 begin;
-select plan(7);
+select plan(8);
 
 insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-00000000000a', 'a@test.co', '{"full_name":"A"}'),
@@ -46,6 +46,21 @@ select is((select paid_minor::int from public.spending_insights(12) where catego
 select is((select share_minor::int from public.spending_insights(12) where category = 'transport'), 500, 'your share when someone else paid');
 select is((select month from public.spending_insights(12) limit 1), date_trunc('month', current_date)::date, 'grouped by month');
 select throws_ok($$select * from public.spending_insights(0)$$, '22023', null, 'months must be 1 to 24');
+
+-- An expense in a deleted (archived) group doesn't count.
+create temp table old_group as select public.create_group('Old trip') as id;
+select public.create_expense('Hotel', 9000, 'INR',
+  '[{"user_id":"00000000-0000-0000-0000-00000000000a","paid_minor":9000}]',
+  '[{"user_id":"00000000-0000-0000-0000-00000000000a","owed_minor":9000}]',
+  (select id from old_group), 'travel');
+reset role;
+update public.groups set archived_at = now() where id = (select id from old_group);
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
+select is(
+  (select count(*)::int from public.spending_insights(12) where category = 'travel'), 0,
+  'expenses in deleted groups are left out'
+);
 
 select * from finish();
 rollback;
