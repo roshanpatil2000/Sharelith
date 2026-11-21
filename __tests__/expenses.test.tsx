@@ -435,6 +435,70 @@ describe('Split types', () => {
   });
 });
 
+describe('Category', () => {
+  it('picks a category from the description and saves it', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Dinner at Taj', '90');
+    expect(screen.getByTestId('expense-category')).toHaveTextContent(/Food/);
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    await screen.findByText('Expense added');
+    expect(createCall()).toMatchObject({ category: 'food' });
+  });
+
+  it('keeps a category picked by hand while the description changes', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Dinner', '90');
+    await fireEvent.press(screen.getByTestId('expense-category'));
+    await fireEvent.press(
+      await screen.findByTestId('expense-category-option-travel'),
+    );
+    await fireEvent.changeText(
+      screen.getByTestId('expense-description'),
+      'Dinner on the train',
+    );
+    expect(screen.getByTestId('expense-category')).toHaveTextContent(/Travel/);
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    await screen.findByText('Expense added');
+    expect(createCall()).toMatchObject({ category: 'travel' });
+  });
+
+  it('falls back to General when nothing matches', async () => {
+    mockBackend({});
+    await openForm();
+    await fill('Misc', '90');
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    await screen.findByText('Expense added');
+    expect(createCall()).toMatchObject({ category: 'general' });
+  });
+
+  it('keeps an expense’s saved category when editing', async () => {
+    mockBackend({
+      expenses: [dinner],
+      detail: { ...dinnerDetail, category: 'travel' },
+    });
+    await openGroup();
+    await fireEvent(
+      await screen.findByTestId('expense-e-1'),
+      'accessibilityAction',
+      {
+        nativeEvent: { actionName: 'edit' },
+      },
+    );
+    await screen.findByTestId('expense-description');
+    expect(screen.getByTestId('expense-category')).toHaveTextContent(/Travel/);
+    await fireEvent.changeText(
+      screen.getByTestId('expense-description'),
+      'Lunch',
+    );
+    expect(screen.getByTestId('expense-category')).toHaveTextContent(/Travel/);
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    await screen.findByText('Expense saved');
+    expect(rpcCall('update_expense')).toMatchObject({ category: 'travel' });
+  });
+});
+
 describe('Group expenses', () => {
   it('lists expenses and shows the real balance', async () => {
     mockBackend({

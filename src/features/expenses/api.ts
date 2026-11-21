@@ -102,6 +102,7 @@ export type ExpenseDetail = {
   created_at?: string;
   group?: { name: string } | null;
   creator?: NameRef;
+  category?: string;
   receipt_path?: string | null;
 };
 
@@ -117,7 +118,7 @@ export function useExpense(expenseId: string | undefined) {
       const { data, error } = await supabase
         .from('expenses')
         .select(
-          'id, group_id, description, amount_minor, currency, expense_date, created_by, is_payment, created_at, receipt_path, group:groups(name), creator:profiles!expenses_created_by_fkey(full_name), expense_payers(user_id, paid_minor, profile:profiles!expense_payers_user_id_fkey(full_name)), expense_shares(user_id, owed_minor, split_type, raw_value, profile:profiles!expense_shares_user_id_fkey(full_name))',
+          'id, group_id, description, amount_minor, currency, category, expense_date, created_by, is_payment, created_at, receipt_path, group:groups(name), creator:profiles!expenses_created_by_fkey(full_name), expense_payers(user_id, paid_minor, profile:profiles!expense_payers_user_id_fkey(full_name)), expense_shares(user_id, owed_minor, split_type, raw_value, profile:profiles!expense_shares_user_id_fkey(full_name))',
         )
         .eq('id', expenseId!)
         .is('deleted_at', null)
@@ -189,6 +190,7 @@ export type ExpenseUpdate = {
   currency: string;
   payers: PayerRow[];
   shares: ShareRow[];
+  category?: string;
 };
 
 export function useUpdateExpense() {
@@ -202,6 +204,8 @@ export function useUpdateExpense() {
         currency: update.currency,
         payers: update.payers,
         shares: update.shares,
+        // Without it, update_expense would reset the category to General.
+        category: update.category ?? 'general',
       });
       if (error) {
         throw toAppError(error);
@@ -312,6 +316,7 @@ export type NewExpense = {
   groupId?: string;
   payers: PayerRow[];
   shares: ShareRow[];
+  category?: string;
 };
 
 export function useCreateExpense() {
@@ -325,6 +330,7 @@ export function useCreateExpense() {
         group_id: expense.groupId,
         payers: expense.payers,
         shares: expense.shares,
+        category: expense.category ?? 'general',
       });
       if (error) {
         throw toAppError(error);
