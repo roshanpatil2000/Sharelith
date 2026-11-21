@@ -657,6 +657,21 @@ export type Database = {
           total_minor: number;
         }[];
       };
+      list_deleted_expenses: {
+        Args: never;
+        Returns: {
+          amount_minor: number;
+          category: string;
+          currency: string;
+          deleted_at: string;
+          description: string;
+          expense_date: string;
+          group_id: string | null;
+          group_name: string | null;
+          id: string;
+          is_payment: boolean;
+        }[];
+      };
       search_expenses: {
         Args: { q: string };
         Returns: {

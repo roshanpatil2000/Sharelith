@@ -34,6 +34,7 @@ import { InviteBridge } from '@/features/invites/InviteBridge';
 import { ChooseContactScreen } from '@/features/invites/screens/ChooseContactScreen';
 import { InviteScreen } from '@/features/invites/screens/InviteScreen';
 import { SearchScreen } from '@/features/search/screens/SearchScreen';
+import { RecentlyDeletedScreen } from '@/features/expenses/screens/RecentlyDeletedScreen';
 import { GroupTotalsScreen } from '@/features/groups/screens/GroupTotalsScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
 import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
@@ -234,6 +235,11 @@ export function RootNavigator() {
               layout={modalLayout}
               component={AddFriendScreen}
               options={{ presentation: 'modal', title: 'Add friend' }}
+            />
+            <Root.Screen
+              name="RecentlyDeleted"
+              component={RecentlyDeletedScreen}
+              options={{ title: 'Recently deleted' }}
             />
             <Root.Screen
               name="Search"
