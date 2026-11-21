@@ -7,7 +7,7 @@ import {
   type RouteProp,
 } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HandCoins, Receipt, Settings } from 'lucide-react-native';
+import { HandCoins, Receipt, Settings, BarChart3 } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   AvatarStack,
@@ -73,6 +73,15 @@ export function GroupDetailScreen({ route }: Props) {
       headerRight: group
         ? () => (
             <View style={styles.headerButtons}>
+              <IconButton
+                icon={BarChart3}
+                accessibilityLabel="Group totals"
+                color="primary"
+                onPress={() =>
+                  navigation.navigate('GroupTotals', { groupId: group.id })
+                }
+                testID="group-totals"
+              />
               <ExportButton
                 title={group.name}
                 groupId={group.id}

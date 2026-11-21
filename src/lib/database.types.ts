@@ -636,6 +636,27 @@ export type Database = {
         Args: { eid: string; frequency: string | null };
         Returns: string | null;
       };
+      group_member_spending: {
+        Args: { gid: string };
+        Returns: {
+          currency: string;
+          paid_minor: number;
+          share_minor: number;
+          user_id: string;
+        }[];
+      };
+      group_spending: {
+        Args: { gid: string };
+        Returns: {
+          category: string;
+          currency: string;
+          expense_count: number;
+          month: string;
+          my_paid_minor: number;
+          my_share_minor: number;
+          total_minor: number;
+        }[];
+      };
       search_expenses: {
         Args: { q: string };
         Returns: {

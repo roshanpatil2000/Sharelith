@@ -34,6 +34,7 @@ import { InviteBridge } from '@/features/invites/InviteBridge';
 import { ChooseContactScreen } from '@/features/invites/screens/ChooseContactScreen';
 import { InviteScreen } from '@/features/invites/screens/InviteScreen';
 import { SearchScreen } from '@/features/search/screens/SearchScreen';
+import { GroupTotalsScreen } from '@/features/groups/screens/GroupTotalsScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
 import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
 import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
@@ -264,6 +265,11 @@ export function RootNavigator() {
               name="GroupDetail"
               component={GroupDetailScreen}
               options={{ title: '' }}
+            />
+            <Root.Screen
+              name="GroupTotals"
+              component={GroupTotalsScreen}
+              options={{ title: 'Group totals' }}
             />
             <Root.Screen
               name="GroupSettings"
