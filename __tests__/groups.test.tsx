@@ -1,5 +1,10 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import App from '../App';
 import {
   fakeProfile,
@@ -389,5 +394,45 @@ describe('Group totals', () => {
     await openTotals();
     expect(screen.getByTestId('totals-pro')).toBeOnTheScreen();
     expect(screen.queryByTestId('totals-months')).toBeNull();
+  });
+});
+
+describe('Default split', () => {
+  it('saves percentages for the group', async () => {
+    mockBackend({
+      groups: [{ ...goaRow, group_members: [{ count: 2 }] }],
+      detail: goaDetail(),
+    });
+    await openApp();
+    await fireEvent.press(await screen.findByTestId('group-g-goa'));
+    await fireEvent.press(await screen.findByTestId('group-settings'));
+    expect(await screen.findByText('Equal')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('group-default-split'));
+    await fireEvent.press(await screen.findByText('%'));
+    await fireEvent.changeText(
+      screen.getByTestId('default-split-user-1'),
+      '70',
+    );
+    await fireEvent.changeText(
+      screen.getByTestId('default-split-f-asha'),
+      '20',
+    );
+    expect(screen.getByText('10% left to assign')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('default-split-save'));
+    expect(
+      await screen.findByText('Percentages must add up to 100.'),
+    ).toBeOnTheScreen();
+    await fireEvent.changeText(
+      screen.getByTestId('default-split-f-asha'),
+      '30',
+    );
+    await fireEvent.press(screen.getByTestId('default-split-save'));
+    await waitFor(() =>
+      expect(supabaseMock.rpc).toHaveBeenCalledWith('set_group_default_split', {
+        gid: 'g-goa',
+        split: { type: 'percent', values: { 'user-1': 70, 'f-asha': 30 } },
+      }),
+    );
+    expect(await screen.findByText('Default split saved')).toBeOnTheScreen();
   });
 });

@@ -502,6 +502,7 @@ export type Database = {
           created_at: string;
           created_by: string | null;
           currency: string;
+          default_split: Json | null;
           description: string | null;
           id: string;
           name: string;
@@ -515,6 +516,7 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           currency?: string;
+          default_split?: Json | null;
           description?: string | null;
           id?: string;
           name: string;
@@ -528,6 +530,7 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           currency?: string;
+          default_split?: Json | null;
           description?: string | null;
           id?: string;
           name?: string;
@@ -671,6 +674,10 @@ export type Database = {
           id: string;
           is_payment: boolean;
         }[];
+      };
+      set_group_default_split: {
+        Args: { gid: string; split: Json | null };
+        Returns: undefined;
       };
       search_expenses: {
         Args: { q: string };

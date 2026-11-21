@@ -3,7 +3,10 @@ import {
   computePayers,
   computeSplit,
   draftFromExpense,
+  asDefaultSplit,
+  draftFromDefault,
   emptySplit,
+  itemsTotal,
   type SplitDraft,
   type SplitType,
 } from '../splitForm';
@@ -16,7 +19,7 @@ const draft = (
 ): SplitDraft => {
   const d = emptySplit();
   d.type = type;
-  if (type !== 'equal') {
+  if (type !== 'equal' && type !== 'itemized') {
     d.values[type] = values;
   }
   return d;
@@ -329,5 +332,80 @@ describe('draftFromExpense', () => {
         people,
       ),
     ).toBeNull();
+  });
+});
+
+describe('itemized split', () => {
+  const items = (list: [string, string[]][], extra = ''): SplitDraft => ({
+    ...emptySplit(),
+    type: 'itemized',
+    items: list.map(([amount, who], i) => ({
+      key: String(i),
+      name: `Item ${i + 1}`,
+      amount,
+      people: who,
+    })),
+    extra,
+  });
+
+  it('shares each item between whoever had it', () => {
+    const r = computeSplit(
+      90000,
+      'INR',
+      ['a', 'b', 'c'],
+      items([
+        ['600', ['a']],
+        ['300', ['b', 'c']],
+      ]),
+    );
+    expect(r.error).toBeNull();
+    expect(r.owed).toEqual({ a: 60000, b: 15000, c: 15000 });
+    expect(r.rows?.every(row => row.split_type === 'exact')).toBe(true);
+  });
+
+  it('shares tax or tip in proportion to what each had', () => {
+    const r = computeSplit(
+      110000,
+      'INR',
+      ['a', 'b'],
+      items(
+        [
+          ['750', ['a']],
+          ['250', ['b']],
+        ],
+        '100',
+      ),
+    );
+    expect(r.owed).toEqual({ a: 82500, b: 27500 });
+  });
+
+  it('says when the items don’t match the total', () => {
+    const bill = items([['500', ['a']]]);
+    expect(computeSplit(60000, 'INR', ['a', 'b'], bill).error).toBe(
+      'Items come to ₹500.00; the total is ₹600.00.',
+    );
+    expect(itemsTotal(bill, 'INR')).toBe(50000);
+  });
+
+  it('asks who had an item', () => {
+    const r = computeSplit(50000, 'INR', ['a'], {
+      ...items([['500', []]]),
+      items: [{ key: '0', name: 'Pizza', amount: '500', people: [] }],
+    });
+    expect(r.error).toBe('Choose who had “Pizza”.');
+  });
+});
+
+describe('group default split', () => {
+  it('starts the form with its values, 0 for newer members', () => {
+    const def = asDefaultSplit({ type: 'percent', values: { a: 60, b: 40 } })!;
+    const d = draftFromDefault(def, ['a', 'b', 'c']);
+    expect(d.type).toBe('percent');
+    expect(d.values.percent).toEqual({ a: '60', b: '40', c: '0' });
+  });
+
+  it('ignores anything that isn’t a default split', () => {
+    expect(asDefaultSplit(null)).toBeNull();
+    expect(asDefaultSplit({ type: 'exact', values: {} })).toBeNull();
   });
 });

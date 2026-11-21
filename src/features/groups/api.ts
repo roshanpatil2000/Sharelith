@@ -39,7 +39,7 @@ export const groupKey = (userId: string | null, groupId: string) =>
   ['groups', userId, groupId] as const;
 
 const GROUP_COLUMNS =
-  'id, name, description, type, cover_url, currency, simplify_debts, created_by, created_at, updated_at';
+  'id, name, description, type, cover_url, currency, simplify_debts, default_split, created_by, created_at, updated_at';
 
 export function useGroups() {
   const userId = useUserId();

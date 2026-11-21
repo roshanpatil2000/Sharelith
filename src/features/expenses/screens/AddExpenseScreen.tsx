@@ -46,13 +46,17 @@ import {
 } from '../api';
 import { useAdPlacement } from '@/features/ads/ads';
 import { maybeShowInterstitial } from '@/features/ads/interstitial';
+import { ItemizedSplit } from '../components/ItemizedSplit';
 import { PersonAmountRow } from '../components/PersonAmountRow';
 import {
   SPLIT_TYPES,
+  asDefaultSplit,
   computePayers,
   computeSplit,
+  draftFromDefault,
   draftFromExpense,
   emptySplit,
+  itemsTotal,
   type PayerDraft,
   type SplitDraft,
   type SplitType,
@@ -176,6 +180,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   }, [groupId, group, friends, friendId, userId]);
   const ids = useMemo(() => people.map(p => p.id), [people]);
 
+  const defaultApplied = useRef<string | null>(null);
   // Choosing someone else to split with starts the choices over. Editing
   // keeps the expense's own group or friend.
   useEffect(() => {
@@ -184,7 +189,24 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     }
     setSplit(emptySplit());
     setPayer({ mode: 'single', id: userId ?? '' });
+    defaultApplied.current = null;
   }, [target, userId, editing]);
+
+  // A new expense in a group with a default split starts from it, once the
+  // group has loaded (only once per group, so a refresh can't undo typing).
+  useEffect(() => {
+    if (editing || !groupId || group?.id !== groupId) {
+      return;
+    }
+    if (defaultApplied.current === groupId) {
+      return;
+    }
+    defaultApplied.current = groupId;
+    const def = asDefaultSplit(group.default_split);
+    if (def) {
+      setSplit(draftFromDefault(def, ids));
+    }
+  }, [editing, groupId, group, ids]);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: editing ? 'Edit expense' : 'Add expense' });
@@ -243,6 +265,8 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   const splitResult = computeSplit(amount, expenseCurrency, ids, split);
   const payerResult = computePayers(amount, expenseCurrency, ids, payer);
   const money = (minor: number) => formatMoney(minor, expenseCurrency);
+  const itemsSum =
+    split.type === 'itemized' ? itemsTotal(split, expenseCurrency) : null;
 
   const setSplitType = (type: SplitType) =>
     setSplit(previous => {
@@ -265,7 +289,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
 
   const setSplitValue = (id: string, text: string) =>
     setSplit(previous =>
-      previous.type === 'equal'
+      previous.type === 'equal' || previous.type === 'itemized'
         ? previous
         : {
             ...previous,
@@ -528,8 +552,18 @@ export function AddExpenseScreen({ route, navigation }: Props) {
                     onChange={setSplitType}
                     testID="expense-split-type"
                   />
+                  {split.type === 'itemized' ? (
+                    <ItemizedSplit
+                      draft={split}
+                      people={people}
+                      symbol={symbol}
+                      onChange={setSplit}
+                      owedText={owedText}
+                    />
+                  ) : null}
                   {people.map(p =>
-                    split.type === 'equal' ? (
+                    split.type === 'itemized' ? null : split.type ===
+                      'equal' ? (
                       <Row key={p.id} gap="md" justify="space-between">
                         <Checkbox
                           label={p.name}
@@ -582,7 +616,22 @@ export function AddExpenseScreen({ route, navigation }: Props) {
                     >
                       {splitResult.error}
                     </Text>
-                  ) : split.type === 'adjustment' ? (
+                  ) : null}
+                  {amount > 0 &&
+                  split.type === 'itemized' &&
+                  splitResult.error &&
+                  itemsSum !== null &&
+                  itemsSum > 0 &&
+                  itemsSum !== amount ? (
+                    <Button
+                      title={`Make the total ${money(itemsSum)}`}
+                      size="sm"
+                      variant="ghost"
+                      onPress={() => setAmount(itemsSum)}
+                      testID="item-use-total"
+                    />
+                  ) : null}
+                  {split.type === 'adjustment' && !splitResult.error ? (
                     <Text variant="caption" color="textSecondary">
                       Add or take off an amount for someone; the rest is split
                       equally.
