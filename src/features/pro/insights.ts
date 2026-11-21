@@ -4,6 +4,7 @@ import { useUserId } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
 import { categoryKeys, type CategoryKey } from '@/app/theme/colors';
 import { useIsPro } from './pro';
+import { insightsKey } from '@/features/expenses/api';
 
 export type InsightRow = {
   month: string;
@@ -19,7 +20,7 @@ export function useInsights(months = 12) {
   const userId = useUserId();
   const isPro = useIsPro();
   return useQuery({
-    queryKey: ['insights', userId, months],
+    queryKey: [...insightsKey(userId), months],
     enabled: !!userId && isPro,
     queryFn: async (): Promise<InsightRow[]> => {
       const { data, error } = await supabase.rpc('spending_insights', {
