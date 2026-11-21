@@ -31,6 +31,7 @@ import {
 } from '@/domain/categorize';
 import { categoryKeys, type CategoryKey } from '@/app/theme/colors';
 import { useProfile } from '@/features/account/api';
+import { storage } from '@/lib/storage';
 import { useUserId } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
 import { useFriends } from '@/features/friends/api';
@@ -60,6 +61,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AddExpense'>;
 const groupTarget = (id: string) => `group:${id}`;
 const friendTarget = (id: string) => `friend:${id}`;
 const MULTIPLE = 'multiple';
+/** The group or friend the last new expense was split with. */
+const LAST_TARGET_KEY = 'expense.lastTarget';
 
 export function AddExpenseScreen({ route, navigation }: Props) {
   const {
@@ -134,6 +137,23 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     ],
     [groups, friends],
   );
+
+  // Opened without a group or friend (the Add expense button): start with
+  // the one used last, or the only one there is.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (editing || target || prefilled.current || !groups || !friends) {
+      return;
+    }
+    prefilled.current = true;
+    const last = storage.getString(LAST_TARGET_KEY);
+    const choice =
+      targetOptions.find(o => o.value === last)?.value ??
+      (targetOptions.length === 1 ? targetOptions[0]?.value : undefined);
+    if (choice) {
+      setTarget(choice);
+    }
+  }, [editing, target, groups, friends, targetOptions]);
 
   const people = useMemo(() => {
     if (groupId) {
@@ -295,7 +315,11 @@ export function AddExpenseScreen({ route, navigation }: Props) {
       return;
     }
     if (people.length === 0) {
-      setFormError('Choose who to split this with.');
+      setFormError(
+        targetOptions.length
+          ? 'Choose a group or friend to split this with.'
+          : 'Add a friend or create a group first, then split this with them.',
+      );
       return;
     }
     if (amount <= 0) {
@@ -331,6 +355,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           shares: splitResult.rows,
           category,
         });
+        storage.set(LAST_TARGET_KEY, target);
       }
       toast.show(existing ? 'Expense saved' : 'Expense added', 'success');
       navigation.goBack();
@@ -384,6 +409,11 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           value={target}
           options={targetOptions}
           onChange={setTarget}
+          placeholder={
+            targetOptions.length
+              ? 'Choose a group or friend'
+              : 'Add a friend first'
+          }
           searchable
           disabled={editing}
           testID="expense-target"

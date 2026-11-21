@@ -6,6 +6,8 @@ import {
   waitFor,
 } from '@testing-library/react-native';
 import App from '../App';
+import { storage } from '@/lib/storage';
+import { queryClient } from '@/lib/queryClient';
 import {
   fakeProfile,
   fakeSession,
@@ -432,6 +434,53 @@ describe('Split types', () => {
         { user_id: vik, owed_minor: 36000, raw_value: 40 },
       ],
     });
+  });
+});
+
+describe('Add expense button', () => {
+  const openFromButton = async () => {
+    supabaseMock.auth.getSession.mockResolvedValueOnce({
+      data: { session: fakeSession() },
+      error: null,
+    });
+    await render(<App />);
+    await fireEvent.press(await screen.findByTestId('fab'));
+    await screen.findByTestId('expense-target');
+  };
+
+  // Start without friends or groups cached by earlier tests.
+  beforeEach(() => queryClient.clear());
+  afterEach(() => storage.remove('expense.lastTarget'));
+
+  it('starts with the only group, so it can be saved straight away', async () => {
+    mockBackend({});
+    await openFromButton();
+    // The group list loads, then the form picks it.
+    await waitFor(() =>
+      expect(screen.getByTestId('expense-target')).toHaveTextContent(
+        /Goa trip/,
+      ),
+    );
+    await screen.findByTestId(`expense-include-${asha}`);
+    await fill('Breakfast', '90');
+    await fireEvent.press(screen.getByTestId('expense-save'));
+    expect(await screen.findByText('Expense added')).toBeOnTheScreen();
+    expect(createCall()).toMatchObject({ group_id: 'g-goa', category: 'food' });
+    // Remembered for next time.
+    expect(storage.getString('expense.lastTarget')).toBe('group:g-goa');
+  });
+
+  it('ignores a remembered group that no longer exists', async () => {
+    storage.set('expense.lastTarget', 'group:gone');
+    mockBackend({});
+    await openFromButton();
+    // Falls back to the only group there is.
+    // The group list loads, then the form picks it.
+    await waitFor(() =>
+      expect(screen.getByTestId('expense-target')).toHaveTextContent(
+        /Goa trip/,
+      ),
+    );
   });
 });
 

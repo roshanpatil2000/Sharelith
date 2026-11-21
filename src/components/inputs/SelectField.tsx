@@ -25,6 +25,8 @@ type Props<T extends string> = {
   /** Shows a search field when the list is long. */
   searchable?: boolean;
   disabled?: boolean;
+  /** Shown when nothing is chosen yet. */
+  placeholder?: string;
   testID?: string;
 };
 
@@ -40,6 +42,7 @@ export function SelectField<T extends string>({
   icon,
   searchable = false,
   disabled = false,
+  placeholder,
   testID,
 }: Props<T>) {
   const styles = useStyles(createStyles);
@@ -64,8 +67,11 @@ export function SelectField<T extends string>({
         title={label}
         leading={icon ? <Icon icon={icon} color="textSecondary" /> : undefined}
         trailing={
-          <Text color="textSecondary" numberOfLines={1}>
-            {selected?.label ?? value}
+          <Text
+            color={selected || value ? 'textSecondary' : 'primary'}
+            numberOfLines={1}
+          >
+            {selected?.label ?? (value || placeholder)}
           </Text>
         }
         chevron
