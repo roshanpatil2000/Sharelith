@@ -68,6 +68,7 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+#variable_conflict use_column
 declare
   me uuid := auth.uid();
   link public.invite_links;
