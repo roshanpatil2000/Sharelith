@@ -1,0 +1,19 @@
+Sharelith 1.0.6
+
+New
+- Expense date and notes: pick the day an expense happened and add notes.
+- Add friends from your contacts, or invite anyone with a link or QR code (Add friend > Invite with a link or QR code). Group admins can share a link that also adds people to the group.
+- Comments on expenses: talk about an expense right on it; new comments show up live.
+- Search: tap the magnifier on Groups or Friends to find friends, groups and expenses, including words in notes and comments.
+- Recurring expenses: on an expense you added, set Repeat to weekly, monthly or yearly, and it's added again on schedule.
+- Group totals: tap the chart icon in a group to see what it spent, your share and who paid. Charts by month and category with Pro.
+- Recently deleted (Account): bring back expenses and payments you deleted.
+- Default split per group (Group settings > Default split), and a new Items split: list what each person had, with tax or tip shared fairly.
+- Currency: an expense in another currency shows its value in your currency. With Pro, balances in several currencies are added up for you.
+
+Fixed
+- The keyboard no longer covers text boxes near the bottom of the screen on Android.
+- An expense you paid that was all yours now says "just you" instead of "not involved".
+
+Note
+- Please mention your app version (Account screen) when you report a problem.

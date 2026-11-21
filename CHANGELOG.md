@@ -2,6 +2,16 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## 1.0.6
+
+- **Expenses:** date and notes in the form; comments (`expense_comments`, live); recurring expenses (`recurring_expenses`, daily pg_cron job); Recently deleted with restore (`list_deleted_expenses`).
+- **Friends:** add from contacts (`react-native-contacts`, nothing uploaded but the person picked); invite links and QR codes (`invite_links`, `/invite/<token>` on the website, App Links on Android).
+- **Search:** friends, groups and expenses by description, notes, group name or comments (`search_expenses`).
+- **Groups:** totals and who paid, with Pro charts (`group_spending`, `group_member_spending`); default split per group (`groups.default_split`).
+- **Splits:** itemized split (items, who had them, tax or tip in proportion), saved as exact amounts.
+- **Currency:** converted amounts on Add expense; Pro total across currencies (ECB rates via Frankfurter).
+- **Fixed:** Android keyboard covered inputs near the bottom (edge-to-edge); "not involved" for an expense that was all yours.
+
 ## 1.0.5
 
 Build numbers are now the build time in epoch seconds (see docs/RELEASE.md), so this heading no longer lists one.
