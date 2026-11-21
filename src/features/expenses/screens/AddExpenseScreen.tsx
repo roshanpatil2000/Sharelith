@@ -17,6 +17,7 @@ import {
   Screen,
   SegmentedControl,
   SelectField,
+  DateField,
   Stack,
   Text,
   TextField,
@@ -29,6 +30,7 @@ import {
   categoryLabel,
   guessCategory,
 } from '@/domain/categorize';
+import { todayISO } from '@/domain/dates';
 import { categoryKeys, type CategoryKey } from '@/app/theme/colors';
 import { useProfile } from '@/features/account/api';
 import { storage } from '@/lib/storage';
@@ -108,6 +110,8 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     categoryChosen.current = true;
     setCategory(key);
   };
+  const [expenseDate, setExpenseDate] = useState(todayISO());
+  const [notes, setNotes] = useState('');
   const [amount, setAmount] = useState(0);
   const [currency, setCurrency] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerDraft>({
@@ -216,6 +220,8 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     loaded.current = true;
     setDescription(existing.description);
     setCategory(asCategoryKey(existing.category));
+    setExpenseDate(existing.expense_date);
+    setNotes(existing.notes ?? '');
     categoryChosen.current = true;
     setAmount(existing.amount_minor);
     setCurrency(existing.currency);
@@ -344,6 +350,8 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           payers: payerResult.rows,
           shares: splitResult.rows,
           category,
+          expenseDate,
+          notes: notes.trim() || null,
         });
       } else {
         await createExpense.mutateAsync({
@@ -354,6 +362,8 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           payers: payerResult.rows,
           shares: splitResult.rows,
           category,
+          expenseDate,
+          notes: notes.trim() || null,
         });
         storage.set(LAST_TARGET_KEY, target);
       }
@@ -439,6 +449,22 @@ export function AddExpenseScreen({ route, navigation }: Props) {
               }))}
               onChange={chooseCategory}
               testID="expense-category"
+            />
+            <DateField
+              label="Date"
+              value={expenseDate}
+              onChange={setExpenseDate}
+              maximum={todayISO()}
+              testID="expense-date"
+            />
+            <TextField
+              label="Notes (optional)"
+              placeholder="Anything to remember about this"
+              value={notes}
+              onChangeText={setNotes}
+              maxLength={1000}
+              multiline
+              testID="expense-notes"
             />
             <AmountInput
               value={amount}

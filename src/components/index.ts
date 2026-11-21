@@ -17,6 +17,7 @@ export { SegmentedControl, type Segment } from './inputs/SegmentedControl';
 export { Chip, ChipGroup } from './inputs/Chip';
 export { FormTextField } from './inputs/FormTextField';
 export { SelectField, type SelectOption } from './inputs/SelectField';
+export { DateField } from './inputs/DateField';
 export { CurrencyPicker } from './inputs/CurrencyPicker';
 
 // Data display

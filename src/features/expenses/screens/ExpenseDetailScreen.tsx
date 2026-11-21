@@ -20,6 +20,7 @@ import {
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { formatMoney } from '@/domain/money';
+import { longDate } from '@/domain/dates';
 import { useUserId } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
 import { useExpense, useSetExpenseDeleted } from '../api';
@@ -27,13 +28,6 @@ import { myNet, shareNote, splitTitle } from '../detail';
 import { ReceiptSection } from '@/features/pro/components/ReceiptSection';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseDetail'>;
-
-const longDate = (date: string) =>
-  new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
 
 export function ExpenseDetailScreen({ route, navigation }: Props) {
   const { expenseId } = route.params;
@@ -154,6 +148,15 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
         />
       ))}
 
+      {expense.notes ? (
+        <>
+          <SectionHeader title="Notes" />
+          <Text style={styles.notes} testID="detail-notes">
+            {expense.notes}
+          </Text>
+        </>
+      ) : null}
+
       {expense.is_payment ? null : (
         <ReceiptSection expenseId={expense.id} path={expense.receipt_path} />
       )}
@@ -209,6 +212,7 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
 
 const createStyles = (t: Theme) =>
   StyleSheet.create({
+    notes: { paddingHorizontal: t.spacing.lg, paddingVertical: t.spacing.md },
     header: {
       alignItems: 'center',
       gap: t.spacing.sm,

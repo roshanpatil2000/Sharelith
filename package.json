@@ -25,6 +25,7 @@
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hookform/resolvers": "^6.0.2",
+    "@react-native-community/datetimepicker": "^9.3.0",
     "@react-native-firebase/app": "27.1.0",
     "@react-native-firebase/crashlytics": "27.1.0",
     "@react-native-firebase/messaging": "27.1.0",
