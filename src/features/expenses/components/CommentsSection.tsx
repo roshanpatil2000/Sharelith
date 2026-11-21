@@ -4,6 +4,7 @@ import { Send } from 'lucide-react-native';
 import {
   Avatar,
   Box,
+  Divider,
   IconButton,
   ListRow,
   Row,
@@ -32,25 +33,11 @@ const when = (iso: string) => {
   return `${friendlyDate(toISODate(d))}, ${time}`;
 };
 
-/** Comments under an expense, with a box to add one. */
+/** Comments under an expense. The box to add one is CommentBox. */
 export function CommentsSection({ expenseId }: { expenseId: string }) {
   const me = useUserId();
   const { data: comments } = useExpenseComments(expenseId);
-  const add = useAddComment(expenseId);
   const remove = useDeleteComment(expenseId);
-  const [draft, setDraft] = useState('');
-
-  const send = async () => {
-    if (!draft.trim()) {
-      return;
-    }
-    try {
-      await add.mutateAsync(draft);
-      setDraft('');
-    } catch (e) {
-      toast.show(toAppError(e).message, 'error');
-    }
-  };
 
   const confirmDelete = (c: ExpenseComment) =>
     Alert.alert('Delete comment?', c.body, [
@@ -89,6 +76,33 @@ export function CommentsSection({ expenseId }: { expenseId: string }) {
           <Text color="textSecondary">No comments yet.</Text>
         </Box>
       ) : null}
+    </>
+  );
+}
+
+/**
+ * The box for a new comment: the screen's footer, so it stays above the
+ * keyboard while typing.
+ */
+export function CommentBox({ expenseId }: { expenseId: string }) {
+  const add = useAddComment(expenseId);
+  const [draft, setDraft] = useState('');
+
+  const send = async () => {
+    if (!draft.trim()) {
+      return;
+    }
+    try {
+      await add.mutateAsync(draft);
+      setDraft('');
+    } catch (e) {
+      toast.show(toAppError(e).message, 'error');
+    }
+  };
+
+  return (
+    <>
+      <Divider />
       <Row px="lg" py="sm" gap="sm">
         <Box flex={1}>
           <TextField

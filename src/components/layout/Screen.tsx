@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Dimensions,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
@@ -9,8 +11,42 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+  type Edge,
+} from 'react-native-safe-area-context';
 import { useStyles, useTheme, type Theme } from '@/app/theme';
+
+/**
+ * Android with edge-to-edge: the window no longer shrinks for the keyboard
+ * (adjustResize is ignored) and KeyboardAvoidingView mis-measures it, so pad
+ * the screen by the keyboard's height ourselves. iOS uses
+ * KeyboardAvoidingView. Returns the padding to add below the content.
+ */
+function useAndroidKeyboardPadding(bottomPadded: boolean): number {
+  const insets = useSafeAreaInsets();
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+    // Measured from where the keyboard starts on screen: its reported
+    // height leaves out part of it when drawing edge to edge.
+    const show = Keyboard.addListener('keyboardDidShow', e =>
+      setHeight(Dimensions.get('screen').height - e.endCoordinates.screenY),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  // The safe area already pads the bottom inset when 'bottom' is an edge.
+  return height > 0
+    ? Math.max(0, height - (bottomPadded ? insets.bottom : 0))
+    : 0;
+}
 
 type Props = {
   children: React.ReactNode;
@@ -47,6 +83,7 @@ export function Screen({
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const [pulling, setPulling] = useState(false);
+  const keyboardPadding = useAndroidKeyboardPadding(edges.includes('bottom'));
   const pull = async () => {
     setPulling(true);
     try {
@@ -80,7 +117,7 @@ export function Screen({
   return (
     <SafeAreaView style={styles.root} edges={edges} testID={testID}>
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={[styles.flex, { paddingBottom: keyboardPadding }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.flex}>

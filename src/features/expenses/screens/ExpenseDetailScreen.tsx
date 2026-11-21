@@ -26,7 +26,7 @@ import { toAppError } from '@/features/auth/errors';
 import { useExpense, useSetExpenseDeleted } from '../api';
 import { myNet, shareNote, splitTitle } from '../detail';
 import { ReceiptSection } from '@/features/pro/components/ReceiptSection';
-import { CommentsSection } from '../components/CommentsSection';
+import { CommentBox, CommentsSection } from '../components/CommentsSection';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseDetail'>;
 
@@ -82,7 +82,11 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
     );
 
   return (
-    <Screen scroll edges={['bottom', 'left', 'right']}>
+    <Screen
+      scroll
+      edges={['bottom', 'left', 'right']}
+      footer={<CommentBox expenseId={expense.id} />}
+    >
       <View style={styles.header}>
         <View style={styles.icon}>
           <Icon icon={Receipt} size={28} color="primary" />
