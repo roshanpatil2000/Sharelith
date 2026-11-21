@@ -64,10 +64,18 @@ type Setup = {
   groups?: unknown[];
   detail?: unknown;
   friends?: Friend[];
+  spending?: unknown[];
+  memberSpending?: unknown[];
 };
 
 /** Routes supabase.from() by table and rpc() by function name. */
-function mockBackend({ groups = [], detail = null, friends = [] }: Setup) {
+function mockBackend({
+  groups = [],
+  detail = null,
+  friends = [],
+  spending = [],
+  memberSpending = [],
+}: Setup) {
   supabaseMock.from.mockImplementation(((table: string) => {
     if (table === 'profiles') {
       return queryBuilder({
@@ -86,6 +94,12 @@ function mockBackend({ groups = [], detail = null, friends = [] }: Setup) {
     }
     if (fn === 'create_group') {
       return { data: 'g-goa', error: null };
+    }
+    if (fn === 'group_spending') {
+      return { data: spending, error: null };
+    }
+    if (fn === 'group_member_spending') {
+      return { data: memberSpending, error: null };
     }
     return { data: null, error: null };
   });
@@ -311,5 +325,69 @@ describe('Group settings', () => {
     expect(
       await screen.findByText('Only the group admin can do that'),
     ).toBeOnTheScreen();
+  });
+});
+
+describe('Group totals', () => {
+  async function openTotals() {
+    mockBackend({
+      groups: [{ ...goaRow, group_members: [{ count: 2 }] }],
+      detail: goaDetail(),
+      spending: [
+        {
+          month: '2026-11-01',
+          category: 'food',
+          currency: 'INR',
+          total_minor: 300000,
+          my_share_minor: 100000,
+          my_paid_minor: 300000,
+          expense_count: 2,
+        },
+        {
+          month: '2026-10-01',
+          category: 'transport',
+          currency: 'INR',
+          total_minor: 100000,
+          my_share_minor: 50000,
+          my_paid_minor: 0,
+          expense_count: 1,
+        },
+      ],
+      memberSpending: [
+        {
+          user_id: 'user-1',
+          currency: 'INR',
+          paid_minor: 300000,
+          share_minor: 150000,
+        },
+        {
+          user_id: 'f-asha',
+          currency: 'INR',
+          paid_minor: 100000,
+          share_minor: 250000,
+        },
+      ],
+    });
+    await openApp();
+    await fireEvent.press(await screen.findByTestId('group-g-goa'));
+    await fireEvent.press(await screen.findByTestId('group-totals'));
+    await screen.findByTestId('totals-group');
+  }
+
+  it('shows the group total, your share and who paid', async () => {
+    await openTotals();
+    expect(screen.getByTestId('totals-group')).toHaveTextContent('₹4,000.00');
+    expect(screen.getByTestId('totals-share')).toHaveTextContent('₹1,500.00');
+    expect(screen.getByTestId('totals-paid')).toHaveTextContent('₹3,000.00');
+    expect(screen.getByText('All time · 3 expenses')).toBeOnTheScreen();
+    expect(screen.getByTestId('totals-member-f-asha')).toHaveTextContent(
+      /Asha Rao.*Share ₹2,500\.00.*₹1,000\.00/,
+    );
+  });
+
+  it('keeps the charts for Pro', async () => {
+    await openTotals();
+    expect(screen.getByTestId('totals-pro')).toBeOnTheScreen();
+    expect(screen.queryByTestId('totals-months')).toBeNull();
   });
 });
