@@ -6,7 +6,7 @@ import React, {
   useState,
 } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Receipt, Users } from 'lucide-react-native';
+import { Receipt, Tag, Users } from 'lucide-react-native';
 import {
   AmountInput,
   Banner,
@@ -24,6 +24,12 @@ import {
 } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import { currencySymbol, formatMoney, minorToInput } from '@/domain/money';
+import {
+  asCategoryKey,
+  categoryLabel,
+  guessCategory,
+} from '@/domain/categorize';
+import { categoryKeys, type CategoryKey } from '@/app/theme/colors';
 import { useProfile } from '@/features/account/api';
 import { useUserId } from '@/features/auth/authStore';
 import { toAppError } from '@/features/auth/errors';
@@ -86,6 +92,19 @@ export function AddExpenseScreen({ route, navigation }: Props) {
       : '',
   );
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<CategoryKey>('general');
+  // Once someone picks a category (or an existing one loads), stop guessing.
+  const categoryChosen = useRef(false);
+  const describe = (text: string) => {
+    setDescription(text);
+    if (!categoryChosen.current) {
+      setCategory(guessCategory(text) ?? 'general');
+    }
+  };
+  const chooseCategory = (key: CategoryKey) => {
+    categoryChosen.current = true;
+    setCategory(key);
+  };
   const [amount, setAmount] = useState(0);
   const [currency, setCurrency] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerDraft>({
@@ -176,6 +195,8 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     }
     loaded.current = true;
     setDescription(existing.description);
+    setCategory(asCategoryKey(existing.category));
+    categoryChosen.current = true;
     setAmount(existing.amount_minor);
     setCurrency(existing.currency);
     const restored = draftFromExpense(existing, ids);
@@ -298,6 +319,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           currency: expenseCurrency,
           payers: payerResult.rows,
           shares: splitResult.rows,
+          category,
         });
       } else {
         await createExpense.mutateAsync({
@@ -307,6 +329,7 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           groupId,
           payers: payerResult.rows,
           shares: splitResult.rows,
+          category,
         });
       }
       toast.show(existing ? 'Expense saved' : 'Expense added', 'success');
@@ -370,12 +393,23 @@ export function AddExpenseScreen({ route, navigation }: Props) {
           placeholder="Enter a description"
           leadingIcon={Receipt}
           value={description}
-          onChangeText={setDescription}
+          onChangeText={describe}
           maxLength={200}
           testID="expense-description"
         />
         {nameOnly ? null : (
           <>
+            <SelectField
+              label="Category"
+              icon={Tag}
+              value={category}
+              options={categoryKeys.map(k => ({
+                value: k,
+                label: categoryLabel(k),
+              }))}
+              onChange={chooseCategory}
+              testID="expense-category"
+            />
             <AmountInput
               value={amount}
               currency={expenseCurrency}
