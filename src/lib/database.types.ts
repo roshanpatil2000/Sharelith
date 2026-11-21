@@ -14,6 +14,21 @@ export type Database = {
   };
   public: {
     Tables: {
+      recurring_expenses: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          frequency: string;
+          id: string;
+          last_expense_id: string;
+          next_date: string;
+          start_date: string;
+          steps: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       expense_comments: {
         Row: {
           author_id: string | null;
@@ -616,6 +631,10 @@ export type Database = {
           friend_id: string;
           group_id: string | null;
         }[];
+      };
+      set_expense_repeat: {
+        Args: { eid: string; frequency: string | null };
+        Returns: string | null;
       };
       search_expenses: {
         Args: { q: string };
