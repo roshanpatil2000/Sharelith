@@ -30,6 +30,7 @@ import { groupsKey, useGroup } from '../api';
 import { useGroupBalances } from '../balances';
 import { groupTypeLabel, memberCountLabel } from '../groupTypes';
 import { GroupCover } from '../components/GroupCover';
+import { ExportButton } from '@/features/pro/components/ExportButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GroupDetail'>;
 
@@ -47,9 +48,6 @@ function GroupSettingsHeaderButton() {
     />
   );
 }
-
-// headerRight is called as a function: render the button as a component.
-const renderSettingsButton = () => <GroupSettingsHeaderButton />;
 
 export function GroupDetailScreen({ route }: Props) {
   const { groupId } = route.params;
@@ -72,9 +70,22 @@ export function GroupDetailScreen({ route }: Props) {
   useLayoutEffect(() => {
     navigation.setOptions({
       title: group?.name ?? '',
-      headerRight: group ? renderSettingsButton : undefined,
+      headerRight: group
+        ? () => (
+            <View style={styles.headerButtons}>
+              <ExportButton
+                title={group.name}
+                groupId={group.id}
+                nameOf={id =>
+                  id === userId ? 'You' : group.names[id] ?? 'Someone'
+                }
+              />
+              <GroupSettingsHeaderButton />
+            </View>
+          )
+        : undefined,
     });
-  }, [navigation, group]);
+  }, [navigation, group, userId, styles.headerButtons]);
 
   if (isError) {
     return <ErrorView onRetry={refetch} />;
@@ -152,6 +163,11 @@ export function GroupDetailScreen({ route }: Props) {
 
 const createStyles = (t: Theme) =>
   StyleSheet.create({
+    headerButtons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.xs,
+    },
     header: {
       alignItems: 'center',
       gap: t.spacing.md,

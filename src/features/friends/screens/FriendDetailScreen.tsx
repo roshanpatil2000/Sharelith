@@ -28,6 +28,8 @@ import { useRefreshExpenses } from '@/features/expenses/api';
 import { ExpenseList } from '@/features/expenses/components/ExpenseList';
 import { useFriend, useRemoveFriend, useSendReminder } from '../api';
 import { useFriendBalances } from '../balances';
+import { useUserId } from '@/features/auth/authStore';
+import { ExportButton } from '@/features/pro/components/ExportButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FriendDetail'>;
 
@@ -50,9 +52,25 @@ export function FriendDetailScreen({ route }: Props) {
   const refreshExpenses = useRefreshExpenses();
   const [confirm, setConfirm] = useState(false);
 
+  const me = useUserId();
   useLayoutEffect(() => {
-    navigation.setOptions({ title: friend?.full_name ?? '' });
-  }, [navigation, friend?.full_name]);
+    const name = friend?.full_name ?? '';
+    const id = friend?.id;
+    navigation.setOptions({
+      title: name,
+      headerRight: id
+        ? () => (
+            <ExportButton
+              title={`You and ${name}`}
+              friendId={id}
+              nameOf={uid =>
+                uid === me ? 'You' : uid === id ? name : 'Someone'
+              }
+            />
+          )
+        : undefined,
+    });
+  }, [navigation, friend?.full_name, friend?.id, me]);
 
   if (!friend) {
     if (isLoading) {
