@@ -187,5 +187,6 @@ jest.mock('react-native-share', () => ({
 jest.mock('react-native-device-info', () => ({
   __esModule: true,
   getBuildNumber: jest.fn(() => '1795196400'),
+  getVersion: jest.fn(() => require('./package.json').version),
   default: { getBuildNumber: jest.fn(() => '1795196400') },
 }));
