@@ -51,6 +51,13 @@ export async function signUp(values: SignUpValues): Promise<void> {
   if (error) {
     throw toAppError(error);
   }
+  // With "Confirm email" on, Supabase doesn't say an email is taken (so sign-up
+  // can't be used to probe who has an account): it returns a stand-in user
+  // with no identities and no session. Say so instead of asking them to
+  // confirm an email that's already an account.
+  if (!data.session && data.user && data.user.identities?.length === 0) {
+    throw toAppError({ code: 'user_already_exists' });
+  }
   if (!data.session) {
     // Happens if "Confirm email" is switched on in the Supabase dashboard.
     throw new AppError(

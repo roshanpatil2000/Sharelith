@@ -116,7 +116,11 @@ describe('App auth flow', () => {
   it('goes to Check your email when Confirm email is on', async () => {
     // No session: Supabase wants the email confirmed first.
     supabaseMock.auth.signUp.mockResolvedValueOnce({
-      data: { session: null, user: fakeSession().user },
+      data: {
+        session: null,
+        // A real new account has an email identity.
+        user: { ...fakeSession().user, identities: [{ provider: 'email' }] },
+      },
       error: null,
     });
 
@@ -146,6 +150,38 @@ describe('App auth flow', () => {
     expect(await screen.findByTestId('login-email')).toHaveDisplayValue(
       'asha@example.com',
     );
+  });
+
+  it('says the email already has an account instead of asking to confirm it', async () => {
+    // Confirm email on: Supabase hides that the email is taken and returns a
+    // stand-in user with no identities and no session.
+    supabaseMock.auth.signUp.mockResolvedValueOnce({
+      data: { session: null, user: { ...fakeSession().user, identities: [] } },
+      error: null,
+    });
+
+    await render(<App />);
+    await fireEvent.press(await screen.findByTestId('welcome-signup'));
+    await fireEvent.changeText(
+      await screen.findByTestId('signup-name'),
+      'Asha Rao',
+    );
+    await fireEvent.changeText(
+      screen.getByTestId('signup-email'),
+      'asha@example.com',
+    );
+    await fireEvent.changeText(
+      screen.getByTestId('signup-password'),
+      'correct-horse',
+    );
+    await fireEvent.press(screen.getByTestId('signup-terms'));
+    await fireEvent.press(screen.getByTestId('signup-submit'));
+
+    expect(
+      await screen.findByText(/An account with this email already exists/),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText('Check your email')).toBeNull();
+    expect(screen.getByTestId('signup-submit')).toBeOnTheScreen();
   });
 
   it('shows the profile on the Account tab and logs out', async () => {
