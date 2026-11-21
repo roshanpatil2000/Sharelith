@@ -46,6 +46,7 @@ import {
 } from '../api';
 import { useAdPlacement } from '@/features/ads/ads';
 import { maybeShowInterstitial } from '@/features/ads/interstitial';
+import { ConvertedAmount } from '@/features/currency/ConvertedAmount';
 import { ItemizedSplit } from '../components/ItemizedSplit';
 import { PersonAmountRow } from '../components/PersonAmountRow';
 import {
@@ -501,6 +502,11 @@ export function AddExpenseScreen({ route, navigation }: Props) {
               value={expenseCurrency}
               onChange={setCurrency}
               testID="expense-currency"
+            />
+            <ConvertedAmount
+              minor={amount}
+              currency={expenseCurrency}
+              into={profile?.default_currency}
             />
             {people.length > 0 ? (
               <>

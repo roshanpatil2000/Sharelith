@@ -27,6 +27,7 @@ import {
   useRefreshExpenses,
   useRefreshExpensesOnFocus,
 } from '@/features/expenses/api';
+import { ConvertedTotal } from '@/features/currency/ConvertedTotal';
 import { renderSearchButton } from '@/features/search/SearchHeaderButton';
 import { useFriends, type Friend } from '../api';
 import {
@@ -99,6 +100,7 @@ export function FriendsScreen() {
     <Screen>
       <Box p="lg" gap="md" bg="surface">
         <BalanceSummary balances={overallBalance(balances)} />
+        <ConvertedTotal balances={overallBalance(balances)} />
         {friends && friends.length > 0 ? (
           <SegmentedControl
             segments={filters}
