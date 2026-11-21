@@ -44,6 +44,12 @@ const groups = process.env.FIREBASE_TESTER_GROUPS || 'testers';
 const buildNumber =
   process.env.BUILD_NUMBER || String(Math.floor(Date.now() / 1000));
 console.log(`Building Sharelith ${version} (${buildNumber})…`);
+// Always rebuild the JavaScript bundle: Gradle can otherwise reuse one from an
+// earlier build (it did for 1.0.5, which then showed version 1.0.4).
+fs.rmSync(path.join(root, 'android/app/build/generated/assets/react'), {
+  recursive: true,
+  force: true,
+});
 // Testers get the release build: what store users will run.
 execFileSync('./gradlew', [':app:assembleRelease'], {
   cwd: path.join(root, 'android'),

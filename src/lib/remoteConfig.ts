@@ -1,6 +1,20 @@
 import { Platform } from 'react-native';
 import { create } from 'zustand';
-import { version as appVersion } from '../../package.json';
+import { version as packageVersion } from '../../package.json';
+
+/**
+ * The installed app's version (versionName on Android, CFBundleShortVersionString
+ * on iOS). Read from the app rather than package.json, so it's right even if
+ * a release reused an older JavaScript bundle.
+ */
+function readInstalledVersion(): string {
+  try {
+    return require('react-native-device-info').getVersion() || packageVersion;
+  } catch {
+    return packageVersion;
+  }
+}
+const appVersion = readInstalledVersion();
 
 /**
  * Firebase Remote Config, Android only for now (Firebase isn't linked on
