@@ -5,6 +5,7 @@ import { env } from '@/lib/env';
 import { appVersion, buildNumber } from '@/lib/remoteConfig';
 import { showAdChoices, useAdsStore } from '@/features/ads/ads';
 import {
+  BarChart3,
   Bell,
   Crown,
   Clock,
@@ -151,6 +152,15 @@ export function AccountScreen() {
         chevron
         onPress={() => navigation.navigate('Pro')}
         testID="account-pro"
+      />
+      <Divider inset={52} />
+      <ListRow
+        title="Insights"
+        subtitle="Your spending by month and category"
+        leading={<Icon icon={BarChart3} color="textSecondary" />}
+        chevron
+        onPress={() => navigation.navigate('Insights')}
+        testID="account-insights"
       />
 
       <SectionHeader title="Preferences" />

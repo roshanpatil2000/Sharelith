@@ -24,6 +24,7 @@ import { ChangePasswordScreen } from '@/features/account/screens/ChangePasswordS
 import { NotificationsScreen } from '@/features/account/screens/NotificationsScreen';
 import { TermsPrompt } from '@/features/auth/components/TermsPrompt';
 import { ProScreen } from '@/features/pro/screens/ProScreen';
+import { InsightsScreen } from '@/features/pro/screens/InsightsScreen';
 import { DeleteAccountScreen } from '@/features/account/screens/DeleteAccountScreen';
 import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { SettleUpScreen } from '@/features/expenses/screens/SettleUpScreen';
@@ -204,6 +205,11 @@ export function RootNavigator() {
               name="Notifications"
               component={NotificationsScreen}
               options={{ title: 'Notifications' }}
+            />
+            <Root.Screen
+              name="Insights"
+              component={InsightsScreen}
+              options={{ title: 'Insights' }}
             />
             <Root.Screen
               name="Pro"

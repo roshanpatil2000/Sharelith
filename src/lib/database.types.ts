@@ -570,6 +570,17 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      spending_insights: {
+        Args: { months?: number };
+        Returns: {
+          category: string;
+          currency: string;
+          expense_count: number;
+          month: string;
+          paid_minor: number;
+          share_minor: number;
+        }[];
+      };
       set_expense_receipt: {
         Args: { eid: string; path: string | null };
         Returns: undefined;
