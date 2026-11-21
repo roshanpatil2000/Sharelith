@@ -6,6 +6,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { Calendar } from 'lucide-react-native';
+import { useTheme } from '@/app/theme';
 import {
   friendlyDate,
   fromISODate,
@@ -32,6 +33,7 @@ type Props = {
  * date picker (a dialog on Android, a sheet on iOS).
  */
 export function DateField({ label, value, onChange, maximum, testID }: Props) {
+  const theme = useTheme();
   const sheet = useRef<BottomSheetModal>(null);
   const [draft, setDraft] = useState(fromISODate(value));
   const maximumDate = maximum ? fromISODate(maximum) : undefined;
@@ -70,6 +72,9 @@ export function DateField({ label, value, onChange, maximum, testID }: Props) {
             value={draft}
             mode="date"
             display="inline"
+            // Match the app's theme, not the phone's, so it's readable on our sheet.
+            themeVariant={theme.scheme}
+            accentColor={theme.colors.primary}
             maximumDate={maximumDate}
             onChange={(_e, date) => date && setDraft(date)}
             testID={testID ? `${testID}-picker` : undefined}
