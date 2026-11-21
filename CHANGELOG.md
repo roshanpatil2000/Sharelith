@@ -2,6 +2,11 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## 1.0.7
+
+- **Comments:** push notifications and Activity entries for new comments (`comment_added`, `activities.note`, trigger on `expense_comments`; `send-push` shows the preview).
+- **Performance:** Firebase Performance no longer collects on emulators.
+
 ## 1.0.6
 
 - **Expenses:** date and notes in the form; comments (`expense_comments`, live); recurring expenses (`recurring_expenses`, daily pg_cron job); Recently deleted with restore (`list_deleted_expenses`).
