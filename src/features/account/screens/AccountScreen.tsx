@@ -163,6 +163,15 @@ export function AccountScreen() {
         onPress={() => navigation.navigate('Insights')}
         testID="account-insights"
       />
+      <Divider inset={52} />
+      <ListRow
+        title="Recently deleted"
+        subtitle="Bring back expenses and payments you deleted"
+        leading={<Icon icon={Trash2} color="textSecondary" />}
+        chevron
+        onPress={() => navigation.navigate('RecentlyDeleted')}
+        testID="account-deleted"
+      />
 
       <SectionHeader title="Preferences" />
       {profile ? (

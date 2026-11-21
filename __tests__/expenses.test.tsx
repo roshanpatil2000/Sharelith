@@ -67,6 +67,7 @@ type Backend = {
   detail?: unknown;
   comments?: unknown[];
   repeat?: unknown;
+  deleted?: unknown[];
 };
 
 function mockBackend({
@@ -76,6 +77,7 @@ function mockBackend({
   detail = null,
   comments = [],
   repeat = null,
+  deleted = [],
 }: Backend) {
   supabaseMock.from.mockImplementation(((table: string) => {
     if (table === 'expenses') {
@@ -114,6 +116,8 @@ function mockBackend({
         };
       case 'list_expenses':
         return { data: expenses, error: null };
+      case 'list_deleted_expenses':
+        return { data: deleted, error: null };
       case 'list_my_balances':
         return { data: balances, error: null };
       case 'create_expense':
@@ -1159,5 +1163,46 @@ describe('Expense list labels', () => {
     expect(screen.getByTestId('expense-e-other')).toHaveTextContent(
       /not involved/,
     );
+  });
+});
+
+describe('Recently deleted', () => {
+  it('lists what you deleted and restores it', async () => {
+    mockBackend({
+      deleted: [
+        {
+          id: 'e-gone',
+          group_id: 'g-goa',
+          group_name: 'Goa trip',
+          description: 'Old dinner',
+          amount_minor: 90000,
+          currency: 'INR',
+          category: 'food',
+          expense_date: '2026-11-02',
+          is_payment: false,
+          deleted_at: new Date().toISOString(),
+        },
+      ],
+    });
+    supabaseMock.auth.getSession.mockResolvedValueOnce({
+      data: { session: fakeSession() },
+      error: null,
+    });
+    await render(<App />);
+    await fireEvent.press(
+      await screen.findByRole('button', { name: /Account/ }),
+    );
+    await fireEvent.press(await screen.findByTestId('account-deleted'));
+    expect(await screen.findByText('Old dinner')).toBeOnTheScreen();
+    expect(screen.getByText('Deleted today · Goa trip')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByTestId('restore-e-gone'));
+    await waitFor(() =>
+      expect(supabaseMock.rpc).toHaveBeenCalledWith('set_expense_deleted', {
+        eid: 'e-gone',
+        deleted: false,
+      }),
+    );
+    expect(await screen.findByText('Restored “Old dinner”')).toBeOnTheScreen();
   });
 });
