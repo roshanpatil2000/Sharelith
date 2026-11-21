@@ -65,6 +65,7 @@ type Backend = {
   createError?: unknown;
   /** What useExpense loads, for editing. */
   detail?: unknown;
+  comments?: unknown[];
 };
 
 function mockBackend({
@@ -72,10 +73,14 @@ function mockBackend({
   balances = [],
   createError,
   detail = null,
+  comments = [],
 }: Backend) {
   supabaseMock.from.mockImplementation(((table: string) => {
     if (table === 'expenses') {
       return queryBuilder<unknown>({ data: detail, error: null });
+    }
+    if (table === 'expense_comments') {
+      return queryBuilder<unknown>({ data: comments, error: null });
     }
     const builder = queryBuilder<unknown>({
       data: [{ ...groupRow, group_members: [{ count: 3 }] }],
@@ -1041,5 +1046,46 @@ describe('Data from other people', () => {
     await fireEvent.press(screen.getByRole('button', { name: /Groups/ }));
 
     await waitFor(() => expect(balanceCalls()).toBeGreaterThan(before));
+  });
+});
+
+describe('Comments', () => {
+  it('shows comments and adds one', async () => {
+    mockBackend({
+      expenses: [dinner],
+      detail: dinnerDetail,
+      comments: [
+        {
+          id: 'c-1',
+          author_id: asha,
+          body: 'I’ll pay you back tomorrow',
+          created_at: '2026-11-20T10:00:00Z',
+          author: { full_name: 'Asha Rao' },
+        },
+      ],
+    });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    expect(
+      await screen.findByText('I’ll pay you back tomorrow'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Comments (1)')).toBeOnTheScreen();
+    expect(screen.getByText(/^Asha Rao · /)).toBeOnTheScreen();
+
+    await fireEvent.changeText(
+      screen.getByTestId('comment-input'),
+      '  Sure, no rush  ',
+    );
+    await fireEvent.press(screen.getByTestId('comment-send'));
+    await waitFor(() =>
+      expect(
+        supabaseMock.from.mock.results
+          .map(r => r.value.insert?.mock.calls[0]?.[0])
+          .find(Boolean),
+      ).toEqual({ expense_id: 'e-1', author_id: me, body: 'Sure, no rush' }),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId('comment-input')).toHaveDisplayValue(''),
+    );
   });
 });
