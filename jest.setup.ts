@@ -170,3 +170,15 @@ jest.mock('react-native-google-mobile-ads', () => ({
   NativeAsset: ({ children }: { children: unknown }) => children,
   NativeAssetType: {},
 }));
+
+// Export (Pro): native file writing and the share sheet.
+jest.mock('react-native-blob-util', () => ({
+  __esModule: true,
+  default: {
+    fs: { dirs: { CacheDir: '/cache' }, writeFile: jest.fn(async () => {}) },
+  },
+}));
+jest.mock('react-native-share', () => ({
+  __esModule: true,
+  default: { open: jest.fn(async () => ({ success: true })) },
+}));
