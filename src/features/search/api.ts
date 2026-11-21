@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toAppError } from '@/features/auth/errors';
 import { useUserId } from '@/features/auth/authStore';
-import type { ExpenseSummary } from '@/features/expenses/api';
+import { expensesKey, type ExpenseSummary } from '@/features/expenses/api';
 
 /** Shortest search the server runs. */
 export const MIN_SEARCH = 2;
@@ -31,7 +31,8 @@ export function useExpenseSearch(query: string) {
   const userId = useUserId();
   const q = query.trim();
   return useQuery({
-    queryKey: ['expenseSearch', userId, q.toLowerCase()],
+    // Under the expenses key, so adding, editing or deleting refreshes it.
+    queryKey: [...expensesKey(userId), 'search', q.toLowerCase()],
     enabled: !!userId && q.length >= MIN_SEARCH,
     staleTime: 30 * 1000,
     queryFn: async (): Promise<ExpenseSummary[]> => {
