@@ -617,6 +617,24 @@ export type Database = {
           group_id: string | null;
         }[];
       };
+      search_expenses: {
+        Args: { q: string };
+        Returns: {
+          amount_minor: number;
+          category: string;
+          created_by: string;
+          currency: string;
+          description: string;
+          expense_date: string;
+          group_id: string | null;
+          id: string;
+          is_payment: boolean;
+          my_net_minor: number;
+          paid_by: string;
+          paid_to: string | null;
+          payer_count: number;
+        }[];
+      };
       spending_insights: {
         Args: { months?: number };
         Returns: {

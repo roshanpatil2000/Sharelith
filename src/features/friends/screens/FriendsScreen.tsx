@@ -27,6 +27,7 @@ import {
   useRefreshExpenses,
   useRefreshExpensesOnFocus,
 } from '@/features/expenses/api';
+import { renderSearchButton } from '@/features/search/SearchHeaderButton';
 import { useFriends, type Friend } from '../api';
 import {
   filterFriends,
@@ -68,7 +69,10 @@ export function FriendsScreen() {
   const [filter, setFilter] = useState<FriendFilter>('all');
 
   useLayoutEffect(() => {
-    navigation.setOptions({ headerRight: renderAddFriendButton });
+    navigation.setOptions({
+      headerLeft: renderSearchButton,
+      headerRight: renderAddFriendButton,
+    });
   }, [navigation]);
 
   const visible = useMemo(

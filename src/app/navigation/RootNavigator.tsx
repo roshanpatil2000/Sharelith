@@ -33,6 +33,7 @@ import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
 import { InviteBridge } from '@/features/invites/InviteBridge';
 import { ChooseContactScreen } from '@/features/invites/screens/ChooseContactScreen';
 import { InviteScreen } from '@/features/invites/screens/InviteScreen';
+import { SearchScreen } from '@/features/search/screens/SearchScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
 import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
 import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
@@ -232,6 +233,11 @@ export function RootNavigator() {
               layout={modalLayout}
               component={AddFriendScreen}
               options={{ presentation: 'modal', title: 'Add friend' }}
+            />
+            <Root.Screen
+              name="Search"
+              component={SearchScreen}
+              options={{ title: 'Search' }}
             />
             <Root.Screen
               name="ChooseContact"

@@ -255,6 +255,61 @@ describe('Contacts and invite links', () => {
   });
 });
 
+describe('Search', () => {
+  it('finds friends by name and expenses from the server', async () => {
+    supabaseMock.rpc.mockImplementation(async (fn: string) =>
+      fn === 'list_friends'
+        ? { data: [asha, vik], error: null }
+        : fn === 'search_expenses'
+        ? {
+            data: [
+              {
+                id: 'e-9',
+                group_id: null,
+                description: 'Rao family dinner',
+                amount_minor: 120000,
+                currency: 'INR',
+                category: 'food',
+                expense_date: '2026-11-20',
+                is_payment: false,
+                created_by: 'f-asha',
+                paid_by: 'f-asha',
+                paid_to: null,
+                payer_count: 1,
+                my_net_minor: -60000,
+              },
+            ],
+            error: null,
+          }
+        : { data: [], error: null },
+    );
+    await openFriends();
+    await fireEvent.press(await screen.findByTestId('open-search'));
+    await fireEvent.changeText(
+      await screen.findByTestId('search-input'),
+      'rao',
+    );
+    expect(await screen.findByTestId('search-friend-f-asha')).toBeOnTheScreen();
+    expect(screen.queryByTestId('search-friend-f-vik')).toBeNull();
+    expect(await screen.findByText('Rao family dinner')).toBeOnTheScreen();
+    expect(supabaseMock.rpc).toHaveBeenCalledWith('search_expenses', {
+      q: 'rao',
+    });
+  });
+
+  it('waits for two letters before searching', async () => {
+    mockRpc([asha]);
+    await openFriends();
+    await fireEvent.press(await screen.findByTestId('open-search'));
+    await fireEvent.changeText(await screen.findByTestId('search-input'), 'a');
+    expect(screen.getByText('Search Sharelith')).toBeOnTheScreen();
+    expect(supabaseMock.rpc).not.toHaveBeenCalledWith(
+      'search_expenses',
+      expect.anything(),
+    );
+  });
+});
+
 describe('Friend detail', () => {
   it('shows the friend and removes them after confirming', async () => {
     mockRpc([asha]);

@@ -55,6 +55,7 @@ export type RootStackParamList = {
   ChangePassword: undefined;
   Pro: undefined;
   Insights: undefined;
+  Search: undefined;
   Notifications: undefined;
   DeleteAccount: undefined;
   /** Forced after a reset or invite link. Its own name, so leaving it resets the stack. */

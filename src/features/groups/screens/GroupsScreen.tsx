@@ -28,6 +28,7 @@ import {
 } from '@/features/expenses/api';
 import { overallBalance, useFriendBalances } from '@/features/friends/balances';
 import { FriendBalanceText } from '@/features/friends/components/FriendBalanceText';
+import { renderSearchButton } from '@/features/search/SearchHeaderButton';
 import { useGroups, type GroupSummary } from '../api';
 import { useGroupBalances, useNonGroupBalance } from '../balances';
 import { memberCountLabel } from '../groupTypes';
@@ -60,7 +61,10 @@ export function GroupsScreen() {
   const overall = overallBalance(useFriendBalances());
 
   useLayoutEffect(() => {
-    navigation.setOptions({ headerRight: renderCreateGroupButton });
+    navigation.setOptions({
+      headerLeft: renderSearchButton,
+      headerRight: renderCreateGroupButton,
+    });
   }, [navigation]);
 
   const adsEnabled = useAdPlacement('groups');
