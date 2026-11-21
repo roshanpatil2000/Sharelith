@@ -905,6 +905,19 @@ describe('Expense detail', () => {
     ).toBeOnTheScreen();
   });
 
+  it('says when you paid exactly your share', async () => {
+    await openDetail({
+      ...dinnerDetail,
+      expense_payers: [{ user_id: me, paid_minor: 9900 }],
+      expense_shares: [
+        { user_id: me, owed_minor: 9900, split_type: 'equal', raw_value: null },
+      ],
+    });
+    expect(screen.getByTestId('detail-effect')).toHaveTextContent(
+      'You paid exactly your share',
+    );
+  });
+
   it('says when it does not involve you', async () => {
     await openDetail({
       ...dinnerDetail,
@@ -1128,5 +1141,23 @@ describe('Repeat', () => {
       await screen.findByText('Repeats monthly · next on 21 December 2026'),
     ).toBeOnTheScreen();
     expect(screen.queryByTestId('detail-repeat-select')).toBeNull();
+  });
+});
+
+describe('Expense list labels', () => {
+  it('says "just you" when you paid exactly your share', async () => {
+    mockBackend({
+      expenses: [
+        { ...dinner, id: 'e-mine', my_net_minor: 0 },
+        { ...dinner, id: 'e-other', paid_by: asha, my_net_minor: 0 },
+      ],
+    });
+    await openGroup();
+    expect(await screen.findByTestId('expense-e-mine')).toHaveTextContent(
+      /just you/,
+    );
+    expect(screen.getByTestId('expense-e-other')).toHaveTextContent(
+      /not involved/,
+    );
   });
 });

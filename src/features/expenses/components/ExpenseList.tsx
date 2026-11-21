@@ -132,7 +132,14 @@ function ExpenseRow({
         trailing={
           <Stack align="flex-end" gap="xxs">
             <Text variant="caption" color="textSecondary">
-              {net > 0 ? 'you lent' : net < 0 ? 'you borrowed' : 'not involved'}
+              {net > 0
+                ? 'you lent'
+                : net < 0
+                ? 'you borrowed'
+                : // Paid it all and it was all yours: on it, but no balance.
+                expense.paid_by === userId && expense.payer_count === 1
+                ? 'just you'
+                : 'not involved'}
             </Text>
             {net !== 0 ? (
               <AmountText minor={net} currency={expense.currency} />
