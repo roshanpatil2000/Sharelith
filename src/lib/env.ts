@@ -9,13 +9,7 @@ function hostForPlatform(url: string): string {
   return url.replace(/\/\/(localhost|127\.0\.0\.1)/, '//10.0.2.2');
 }
 
-/** Android build flavour from BuildConfig: 'dev' or 'prod' (iOS: 'prod'). */
-const flavor = Config.FLAVOR === 'dev' ? 'dev' : 'prod';
-
 export const env = {
-  flavor,
-  /** The dev flavour (com.sharelith.app.dev): never real ads. */
-  isDevFlavor: flavor === 'dev',
   supabaseUrl: hostForPlatform(Config.SUPABASE_URL ?? 'http://127.0.0.1:54321'),
   supabaseAnonKey: Config.SUPABASE_ANON_KEY ?? '',
   /** Web page that forwards email links into the app (sharelith://). */

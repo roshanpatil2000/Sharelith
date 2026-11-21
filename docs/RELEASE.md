@@ -1,18 +1,13 @@
 # Releasing Sharelith
 
-## Flavours (Android)
+## Android app
 
-| Flavour | App ID | Name | For |
-|---|---|---|---|
-| `dev` | `com.sharelith.app.dev` | Sharelith Dev (orange icon) | Everyday testing; always Google's test ads |
-| `prod` | `com.sharelith.app` | Sharelith | Testers (App Distribution) and the Play Store |
+One app, `com.sharelith.app` ("Sharelith").
 
-Both use the same Supabase project for now and install side by side.
-
-- Run: `npm run android` (dev) or `npm run android:prod`.
-- Build: `./gradlew :app:assembleDevRelease`, `:app:assembleProdRelease`, `:app:bundleProdRelease`.
-- Firebase: each flavour reads `android/app/src/<flavour>/google-services.json`. Register `com.sharelith.app.dev` as another Android app in the Firebase project and save its file to `src/dev/` for push, Crashlytics and Remote Config in dev; without it dev builds run without Firebase.
-- App Links only verify for prod (the website's `assetlinks.json` lists `com.sharelith.app`). Dev opens auth links through the website's bridge page instead.
+- Run: `npm run android`.
+- Build: `./gradlew :app:assembleRelease` (APK) or `:app:bundleRelease` (Play bundle).
+- Firebase reads `android/app/google-services.json` (git-ignored); without it the app builds without Firebase.
+- Debug builds always show Google's test ads; release builds show real ads.
 
 ## Version
 
@@ -29,7 +24,7 @@ The build number is the **build time in epoch seconds** (Unix time), for example
 
 - **Android:** `android/app/build.gradle` sets `versionCode` when building.
 - **iOS:** Xcode's "Set build number" build phase writes it into the built app's `CFBundleVersion` (the project file keeps a placeholder).
-- **Repeat a build exactly:** set `BUILD_NUMBER`, e.g. `BUILD_NUMBER=1795196400 ./gradlew :app:bundleProdRelease`.
+- **Repeat a build exactly:** set `BUILD_NUMBER`, e.g. `BUILD_NUMBER=1795196400 ./gradlew :app:bundleRelease`.
 - `npm run distribute:android` prints the number it built.
 
 **Limit:** Google Play's highest build number is 2,100,000,000, which epoch seconds reach on **18 July 2036**. Before then, move to a new scheme whose numbers are still higher than the last upload.
@@ -94,10 +89,10 @@ Ads are controlled from Firebase Remote Config; changes reach open apps within s
 ## Android: build
 
 ```bash
-cd android && ./gradlew :app:bundleProdRelease
+cd android && ./gradlew :app:bundleRelease
 ```
 
-The bundle to upload is `android/app/build/outputs/bundle/prodRelease/app-prod-release.aab`. Use `assembleProdRelease` instead for an APK you can install directly.
+The bundle to upload is `android/app/build/outputs/bundle/release/app-release.aab`. Use `assembleRelease` instead for an APK you can install directly.
 
 Release builds run R8, which shrinks the code and can break libraries that rely on reflection. Always install a release build and check sign-in, adding an expense and the app lock before uploading.
 

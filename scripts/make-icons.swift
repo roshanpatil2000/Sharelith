@@ -8,9 +8,8 @@ func rgb(_ hex: Int) -> NSColor {
   NSColor(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
           blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
 }
-// Prod: teal into green. Dev: orange, so it's never mistaken for the store app.
+// Teal into green.
 let prod = (rgb(0x006970), rgb(0x2BB673))
-let dev = (rgb(0xC43E00), rgb(0xFF9800))
 var colors = prod
 
 enum Shape { case square, rounded, circle, none }
@@ -95,8 +94,9 @@ func renderBackground(_ path: String, size: Int) {
   try! rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: path))
 }
 
-for (res, c) in [("android/app/src/main/res", prod), ("android/app/src/dev/res", dev)] {
-  colors = c
+do {
+  let res = "android/app/src/main/res"
+  colors = prod
   // Legacy launcher icons (Android 7 and older) and the adaptive layers.
   for (dpi, scale) in [("mdpi", 1.0), ("hdpi", 1.5), ("xhdpi", 2.0), ("xxhdpi", 3.0), ("xxxhdpi", 4.0)] {
     render("\(res)/mipmap-\(dpi)/ic_launcher.png", size: Int(48 * scale), shape: .rounded, markScale: 0.52)
