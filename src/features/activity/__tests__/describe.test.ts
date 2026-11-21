@@ -114,6 +114,17 @@ describe('describeActivity', () => {
       describeActivity({ ...member, kind: 'member_joined' }, me).title,
     ).toBe('Vikram joined “Goa”');
     expect(
+      describeActivity(
+        {
+          ...member,
+          kind: 'comment_added',
+          description: 'Dinner',
+          note: 'Paid at the cafe',
+        },
+        me,
+      ).title,
+    ).toBe('Asha commented on “Dinner” in Goa: “Paid at the cafe”');
+    expect(
       describeActivity({ ...member, kind: 'member_removed' }, me).title,
     ).toBe('Asha removed Vikram from “Goa”');
     expect(

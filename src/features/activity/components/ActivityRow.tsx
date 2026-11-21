@@ -9,6 +9,7 @@ import {
   UserPlus,
   Users,
   type LucideIcon,
+  MessageCircle,
 } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import { AmountText, Icon, Pressable, Stack, Text } from '@/components';
@@ -27,6 +28,7 @@ const ICONS: Record<ActivityKind, LucideIcon> = {
   member_added: UserPlus,
   member_left: UserMinus,
   member_joined: UserPlus,
+  comment_added: MessageCircle,
   member_removed: UserMinus,
   reminder: BellRing,
 };

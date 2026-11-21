@@ -833,6 +833,7 @@ export type Database = {
           paid_by: string;
           paid_to: string;
           payee_name: string;
+          note: string | null;
           payer_name: string;
           subject_id: string;
           subject_name: string;

@@ -16,6 +16,7 @@ export type ActivityKind =
   | 'member_left'
   | 'member_removed'
   | 'member_joined'
+  | 'comment_added'
   | 'reminder';
 
 /** One line of your feed. Names and amounts are as they were at the time. */
@@ -40,6 +41,8 @@ export type ActivityItem = {
   payer_name: string | null;
   paid_to: string | null;
   payee_name: string | null;
+  /** For a comment: the start of what was said. */
+  note?: string | null;
 };
 
 export const activityKey = (userId: string | null) =>
