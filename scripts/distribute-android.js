@@ -16,14 +16,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.join(__dirname, '..');
-const servicesFile = path.join(
-  root,
-  'android/app/src/prod/google-services.json',
-);
+const servicesFile = path.join(root, 'android/app/google-services.json');
 if (!fs.existsSync(servicesFile)) {
-  console.error(
-    'Missing android/app/src/prod/google-services.json (see docs/PUSH.md).',
-  );
+  console.error('Missing android/app/google-services.json (see docs/PUSH.md).');
   process.exit(1);
 }
 const services = JSON.parse(fs.readFileSync(servicesFile, 'utf8'));
@@ -49,8 +44,8 @@ const groups = process.env.FIREBASE_TESTER_GROUPS || 'testers';
 const buildNumber =
   process.env.BUILD_NUMBER || String(Math.floor(Date.now() / 1000));
 console.log(`Building Sharelith ${version} (${buildNumber})…`);
-// Testers get the prod flavour: what store users will run.
-execFileSync('./gradlew', [':app:assembleProdRelease'], {
+// Testers get the release build: what store users will run.
+execFileSync('./gradlew', [':app:assembleRelease'], {
   cwd: path.join(root, 'android'),
   stdio: 'inherit',
   env: { ...process.env, BUILD_NUMBER: buildNumber },
@@ -58,7 +53,7 @@ execFileSync('./gradlew', [':app:assembleProdRelease'], {
 
 const apk = path.join(
   root,
-  'android/app/build/outputs/apk/prod/release/app-prod-release.apk',
+  'android/app/build/outputs/apk/release/app-release.apk',
 );
 console.log(`Uploading to App Distribution (groups: ${groups})…`);
 execFileSync(

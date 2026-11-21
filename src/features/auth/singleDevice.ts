@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
 import { appVersion } from '@/lib/remoteConfig';
-import { env } from '@/lib/env';
 import { storage } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { currentPushToken } from '@/features/push/push';
@@ -34,7 +33,7 @@ export function deviceInfo() {
       platform: 'android',
       model: [brand, model].filter(Boolean).join(' ') || 'Android phone',
       os: `Android ${str(c.Release) ?? ''}`.trim(),
-      app_version: env.isDevFlavor ? `${appVersion} (dev)` : appVersion,
+      app_version: appVersion,
     };
   }
   const idiom = str(c.interfaceIdiom);

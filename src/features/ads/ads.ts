@@ -109,8 +109,8 @@ export async function showAdChoices(): Promise<void> {
 export type AdKind = 'interstitial' | 'native';
 
 /**
- * Debug builds and the dev flavour always use Google's test ads, as AdMob
- * requires for anything but real users.
+ * Debug builds always use Google's test ads, as AdMob requires for anything
+ * but real users.
  */
 export function adUnitId(kind: AdKind): string {
   const m = adsModule();
@@ -118,7 +118,7 @@ export function adUnitId(kind: AdKind): string {
     interstitial: m?.TestIds.INTERSTITIAL ?? '',
     native: m?.TestIds.NATIVE ?? '',
   }[kind];
-  return __DEV__ || env.isDevFlavor ? test : env.adUnits[kind] || test;
+  return __DEV__ ? test : env.adUnits[kind] || test;
 }
 
 /** Request options for every ad: non-personalised unless agreed. */

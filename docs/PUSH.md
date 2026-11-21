@@ -15,8 +15,7 @@ Never paste any of these values into chat or commit them.
 
 1. **Firebase project.** In the Firebase console, add an Android app with
    package `com.sharelith.app`. Download `google-services.json` into
-   `android/app/src/prod/` (git-ignored; the dev flavour reads `src/dev/`). Builds without it work but get no
-   pushes.
+   `android/app/` (git-ignored). Builds without it work but get no pushes.
 2. **Service account.** Project settings → Service accounts → Generate new
    private key. Store the whole JSON as a function secret:
 
