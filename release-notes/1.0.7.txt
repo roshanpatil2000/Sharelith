@@ -1,0 +1,10 @@
+Sharelith 1.0.7
+
+New
+- Comment notifications: when someone comments on an expense you're on, you get a notification with what they said. Tap it to open the expense. Comments also show in Activity.
+
+From 1.0.6 (if you skipped it)
+- Expense date and notes, comments, search, recurring expenses, group totals, Recently deleted, default and itemized splits, contacts and invite links, and amounts in your currency.
+
+Note
+- Please mention your app version (Account screen) when you report a problem.
