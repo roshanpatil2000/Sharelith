@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import Contacts from 'react-native-contacts';
 import App from '../App';
 import {
   fakeProfile,
@@ -195,6 +196,62 @@ describe('Add friend', () => {
     );
     await fireEvent.press(screen.getByTestId('add-friend-submit'));
     expect(await screen.findByText(error.message)).toBeOnTheScreen();
+  });
+});
+
+describe('Contacts and invite links', () => {
+  async function openAdd() {
+    mockRpc([]);
+    await openFriends();
+    await fireEvent.press(await screen.findByTestId('friends-add'));
+    await screen.findByTestId('add-friend-email');
+  }
+
+  it('fills in a contact and invites them with their name', async () => {
+    jest.mocked(Contacts.getAllWithoutPhotos).mockResolvedValueOnce([
+      {
+        recordID: '1',
+        displayName: 'Neha Joshi',
+        emailAddresses: [{ email: 'neha@example.com' }],
+      },
+      { recordID: '2', displayName: 'Ravi', emailAddresses: [] },
+    ] as never);
+    await openAdd();
+    await fireEvent.press(screen.getByTestId('add-friend-contacts'));
+    await fireEvent.press(
+      await screen.findByTestId('contact-neha@example.com'),
+    );
+    expect(screen.queryByText('Ravi')).toBeNull();
+    supabaseMock.functions.invoke.mockResolvedValueOnce({
+      data: {
+        status: 'invited',
+        friend: { ...vik, full_name: 'Neha Joshi', email: 'neha@example.com' },
+      },
+      error: null,
+    } as never);
+    await fireEvent.press(await screen.findByTestId('add-friend-submit'));
+    expect(supabaseMock.functions.invoke).toHaveBeenCalledWith('add-friend', {
+      body: { email: 'neha@example.com', name: 'Neha Joshi' },
+    });
+    expect(
+      await screen.findByText('Invited Neha — they’ll get an email'),
+    ).toBeOnTheScreen();
+  });
+
+  it('shows a QR code and link to share', async () => {
+    await openAdd();
+    supabaseMock.rpc.mockImplementation(async (fn: string) =>
+      fn === 'create_invite_link'
+        ? { data: 'AbC-123_xyzQWERTYuiop', error: null }
+        : { data: [], error: null },
+    );
+    await fireEvent.press(screen.getByTestId('add-friend-invite'));
+    expect(await screen.findByTestId('qr-code')).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        'https://sharelith.techbeas.co.in/invite/AbC-123_xyzQWERTYuiop',
+      ),
+    ).toBeOnTheScreen();
   });
 });
 

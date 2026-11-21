@@ -30,6 +30,9 @@ import { AddExpenseScreen } from '@/features/expenses/screens/AddExpenseScreen';
 import { SettleUpScreen } from '@/features/expenses/screens/SettleUpScreen';
 import { ExpenseDetailScreen } from '@/features/expenses/screens/ExpenseDetailScreen';
 import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
+import { InviteBridge } from '@/features/invites/InviteBridge';
+import { ChooseContactScreen } from '@/features/invites/screens/ChooseContactScreen';
+import { InviteScreen } from '@/features/invites/screens/InviteScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
 import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
 import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
@@ -146,6 +149,9 @@ export function RootNavigator() {
         <PushBridge navigation={navigationRef} />
       ) : null}
       {status === 'signedIn' && !resetPending ? <TermsPrompt /> : null}
+      {status === 'signedIn' && !resetPending ? (
+        <InviteBridge navigation={navigationRef} />
+      ) : null}
       <Root.Navigator screenOptions={stackOptions(theme)}>
         {status === 'signedIn' && resetPending ? (
           // Opened a reset or invite link: choose a password before anything
@@ -226,6 +232,16 @@ export function RootNavigator() {
               layout={modalLayout}
               component={AddFriendScreen}
               options={{ presentation: 'modal', title: 'Add friend' }}
+            />
+            <Root.Screen
+              name="ChooseContact"
+              component={ChooseContactScreen}
+              options={{ title: 'Choose a contact' }}
+            />
+            <Root.Screen
+              name="Invite"
+              component={InviteScreen}
+              options={{ title: 'Invite with a link' }}
             />
             <Root.Screen
               name="FriendDetail"

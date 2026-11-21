@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LogOut, Trash2, UserMinus, UserPlus } from 'lucide-react-native';
+import {
+  LogOut,
+  Trash2,
+  UserMinus,
+  QrCode,
+  UserPlus,
+} from 'lucide-react-native';
 import {
   Avatar,
   Badge,
@@ -196,6 +202,14 @@ export function GroupSettingsScreen({ route, navigation }: Props) {
           leading={<Icon icon={UserPlus} color="primary" />}
           onPress={() => navigation.navigate('AddGroupMembers', { groupId })}
           testID="group-add-people"
+        />
+      ) : null}
+      {isAdmin ? (
+        <ListRow
+          title="Invite with a link or QR code"
+          leading={<Icon icon={QrCode} color="primary" />}
+          onPress={() => navigation.navigate('Invite', { groupId })}
+          testID="group-invite-link"
         />
       ) : null}
       {group.members.map(m => {
