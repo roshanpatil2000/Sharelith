@@ -73,7 +73,7 @@ export async function handleSendPush(
   const { data: activity, error } = await admin
     .from('activities')
     .select(
-      'kind, actor_id, group_id, expense_id, group_name, description, amount_minor, currency, actor:profiles!activities_actor_id_fkey(full_name)',
+      'kind, actor_id, group_id, expense_id, group_name, description, amount_minor, currency, note, actor:profiles!activities_actor_id_fkey(full_name)',
     )
     .eq('id', activityId)
     .maybeSingle<ActivityRow>();

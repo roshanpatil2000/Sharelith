@@ -75,6 +75,13 @@ export function describeActivity(
         title: `${actor} added ${subject('you')} to ${group}`,
         ...none,
       };
+    case 'comment_added':
+      return {
+        title: `${actor} commented on ${what}${inGroup}${
+          item.note ? `: “${item.note}”` : ''
+        }`,
+        ...none,
+      };
     case 'member_joined':
       return { title: `${subject('You')} joined ${group}`, ...none };
     case 'member_left':

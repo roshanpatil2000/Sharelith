@@ -55,6 +55,15 @@ describe('pushText', () => {
     });
   });
 
+  it('shows who commented and what they said', () => {
+    expect(
+      pushText(
+        activity({ kind: 'comment_added', note: 'Paid at the cafe' }),
+        0,
+      ),
+    ).toEqual({ title: 'Dinner · Goa', body: 'Asha: Paid at the cafe' });
+  });
+
   it('covers group membership', () => {
     expect(pushText(activity({ kind: 'member_added' }), 0)).toEqual({
       title: 'Goa',

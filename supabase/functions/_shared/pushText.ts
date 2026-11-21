@@ -8,6 +8,8 @@ export type PushActivity = {
   description: string | null;
   amount_minor: number | null;
   currency: string | null;
+  /** For a comment: the start of what was said. */
+  note?: string | null;
 };
 
 export type PushText = { title: string; body: string };
@@ -68,6 +70,8 @@ export function pushText(a: PushActivity, net: number): PushText {
     case 'group_created':
     case 'member_added':
       return { title: group, body: `${actor} added you to the group.` };
+    case 'comment_added':
+      return { title, body: `${actor}: ${a.note ?? 'commented'}` };
     case 'member_removed':
       return { title: group, body: `${actor} removed you from the group.` };
     case 'reminder':
