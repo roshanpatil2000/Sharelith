@@ -182,3 +182,10 @@ jest.mock('react-native-share', () => ({
   __esModule: true,
   default: { open: jest.fn(async () => ({ success: true })) },
 }));
+
+// The installed build number (epoch seconds), read from the native app.
+jest.mock('react-native-device-info', () => ({
+  __esModule: true,
+  getBuildNumber: jest.fn(() => '1795196400'),
+  default: { getBuildNumber: jest.fn(() => '1795196400') },
+}));

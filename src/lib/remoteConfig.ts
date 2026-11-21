@@ -41,12 +41,16 @@ export const useRemoteConfig = create<RemoteValues>(() => remoteDefaults);
 
 export { appVersion };
 
-/** Build number, as both native projects derive it: 1.2.3 → 10203. */
-export function buildNumber(version: string): number {
-  const [major = 0, minor = 0, patch = 0] = version
-    .split('.')
-    .map(n => parseInt(n, 10) || 0);
-  return major * 10000 + minor * 100 + patch;
+/**
+ * The installed app's build number: the build time in epoch seconds
+ * (versionCode on Android, CFBundleVersion on iOS).
+ */
+export function installedBuildNumber(): string {
+  try {
+    return require('react-native-device-info').getBuildNumber();
+  } catch {
+    return '';
+  }
 }
 
 type RemoteConfigModule = typeof import('@react-native-firebase/remote-config');

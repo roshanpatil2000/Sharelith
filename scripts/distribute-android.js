@@ -44,11 +44,16 @@ const notes =
     : `Sharelith ${version} for testing.`);
 const groups = process.env.FIREBASE_TESTER_GROUPS || 'testers';
 
-console.log(`Building Sharelith ${version}…`);
+// The build number is the build time in epoch seconds (see android/app/build.gradle).
+// Picked here so it can be printed and matched to the build testers get.
+const buildNumber =
+  process.env.BUILD_NUMBER || String(Math.floor(Date.now() / 1000));
+console.log(`Building Sharelith ${version} (${buildNumber})…`);
 // Testers get the prod flavour: what store users will run.
 execFileSync('./gradlew', [':app:assembleProdRelease'], {
   cwd: path.join(root, 'android'),
   stdio: 'inherit',
+  env: { ...process.env, BUILD_NUMBER: buildNumber },
 });
 
 const apk = path.join(

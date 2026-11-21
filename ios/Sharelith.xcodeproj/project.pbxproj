@@ -121,6 +121,7 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				5E7B0C1D2A3B4C5D6E7F8A9B /* Set build number */,
 			);
 			buildRules = (
 			);
@@ -210,6 +211,21 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Sharelith/Pods-Sharelith-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		5E7B0C1D2A3B4C5D6E7F8A9B /* Set build number */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Set build number";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Build number = build time in epoch seconds (BUILD_NUMBER overrides it).\n# Written into the built app only, so the project file doesn't change.\nset -e\nNUMBER=\"${BUILD_NUMBER:-$(date +%s)}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\necho \"Build number $NUMBER\"\n";
 		};
 		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

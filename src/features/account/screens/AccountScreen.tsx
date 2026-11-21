@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { env } from '@/lib/env';
-import { appVersion, buildNumber } from '@/lib/remoteConfig';
+import { appVersion, installedBuildNumber } from '@/lib/remoteConfig';
 import { showAdChoices, useAdsStore } from '@/features/ads/ads';
 import {
   BarChart3,
@@ -101,6 +101,7 @@ export function AccountScreen() {
   const setThemePreference = useSettingsStore(s => s.setThemePreference);
   const appLock = useAppLockToggle();
   const isPro = useIsPro();
+  const build = installedBuildNumber();
   const [confirmLogout, setConfirmLogout] = useState(false);
   // Shown where the law requires a way to change ad consent (EU/UK).
   const adChoices = useAdsStore(s => s.privacyOptionsRequired);
@@ -284,7 +285,8 @@ export function AccountScreen() {
           align="center"
           testID="account-version"
         >
-          Sharelith {appVersion} ({buildNumber(appVersion)})
+          Sharelith {appVersion}
+          {build ? ` (${build})` : ''}
         </Text>
       </Box>
 

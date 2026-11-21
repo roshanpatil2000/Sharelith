@@ -172,8 +172,9 @@ describe('App auth flow', () => {
     const openURL = jest
       .spyOn(Linking, 'openURL')
       .mockResolvedValue(undefined as never);
+    // Version from package.json; build number (epoch seconds) from the app.
     expect(screen.getByTestId('account-version')).toHaveTextContent(
-      /^Sharelith \d+\.\d+\.\d+ \(\d+\)$/,
+      /^Sharelith \d+\.\d+\.\d+ \(1795196400\)$/,
     );
     await fireEvent.press(screen.getByTestId('account-privacy'));
     expect(openURL).toHaveBeenCalledWith(

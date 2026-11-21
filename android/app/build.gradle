@@ -69,13 +69,15 @@ react {
 def enableProguardInReleaseBuilds = true
 
 /**
- * One version for both apps: versionName comes from package.json, and
- * versionCode is derived from it (1.2.3 -> 10203), so it always increases.
+ * One version for both apps: versionName comes from package.json. The build
+ * number (versionCode) is the build time in epoch seconds, so every build
+ * gets a higher number than the last. BUILD_NUMBER overrides it to repeat a
+ * build exactly. Play's limit (2,100,000,000) is reached in July 2036: see
+ * docs/RELEASE.md.
  */
 def appVersion = new groovy.json.JsonSlurper()
     .parse(file("../../package.json")).version
-def (major, minor, patch) = appVersion.tokenize(".").collect { it.toInteger() }
-def appVersionCode = major * 10000 + minor * 100 + patch
+def appVersionCode = (System.getenv("BUILD_NUMBER") ?: (System.currentTimeMillis().intdiv(1000)).toString()).toInteger()
 
 /**
  * Release signing reads the upload key from Gradle properties, normally in

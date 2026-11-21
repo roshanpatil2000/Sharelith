@@ -21,7 +21,18 @@ Both use the same Supabase project for now and install side by side.
 1. Bump it, for example `1.0.0` → `1.0.1`.
 2. Run `npm run version:sync` to copy it into the iOS project.
 
-Android reads it directly. Both apps get build number `major*10000 + minor*100 + patch`, so 1.0.1 is build 10001. Store builds must have a higher number than the last one uploaded, so every store upload needs a new version.
+Android reads it directly.
+
+### Build number
+
+The build number is the **build time in epoch seconds** (Unix time), for example `1795196400`. Every build gets a higher number than the last, so several store uploads of the same version are fine. The app shows it on the Account screen as `Sharelith 1.0.4 (1795196400)`.
+
+- **Android:** `android/app/build.gradle` sets `versionCode` when building.
+- **iOS:** Xcode's "Set build number" build phase writes it into the built app's `CFBundleVersion` (the project file keeps a placeholder).
+- **Repeat a build exactly:** set `BUILD_NUMBER`, e.g. `BUILD_NUMBER=1795196400 ./gradlew :app:bundleProdRelease`.
+- `npm run distribute:android` prints the number it built.
+
+**Limit:** Google Play's highest build number is 2,100,000,000, which epoch seconds reach on **18 July 2036**. Before then, move to a new scheme whose numbers are still higher than the last upload.
 
 ## Android: upload key (once)
 
