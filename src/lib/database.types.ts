@@ -548,6 +548,39 @@ export type Database = {
           },
         ];
       };
+      pro_grants: {
+        Row: {
+          expires_at: string | null;
+          granted_at: string;
+          id: number;
+          note: string | null;
+          reason: string;
+          revoke_note: string | null;
+          revoked_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          expires_at?: string | null;
+          granted_at?: string;
+          id?: never;
+          note?: string | null;
+          reason: string;
+          revoke_note?: string | null;
+          revoked_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          expires_at?: string | null;
+          granted_at?: string;
+          id?: never;
+          note?: string | null;
+          reason?: string;
+          revoke_note?: string | null;
+          revoked_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -566,7 +599,6 @@ export type Database = {
           notify_payments: boolean;
           notify_reminders: boolean;
           phone: string | null;
-          pro_override: boolean;
           timezone: string;
           updated_at: string;
         };
@@ -587,7 +619,6 @@ export type Database = {
           notify_payments?: boolean;
           notify_reminders?: boolean;
           phone?: string | null;
-          pro_override?: boolean;
           timezone?: string;
           updated_at?: string;
         };
@@ -608,7 +639,6 @@ export type Database = {
           notify_payments?: boolean;
           notify_reminders?: boolean;
           phone?: string | null;
-          pro_override?: boolean;
           timezone?: string;
           updated_at?: string;
         };
@@ -624,7 +654,21 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      admin_pro_status: {
+        Row: {
+          email: string | null;
+          grant_note: string | null;
+          grant_reason: string | null;
+          grant_until: string | null;
+          is_pro: boolean | null;
+          source: string | null;
+          subscription_active: boolean | null;
+          subscription_status: string | null;
+          subscription_until: string | null;
+          user_id: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       redeem_invite_link: {
@@ -721,6 +765,19 @@ export type Database = {
           status: string | null;
         }[];
       };
+      grant_pro: {
+        Args: {
+          email: string;
+          ends_at?: string;
+          note?: string;
+          reason: string;
+        };
+        Returns: number;
+      };
+      revoke_pro: {
+        Args: { email: string; note?: string };
+        Returns: undefined;
+      };
       require_pro: { Args: never; Returns: undefined };
       active_member_ids: { Args: { gid: string }; Returns: string[] };
       add_group_members: {
@@ -794,7 +851,6 @@ export type Database = {
           notify_payments: boolean;
           notify_reminders: boolean;
           phone: string | null;
-          pro_override: boolean;
           timezone: string;
           updated_at: string;
         }[];

@@ -1,4 +1,4 @@
--- Pro: subscriptions and the override decide it; only the server can grant it.
+-- Pro: subscriptions and grants decide it; only the server can grant it.
 begin;
 select plan(12);
 
@@ -25,8 +25,8 @@ update public.subscriptions set status = 'active', expires_at = now() - interval
 where user_id = '00000000-0000-0000-0000-00000000000a';
 select ok(not public.is_pro('00000000-0000-0000-0000-00000000000a'), 'an expired period does not');
 
-update public.profiles set pro_override = true where id = '00000000-0000-0000-0000-00000000000b';
-select ok(public.is_pro('00000000-0000-0000-0000-00000000000b'), 'the override gives Pro');
+select public.grant_pro('b@test.co', 'test');
+select ok(public.is_pro('00000000-0000-0000-0000-00000000000b'), 'a grant gives Pro');
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
@@ -34,7 +34,7 @@ set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
 select is((select is_pro from public.my_pro_status()), false, 'you can read your own status');
 select is((select count(*)::int from public.subscriptions), 1, 'and only your own subscription');
 select throws_ok(
-  $$update public.profiles set pro_override = true where id = '00000000-0000-0000-0000-00000000000a'$$,
+  $$insert into public.pro_grants (user_id, reason) values ('00000000-0000-0000-0000-00000000000a', 'test')$$,
   '42501', null, 'you cannot give yourself Pro'
 );
 select throws_ok($$select public.require_pro()$$, '42501', null, 'Pro-only actions refuse free users');

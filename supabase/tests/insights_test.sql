@@ -16,7 +16,7 @@ set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000000a"}';
 select throws_ok($$select * from public.spending_insights(12)$$, '42501', null, 'free users get no insights');
 
 reset role;
-update public.profiles set pro_override = true where id = '00000000-0000-0000-0000-00000000000a';
+select public.grant_pro('a@test.co', 'test');
 set local role authenticated;
 
 -- A pays 3000 for food, split with B: A's share 1500, paid 3000.
