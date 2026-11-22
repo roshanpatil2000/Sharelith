@@ -1,13 +1,19 @@
 import React, { useEffect, useLayoutEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   useNavigation,
   useRoute,
   type RouteProp,
 } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HandCoins, Receipt, Settings, BarChart3 } from 'lucide-react-native';
+import {
+  BarChart3,
+  HandCoins,
+  Receipt,
+  Settings,
+  UserPlus,
+} from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   AvatarStack,
@@ -69,19 +75,11 @@ export function GroupDetailScreen({ route }: Props) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: group?.name ?? '',
+      // The name is the screen's own heading.
+      title: '',
       headerRight: group
         ? () => (
             <View style={styles.headerButtons}>
-              <IconButton
-                icon={BarChart3}
-                accessibilityLabel="Group totals"
-                color="primary"
-                onPress={() =>
-                  navigation.navigate('GroupTotals', { groupId: group.id })
-                }
-                testID="group-totals"
-              />
               <ExportButton
                 title={group.name}
                 groupId={group.id}
@@ -128,19 +126,15 @@ export function GroupDetailScreen({ route }: Props) {
       onRefresh={() => Promise.all([refetch(), refreshExpenses()])}
     >
       <View style={styles.header}>
-        <GroupCover type={group.type} uri={group.cover_url} size="xl" />
-        <Stack align="center" gap="xs">
-          <Text variant="title" align="center">
-            {group.name}
-          </Text>
+        <GroupCover type={group.type} uri={group.cover_url} size="lg" />
+        <Stack gap="xs">
+          <Text variant="title">{group.name}</Text>
           <Text color="textSecondary">
             {groupTypeLabel(group.type)} ·{' '}
             {memberCountLabel(group.members.length)}
           </Text>
           {group.description ? (
-            <Text color="textSecondary" align="center">
-              {group.description}
-            </Text>
+            <Text color="textSecondary">{group.description}</Text>
           ) : null}
         </Stack>
         <AvatarStack
@@ -151,15 +145,40 @@ export function GroupDetailScreen({ route }: Props) {
           max={6}
         />
         <BalanceSummary balances={balances[group.id] ?? []} />
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.actions}
+        contentContainerStyle={styles.actionsContent}
+      >
         {(balances[group.id] ?? []).length > 0 ? (
           <Button
             title="Settle up"
             icon={HandCoins}
+            size="sm"
             onPress={() => navigation.navigate('SettleUp', { groupId })}
             testID="group-settle-up"
           />
         ) : null}
-      </View>
+        <Button
+          title="Totals"
+          icon={BarChart3}
+          size="sm"
+          variant="outline"
+          accessibilityLabel="Group totals"
+          onPress={() => navigation.navigate('GroupTotals', { groupId })}
+          testID="group-totals"
+        />
+        <Button
+          title="Add people"
+          icon={UserPlus}
+          size="sm"
+          variant="outline"
+          onPress={() => navigation.navigate('AddGroupMembers', { groupId })}
+          testID="group-add-people"
+        />
+      </ScrollView>
       <Divider />
       <ExpenseList
         groupId={groupId}
@@ -178,9 +197,15 @@ const createStyles = (t: Theme) =>
       gap: t.spacing.xs,
     },
     header: {
-      alignItems: 'center',
+      alignItems: 'flex-start',
       gap: t.spacing.md,
-      padding: t.spacing.xl,
+      padding: t.spacing.lg,
       backgroundColor: t.colors.surface,
+    },
+    actions: { flexGrow: 0, backgroundColor: t.colors.surface },
+    actionsContent: {
+      gap: t.spacing.sm,
+      paddingHorizontal: t.spacing.lg,
+      paddingBottom: t.spacing.lg,
     },
   });

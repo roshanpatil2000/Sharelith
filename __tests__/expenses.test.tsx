@@ -887,7 +887,9 @@ describe('Expense detail', () => {
     expect(screen.getByTestId(`detail-share-${asha}`)).toHaveTextContent(
       /Asha Rao.*₹300\.00/,
     );
-    expect(screen.getByTestId('detail-edit')).toHaveTextContent('Edit expense');
+    expect(screen.getByTestId('detail-edit')).toHaveAccessibleName(
+      'Edit expense',
+    );
     expect(screen.getByTestId('detail-delete')).toBeOnTheScreen();
   });
 
@@ -921,7 +923,7 @@ describe('Expense detail', () => {
       created_by: asha,
       creator: { full_name: 'Asha Rao' },
     });
-    expect(screen.getByTestId('detail-edit')).toHaveTextContent('Rename');
+    expect(screen.getByTestId('detail-edit')).toHaveAccessibleName('Rename');
     expect(screen.queryByTestId('detail-delete')).toBeNull();
     expect(
       screen.getByText(/Only Asha Rao can change the amount or delete this/),

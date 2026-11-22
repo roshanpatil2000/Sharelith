@@ -7,10 +7,10 @@ import {
   AmountText,
   Avatar,
   Banner,
-  Button,
   ConfirmDialog,
   Divider,
   Icon,
+  IconButton,
   ListRow,
   Screen,
   SectionHeader,
@@ -39,11 +39,42 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
   const setDeleted = useSetExpenseDeleted();
   const [confirm, setConfirm] = useState(false);
 
+  const mine = !!expense && expense.created_by === me;
+  const isPayment = !!expense?.is_payment;
+
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: expense?.is_payment ? 'Payment' : 'Expense',
+      title: isPayment ? 'Payment' : 'Expense',
+      headerRight: expense
+        ? () => (
+            <View style={styles.actions}>
+              {mine ? (
+                <IconButton
+                  icon={Trash2}
+                  color="danger"
+                  accessibilityLabel={
+                    isPayment ? 'Delete payment' : 'Delete expense'
+                  }
+                  onPress={() => setConfirm(true)}
+                  testID="detail-delete"
+                />
+              ) : null}
+              {isPayment ? null : (
+                <IconButton
+                  icon={Pencil}
+                  color="primary"
+                  accessibilityLabel={mine ? 'Edit expense' : 'Rename'}
+                  onPress={() =>
+                    navigation.navigate('AddExpense', { expenseId })
+                  }
+                  testID="detail-edit"
+                />
+              )}
+            </View>
+          )
+        : undefined,
     });
-  }, [navigation, expense?.is_payment]);
+  }, [navigation, expense, expenseId, mine, isPayment, styles.actions]);
 
   if (isLoading) {
     return <Screen>{null}</Screen>;
@@ -58,7 +89,6 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
 
   const name = (id: string, profile?: { full_name: string } | null) =>
     id === me ? 'You' : profile?.full_name ?? 'Someone';
-  const mine = expense.created_by === me;
   const net = myNet(expense, me);
   const { currency } = expense;
 
@@ -89,16 +119,20 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
       footer={<CommentBox expenseId={expense.id} />}
     >
       <View style={styles.header}>
-        <View style={styles.icon}>
-          <Icon icon={Receipt} size={28} color="primary" />
+        <View style={styles.summary}>
+          <View style={styles.icon}>
+            <Icon icon={Receipt} size={28} color="primary" />
+          </View>
+          <Stack gap="xxs" style={styles.summaryText}>
+            <Text variant="title" testID="detail-description">
+              {expense.description}
+            </Text>
+            <Text variant="display" testID="detail-amount">
+              {formatMoney(expense.amount_minor, currency)}
+            </Text>
+          </Stack>
         </View>
-        <Text variant="title" align="center" testID="detail-description">
-          {expense.description}
-        </Text>
-        <Text variant="display" testID="detail-amount">
-          {formatMoney(expense.amount_minor, currency)}
-        </Text>
-        <Text color="textSecondary" align="center">
+        <Text color="textSecondary">
           {[expense.group?.name, longDate(expense.expense_date)]
             .filter(Boolean)
             .join(' · ')}
@@ -177,36 +211,15 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
 
       <CommentsSection expenseId={expense.id} />
 
-      <Divider />
-      <Stack gap="sm" style={styles.actions}>
-        {expense.is_payment ? null : (
-          <Button
-            title={mine ? 'Edit expense' : 'Rename'}
-            icon={Pencil}
-            variant="secondary"
-            fullWidth
-            onPress={() =>
-              navigation.navigate('AddExpense', { expenseId: expense.id })
-            }
-            testID="detail-edit"
-          />
-        )}
-        {mine ? (
-          <Button
-            title={expense.is_payment ? 'Delete payment' : 'Delete expense'}
-            icon={Trash2}
-            variant="danger"
-            fullWidth
-            onPress={() => setConfirm(true)}
-            testID="detail-delete"
-          />
-        ) : (
-          <Text variant="caption" color="textSecondary" align="center">
+      {mine ? null : (
+        <>
+          <Divider />
+          <Text variant="caption" color="textSecondary" style={styles.notes}>
             Only {name(expense.created_by, expense.creator)} can change the
             amount or delete this.
           </Text>
-        )}
-      </Stack>
+        </>
+      )}
 
       <ConfirmDialog
         visible={confirm}
@@ -230,18 +243,19 @@ const createStyles = (t: Theme) =>
   StyleSheet.create({
     notes: { paddingHorizontal: t.spacing.lg, paddingVertical: t.spacing.md },
     header: {
-      alignItems: 'center',
       gap: t.spacing.sm,
-      padding: t.spacing.xl,
+      padding: t.spacing.lg,
       backgroundColor: t.colors.surface,
     },
     icon: {
       width: 56,
       height: 56,
-      borderRadius: 28,
+      borderRadius: t.radius.md,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: t.colors.primarySoft,
     },
-    actions: { padding: t.spacing.lg },
+    summary: { flexDirection: 'row', gap: t.spacing.md },
+    summaryText: { flex: 1 },
+    actions: { flexDirection: 'row', alignItems: 'center' },
   });
