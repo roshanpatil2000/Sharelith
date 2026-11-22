@@ -16,24 +16,41 @@ Pro is a Google Play subscription (Android only for now) with two plans, monthly
    - acknowledges the purchase.
    The app then finishes the transaction. The app never grants Pro itself.
 3. **`play-notifications`** receives Google's Real-time Developer Notifications. For each one, it re-reads the token from Google and updates `subscriptions`, so renewals, cancellations, holds and refunds apply without the app.
-4. **`is_pro(uid)`** in the database decides Pro:
-   - a subscription that's active, in grace, or cancelled but not yet expired; or
-   - `profiles.pro_override` (test accounts, complimentary Pro).
+4. **`is_pro(uid)`** in the database decides Pro, reading the rule from the `admin_pro_status` view:
+   - a subscription in `subscriptions` that's active, in grace, or cancelled but not yet expired; or
+   - a grant in `pro_grants` that's neither revoked nor expired.
 
    The app reads it with `my_pro_status()`. Pro-only actions on the server call `require_pro()`.
 
 Plan IDs come from Remote Config (`pro_monthly_sku`, `pro_yearly_sku`, defaults `pro_monthly` / `pro_yearly`).
 
-## Testing without Play: give an account Pro
+## Give, check and remove Pro without Play
 
-In the Supabase SQL editor:
+Run these in the Supabase SQL editor. The app and its users can't call them.
 
 ```sql
-update public.profiles set pro_override = true
-where email = 'tester@example.com';
+-- Who has Pro, and why
+select * from public.admin_pro_status where is_pro;
+
+-- Give Pro until revoked. Reason: test, complimentary or support
+select public.grant_pro('person@example.com', 'complimentary');
+
+-- Give Pro for a while, with a note
+select public.grant_pro('person@example.com', 'test', 'QA phone', now() + interval '30 days');
+
+-- Take granted Pro away (a paid subscription is left alone)
+select public.revoke_pro('person@example.com', 'testing finished');
+
+-- One person's history
+select g.* from public.pro_grants g
+join auth.users u on u.id = g.user_id
+where u.email = 'person@example.com'
+order by g.granted_at;
 ```
 
-Set it back to `false` to remove Pro.
+In `admin_pro_status`, `source` says where Pro comes from: `free`, `subscription`, `grant` or `subscription+grant`. Granting again replaces the open grant and keeps the old row as history. A person's grants are deleted with their account.
+
+The app caches Pro for up to 5 minutes, so after a change the person may need to reopen it once that has passed.
 
 ## One-time Play setup
 

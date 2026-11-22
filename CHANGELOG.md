@@ -2,6 +2,11 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## Unreleased
+
+- **Pro (server only):** manual Pro is now `pro_grants` (reason, dates, history) with `grant_pro` / `revoke_pro`, and `admin_pro_status` shows who has Pro and why. Replaces `profiles.pro_override`.
+- **Fixed (server only):** granted Pro no longer shows an expired subscription's renewal date.
+
 ## 1.0.7
 
 - **Comments:** push notifications and Activity entries for new comments (`comment_added`, `activities.note`, trigger on `expense_comments`; `send-push` shows the preview).

@@ -7,7 +7,7 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-00000000000a', 'a@test.co', '{"full_name":"A"}'),
   ('00000000-0000-0000-0000-00000000000b', 'b@test.co', '{"full_name":"B"}'),
   ('00000000-0000-0000-0000-00000000000c', 'c@test.co', '{"full_name":"C"}');
-update public.profiles set pro_override = true where id = '00000000-0000-0000-0000-00000000000a';
+select public.grant_pro('a@test.co', 'test');
 insert into public.friendships (user_a, user_b) values
   ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b');
 
