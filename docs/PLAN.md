@@ -15,7 +15,7 @@ Phases 0-7 are built for Android, plus most of the beta essentials from Phase 10
 - Phase 6: group-wide activity feed with realtime updates.
 - Phase 7: Android push for activity that concerns you (`docs/PUSH.md`).
 - Phase 10 (part): Crashlytics on Android, privacy policy and Terms on the website with consent at sign-up, Android App Links for auth emails, R8, release builds that refuse the debug key.
-- Hardening: the 2 Nov review items, soft-leave (`left_at`), "Deleted user" anonymisation, settled-balance checks, FLAG_SECURE, Storage-only photo URLs.
+- Hardening: the 2 Nov review items, soft-leave (`left_at`), "Deleted user" anonymisation, settled-balance checks, FLAG_SECURE (since removed so screenshots work), Storage-only photo URLs.
 - CI runs typecheck, lint, Jest and pgTAP on every PR.
 
 **Changes from the original plan**

@@ -6,6 +6,7 @@ Tester-facing notes for each build live in `release-notes/<version>.txt` and are
 
 - **Pro (server only):** manual Pro is now `pro_grants` (reason, dates, history) with `grant_pro` / `revoke_pro`, and `admin_pro_status` shows who has Pro and why. Replaces `profiles.pro_override`.
 - **Fixed (server only):** granted Pro no longer shows an expired subscription's renewal date.
+- **Android:** screenshots and screen recording work; `FLAG_SECURE` is removed, so the recent-apps preview also shows the app.
 
 ## 1.0.7
 

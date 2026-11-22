@@ -1,7 +1,6 @@
 package com.sharelith.app
 
 import android.os.Bundle
-import android.view.WindowManager
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -11,17 +10,11 @@ import com.zoontek.rnbootsplash.RNBootSplash
 
 class MainActivity : ReactActivity() {
 
-  /**
-   * FLAG_SECURE keeps money and contact details out of screenshots, screen
-   * recordings and the recent-apps thumbnail.
-   */
   override fun onCreate(savedInstanceState: Bundle?) {
     supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
     // Keeps the splash up until JS calls BootSplash.hide().
     RNBootSplash.init(this, R.style.BootTheme)
     super.onCreate(savedInstanceState)
-    window.setFlags(
-        WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
   }
 
   /**
