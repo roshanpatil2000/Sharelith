@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Banner, Button, Screen, Stack, Text, toast } from '@/components';
+import { Banner, FormHeader, Screen, Stack, Text, toast } from '@/components';
 import type { RootStackParamList } from '@/app/navigation/types';
 import type { PickedImage } from '@/features/account/api';
 import { toAppError } from '@/features/auth/errors';
@@ -22,7 +22,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CreateGroup'>;
 export function CreateGroupScreen({ route }: Props) {
   const navigation = useNavigation();
   const createGroup = useCreateGroup();
-  const [type, setType] = useState<GroupType>('trip');
+  const [type, setType] = useState<GroupType>(route.params?.type ?? 'trip');
   const [cover, setCover] = useState<(PickedImage & { uri?: string }) | null>(
     null,
   );
@@ -77,7 +77,27 @@ export function CreateGroupScreen({ route }: Props) {
   });
 
   return (
-    <Screen scroll padded edges={['bottom', 'left', 'right']}>
+    <Screen
+      scroll
+      padded
+      edges={['top', 'bottom', 'left', 'right']}
+      header={
+        <FormHeader
+          title="Create a group"
+          onClose={() => navigation.goBack()}
+          action={{
+            title: 'Done',
+            accessibilityLabel:
+              selected.size > 0
+                ? `Create group with ${selected.size + 1} people`
+                : 'Create group',
+            loading: formState.isSubmitting,
+            onPress: onSubmit,
+            testID: 'group-create',
+          }}
+        />
+      }
+    >
       <Stack gap="xl">
         {formError ? <Banner tone="danger" message={formError} /> : null}
         <GroupDetailsFields
@@ -103,18 +123,6 @@ export function CreateGroupScreen({ route }: Props) {
             }
           />
         </Stack>
-        <Button
-          title={
-            selected.size > 0
-              ? `Create group with ${selected.size + 1} people`
-              : 'Create group'
-          }
-          size="lg"
-          fullWidth
-          loading={formState.isSubmitting}
-          onPress={onSubmit}
-          testID="group-create"
-        />
       </Stack>
     </Screen>
   );

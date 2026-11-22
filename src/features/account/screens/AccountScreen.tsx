@@ -12,7 +12,6 @@ import {
   KeyRound,
   LogOut,
   Palette,
-  Pencil,
   ScanFace,
   Megaphone,
   ScrollText,
@@ -22,6 +21,7 @@ import {
 import {
   Avatar,
   Box,
+  Button,
   ConfirmDialog,
   CurrencyPicker,
   Divider,
@@ -31,7 +31,6 @@ import {
   Row,
   Screen,
   SectionHeader,
-  SegmentedControl,
   SelectField,
   Skeleton,
   Stack,
@@ -43,18 +42,15 @@ import { timezoneLabel, timezoneOptions } from '@/domain/timezones';
 import { signOut } from '@/features/auth/api';
 import { toAppError } from '@/features/auth/errors';
 import { useAppLockToggle } from '@/features/lock/useAppLockToggle';
-import { useSettingsStore, type ThemePreference } from '@/lib/settingsStore';
+import { useSettingsStore } from '@/lib/settingsStore';
 import { useProfile, useUpdateProfile } from '../api';
 import { useIsPro } from '@/features/pro/pro';
 import { VerifyEmailBanner } from '../components/VerifyEmailBanner';
 
-const themeSegments = [
-  { value: 'system', label: 'System' },
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-] as const;
+const themeName = { system: 'System', light: 'Light', dark: 'Dark' } as const;
 
 function ProfileHeader() {
+  const navigation = useNavigation();
   const {
     data: profile,
     isLoading,
@@ -89,6 +85,13 @@ function ProfileHeader() {
           {profile.email}
         </Text>
       </Stack>
+      <Button
+        title="Edit"
+        accessibilityLabel="Edit profile"
+        variant="link"
+        onPress={() => navigation.navigate('EditProfile')}
+        testID="account-edit-profile"
+      />
     </Row>
   );
 }
@@ -98,7 +101,6 @@ export function AccountScreen() {
   const { data: profile } = useProfile();
   const updateProfile = useUpdateProfile();
   const themePreference = useSettingsStore(s => s.themePreference);
-  const setThemePreference = useSettingsStore(s => s.setThemePreference);
   const appLock = useAppLockToggle();
   const isPro = useIsPro();
   const build = installedBuildNumber();
@@ -136,13 +138,21 @@ export function AccountScreen() {
     <Screen scroll>
       <ProfileHeader />
       <VerifyEmailBanner />
-      <ListRow
-        title="Edit profile"
-        leading={<Icon icon={Pencil} color="textSecondary" />}
-        chevron
-        onPress={() => navigation.navigate('EditProfile')}
-        testID="account-edit-profile"
-      />
+      {isPro ? null : (
+        <Box m="lg" p="xl" gap="md" radius="lg" bg="primarySoft" align="center">
+          <Icon icon={Crown} color="primary" size={40} />
+          <Text align="center">
+            More from Sharelith: no ads, receipts, exports and insights.
+          </Text>
+          <Button
+            title="See Sharelith Pro"
+            fullWidth
+            style={proButton}
+            onPress={() => navigation.navigate('Pro')}
+            testID="account-pro-banner"
+          />
+        </Box>
+      )}
 
       <ListRow
         title="Sharelith Pro"
@@ -202,18 +212,14 @@ export function AccountScreen() {
         testID="account-notifications"
       />
       <Divider inset={52} />
-      <Stack gap="sm" px="lg" py="md" bg="surface">
-        <Row gap="md">
-          <Icon icon={Palette} color="textSecondary" />
-          <Text variant="bodyStrong">Theme</Text>
-        </Row>
-        <SegmentedControl<ThemePreference>
-          segments={themeSegments}
-          value={themePreference}
-          onChange={setThemePreference}
-          testID="theme-control"
-        />
-      </Stack>
+      <ListRow
+        title="Appearance"
+        subtitle={themeName[themePreference]}
+        leading={<Icon icon={Palette} color="textSecondary" />}
+        chevron
+        onPress={() => navigation.navigate('Appearance')}
+        testID="account-appearance"
+      />
 
       <SectionHeader title="Security" />
       <ListRow
@@ -311,3 +317,5 @@ export function AccountScreen() {
     </Screen>
   );
 }
+
+const proButton = { borderRadius: 999 };

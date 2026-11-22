@@ -34,6 +34,7 @@ export function FAB({
       accessibilityLabel={label}
       style={[styles.fab, { bottom: bottom + tabBarSpace }]}
       pressedStyle={styles.pressed}
+      ripple={colors.primaryPressed}
     >
       <Icon icon={icon} size={20} tint={colors.textOnPrimary} />
       <Text variant="bodyStrong" color="textOnPrimary">

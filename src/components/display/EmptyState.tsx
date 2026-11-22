@@ -5,9 +5,13 @@ import { useStyles, type Theme } from '@/app/theme';
 import { Text } from '../primitives/Text';
 import { Icon } from '../primitives/Icon';
 import { Button } from '../inputs/Button';
+import { Appear } from '../motion/Appear';
 
 type Props = {
   icon: LucideIcon;
+  /** An illustration to show instead of the icon. */
+  art?: React.ReactNode;
+  actionIcon?: LucideIcon;
   title: string;
   message?: string;
   actionLabel?: string;
@@ -16,6 +20,8 @@ type Props = {
 
 export function EmptyState({
   icon,
+  art,
+  actionIcon,
   title,
   message,
   actionLabel,
@@ -23,10 +29,20 @@ export function EmptyState({
 }: Props) {
   const styles = useStyles(createStyles);
   return (
-    <View style={styles.container}>
-      <View style={styles.iconWrap}>
-        <Icon icon={icon} size={36} color="primary" />
-      </View>
+    <Appear style={styles.container}>
+      {art ? (
+        <View
+          style={styles.art}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          {art}
+        </View>
+      ) : (
+        <View style={styles.iconWrap}>
+          <Icon icon={icon} size={36} color="primary" />
+        </View>
+      )}
       <Text variant="heading" align="center">
         {title}
       </Text>
@@ -36,9 +52,15 @@ export function EmptyState({
         </Text>
       ) : null}
       {actionLabel && onAction ? (
-        <Button title={actionLabel} onPress={onAction} style={styles.action} />
+        <Button
+          title={actionLabel}
+          icon={actionIcon}
+          variant="outline"
+          onPress={onAction}
+          style={styles.action}
+        />
       ) : null}
-    </View>
+    </Appear>
   );
 }
 
@@ -49,6 +71,14 @@ const createStyles = (t: Theme) =>
       justifyContent: 'center',
       padding: t.spacing.xxxl,
       gap: t.spacing.sm,
+    },
+    art: {
+      width: 200,
+      height: 200,
+      padding: t.spacing.md,
+      borderRadius: 100,
+      backgroundColor: t.colors.primarySoft,
+      marginBottom: t.spacing.md,
     },
     iconWrap: {
       width: 72,

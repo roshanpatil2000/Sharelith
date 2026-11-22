@@ -16,6 +16,7 @@ export { Checkbox } from './inputs/Checkbox';
 export { SegmentedControl, type Segment } from './inputs/SegmentedControl';
 export { Chip, ChipGroup } from './inputs/Chip';
 export { FormTextField } from './inputs/FormTextField';
+export { PillTrigger } from './inputs/PillTrigger';
 export { SelectField, type SelectOption } from './inputs/SelectField';
 export { DateField } from './inputs/DateField';
 export { CurrencyPicker } from './inputs/CurrencyPicker';
@@ -38,6 +39,9 @@ export { Card } from './display/Card';
 export { EmptyState } from './display/EmptyState';
 export { Skeleton, ListRowSkeleton } from './display/Skeleton';
 
+// Motion
+export { Appear } from './motion/Appear';
+
 // Feedback & overlays
 export { Banner } from './feedback/Banner';
 export { ConfirmDialog } from './feedback/ConfirmDialog';
@@ -47,6 +51,7 @@ export { ErrorView } from './feedback/ErrorView';
 export { BottomSheet } from './feedback/BottomSheet';
 
 // Layout
+export { FormHeader } from './layout/FormHeader';
 export { Screen } from './layout/Screen';
 export { Header } from './layout/Header';
 export { FAB } from './layout/FAB';

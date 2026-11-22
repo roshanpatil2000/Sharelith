@@ -1,21 +1,22 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { Edge } from 'react-native-safe-area-context';
+import { useStyles, type Theme } from '@/app/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Receipt, Tag, Users } from 'lucide-react-native';
+import { Calendar, NotebookPen } from 'lucide-react-native';
 import {
   AmountInput,
+  Appear,
   Banner,
   Button,
+  CategoryIcon,
   Checkbox,
   CurrencyPicker,
+  FormHeader,
+  PillTrigger,
+  Pressable,
   Row,
   Screen,
-  SegmentedControl,
   SelectField,
   DateField,
   Stack,
@@ -117,6 +118,9 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   };
   const [expenseDate, setExpenseDate] = useState(todayISO());
   const [notes, setNotes] = useState('');
+  const [notesOpen, setNotesOpen] = useState(false);
+  const styles = useStyles(createStyles);
+  const title = editing ? 'Edit expense' : 'Add expense';
   const [amount, setAmount] = useState(0);
   const [currency, setCurrency] = useState<string | null>(null);
   const [payer, setPayer] = useState<PayerDraft>({
@@ -208,10 +212,6 @@ export function AddExpenseScreen({ route, navigation }: Props) {
       setSplit(draftFromDefault(def, ids));
     }
   }, [editing, groupId, group, ids]);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({ title: editing ? 'Edit expense' : 'Add expense' });
-  }, [navigation, editing]);
 
   // Point the form at the expense's group or friend.
   useEffect(() => {
@@ -411,11 +411,26 @@ export function AddExpenseScreen({ route, navigation }: Props) {
     'the person who added it';
 
   if (editing && (loadingExisting || (existing && !loaded.current))) {
-    return <Screen>{null}</Screen>;
+    return (
+      <Screen
+        edges={FORM_EDGES}
+        header={
+          <FormHeader title={title} onClose={() => navigation.goBack()} />
+        }
+      >
+        {null}
+      </Screen>
+    );
   }
   if (editing && !existing) {
     return (
-      <Screen padded>
+      <Screen
+        padded
+        edges={FORM_EDGES}
+        header={
+          <FormHeader title={title} onClose={() => navigation.goBack()} />
+        }
+      >
         <Banner tone="danger" message="This expense was deleted." />
       </Screen>
     );
@@ -424,243 +439,390 @@ export function AddExpenseScreen({ route, navigation }: Props) {
   const owedText = (id: string) =>
     amount > 0 && splitResult.owed[id] ? money(splitResult.owed[id]!) : '';
 
-  return (
-    <Screen scroll padded>
-      <Stack gap="lg">
-        {formError ? <Banner tone="danger" message={formError} /> : null}
-        {nameOnly ? (
-          <Banner
-            tone="info"
-            message={
-              nameOnly === 'notMine'
-                ? `Only ${addedBy} can change the amount or delete this expense. You can rename it.`
-                : 'Someone on this expense is no longer here, so its amounts can’t change. You can rename it.'
-            }
+  const header = (
+    <FormHeader
+      title={title}
+      onClose={() => navigation.goBack()}
+      action={{
+        title: 'Save',
+        onPress: save,
+        loading:
+          createExpense.isPending ||
+          updateExpense.isPending ||
+          renameExpense.isPending,
+        testID: 'expense-save',
+      }}
+    />
+  );
+
+  // Date and notes, within reach above the keyboard.
+  const toolbar = nameOnly ? null : (
+    <Row gap="sm" px="lg" py="sm" style={styles.toolbar}>
+      <DateField
+        label="Date"
+        value={expenseDate}
+        onChange={setExpenseDate}
+        maximum={todayISO()}
+        testID="expense-date"
+        renderTrigger={(open, day) => (
+          <PillTrigger
+            label="Date"
+            text={day}
+            icon={Calendar}
+            onPress={open}
+            testID="expense-date"
           />
-        ) : null}
-        <SelectField
-          label="Split with"
-          icon={Users}
-          value={target}
-          options={targetOptions}
-          onChange={setTarget}
-          placeholder={
-            targetOptions.length
-              ? 'Choose a group or friend'
-              : 'Add a friend first'
-          }
-          searchable
-          disabled={editing}
-          testID="expense-target"
-        />
-        <TextField
-          label="Description"
-          placeholder="Enter a description"
-          leadingIcon={Receipt}
-          value={description}
-          onChangeText={describe}
-          maxLength={200}
-          testID="expense-description"
-        />
-        {nameOnly ? null : (
-          <>
+        )}
+      />
+      <PillTrigger
+        label={notes ? 'Edit notes' : 'Add notes'}
+        text="Notes"
+        icon={NotebookPen}
+        onPress={() => setNotesOpen(open => !open)}
+        testID="expense-notes-toggle"
+      />
+    </Row>
+  );
+
+  return (
+    <Appear from="grow" style={styles.fill}>
+      <Screen scroll edges={FORM_EDGES} header={header} footer={toolbar}>
+        <Row gap="sm" px="lg" py="md" style={styles.withRow}>
+          <Text>
+            With <Text variant="bodyStrong">you</Text> and
+          </Text>
+          <View style={styles.target}>
             <SelectField
-              label="Category"
-              icon={Tag}
-              value={category}
-              options={categoryKeys.map(k => ({
-                value: k,
-                label: categoryLabel(k),
-              }))}
-              onChange={chooseCategory}
-              testID="expense-category"
-            />
-            <DateField
-              label="Date"
-              value={expenseDate}
-              onChange={setExpenseDate}
-              maximum={todayISO()}
-              testID="expense-date"
-            />
-            <TextField
-              label="Notes (optional)"
-              placeholder="Anything to remember about this"
-              value={notes}
-              onChangeText={setNotes}
-              maxLength={1000}
-              multiline
-              testID="expense-notes"
-            />
-            <AmountInput
-              value={amount}
-              currency={expenseCurrency}
-              onChange={setAmount}
-              testID="expense-amount"
-            />
-            <CurrencyPicker
-              label="Currency"
-              value={expenseCurrency}
-              onChange={setCurrency}
-              testID="expense-currency"
-            />
-            <ConvertedAmount
-              minor={amount}
-              currency={expenseCurrency}
-              into={profile?.default_currency}
-            />
-            {people.length > 0 ? (
-              <>
-                <SelectField
-                  label="Paid by"
-                  value={payer.mode === 'single' ? payer.id : MULTIPLE}
-                  options={[
-                    ...people.map(p => ({ value: p.id, label: p.name })),
-                    { value: MULTIPLE, label: 'Multiple people' },
-                  ]}
-                  onChange={choosePayer}
-                  testID="expense-paid-by"
+              label="Split with"
+              value={target}
+              options={targetOptions}
+              onChange={setTarget}
+              searchable
+              testID="expense-target"
+              renderTrigger={({ open, selected }) => (
+                <PillTrigger
+                  label="Split with"
+                  text={
+                    selected?.label ??
+                    (targetOptions.length
+                      ? 'Choose a group or friend'
+                      : 'Add a friend first')
+                  }
+                  disabled={editing}
+                  onPress={open}
+                  testID="expense-target"
                 />
-                {payer.mode === 'multiple' ? (
-                  <Stack gap="sm">
-                    {people.map(p => (
-                      <PersonAmountRow
-                        key={p.id}
-                        name={p.name}
-                        prefix={symbol}
-                        value={payer.values[p.id] ?? ''}
-                        onChange={text =>
-                          setPayer({
-                            mode: 'multiple',
-                            values: { ...payer.values, [p.id]: text },
-                          })
-                        }
-                        testID={`expense-paid-${p.id}`}
-                      />
-                    ))}
-                    {amount > 0 &&
-                    payerResult.error &&
-                    payerResult.error !== formError ? (
-                      <Text
-                        variant="caption"
-                        color="textSecondary"
-                        testID="expense-paid-status"
-                      >
-                        {payerResult.error}
-                      </Text>
-                    ) : null}
-                  </Stack>
-                ) : null}
-                <Stack gap="sm">
-                  <Text variant="bodyStrong">Split</Text>
-                  <SegmentedControl
-                    segments={SPLIT_TYPES}
-                    value={split.type}
-                    onChange={setSplitType}
-                    testID="expense-split-type"
-                  />
-                  {split.type === 'itemized' ? (
-                    <ItemizedSplit
-                      draft={split}
-                      people={people}
-                      symbol={symbol}
-                      onChange={setSplit}
-                      owedText={owedText}
-                    />
-                  ) : null}
-                  {people.map(p =>
-                    split.type === 'itemized' ? null : split.type ===
-                      'equal' ? (
-                      <Row key={p.id} gap="md" justify="space-between">
-                        <Checkbox
-                          label={p.name}
-                          checked={!split.excluded.includes(p.id)}
-                          onChange={() => toggle(p.id)}
-                          testID={`expense-include-${p.id}`}
-                        />
-                        <Text
-                          color="textSecondary"
-                          testID={`expense-owed-${p.id}`}
-                        >
-                          {owedText(p.id)}
-                        </Text>
-                      </Row>
-                    ) : (
-                      <PersonAmountRow
-                        key={p.id}
-                        name={p.name}
-                        prefix={
-                          split.type === 'exact' || split.type === 'adjustment'
-                            ? split.type === 'adjustment'
-                              ? `± ${symbol}`
-                              : symbol
-                            : undefined
-                        }
-                        suffix={
-                          split.type === 'percent'
-                            ? '%'
-                            : split.type === 'shares'
-                            ? 'shares'
-                            : undefined
-                        }
-                        signed={split.type === 'adjustment'}
-                        value={split.values[split.type][p.id] ?? ''}
-                        onChange={text => setSplitValue(p.id, text)}
-                        result={
-                          split.type === 'exact' ? undefined : owedText(p.id)
-                        }
-                        testID={`expense-split-${p.id}`}
-                      />
-                    ),
-                  )}
-                  {amount > 0 &&
-                  splitResult.error &&
-                  splitResult.error !== formError ? (
+              )}
+            />
+          </View>
+        </Row>
+        <Stack gap="xl" p="lg">
+          {formError ? <Banner tone="danger" message={formError} /> : null}
+          {nameOnly ? (
+            <Banner
+              tone="info"
+              message={
+                nameOnly === 'notMine'
+                  ? `Only ${addedBy} can change the amount or delete this expense. You can rename it.`
+                  : 'Someone on this expense is no longer here, so its amounts can’t change. You can rename it.'
+              }
+            />
+          ) : null}
+          <Row gap="md" align="flex-start" px="sm">
+            {nameOnly ? null : (
+              <SelectField
+                label="Category"
+                value={category}
+                options={categoryKeys.map(k => ({
+                  value: k,
+                  label: categoryLabel(k),
+                }))}
+                onChange={chooseCategory}
+                testID="expense-category"
+                renderTrigger={({ open }) => (
+                  <Pressable
+                    onPress={open}
+                    accessibilityLabel={`Category, ${categoryLabel(category)}`}
+                    style={styles.category}
+                    testID="expense-category"
+                  >
+                    <CategoryIcon category={category} size={52} />
                     <Text
                       variant="caption"
                       color="textSecondary"
-                      testID="expense-split-status"
+                      numberOfLines={1}
                     >
-                      {splitResult.error}
+                      {categoryLabel(category)}
                     </Text>
-                  ) : null}
-                  {amount > 0 &&
-                  split.type === 'itemized' &&
-                  splitResult.error &&
-                  itemsSum !== null &&
-                  itemsSum > 0 &&
-                  itemsSum !== amount ? (
-                    <Button
-                      title={`Make the total ${money(itemsSum)}`}
-                      size="sm"
-                      variant="ghost"
-                      onPress={() => setAmount(itemsSum)}
-                      testID="item-use-total"
+                  </Pressable>
+                )}
+              />
+            )}
+            <View style={styles.grow}>
+              <TextField
+                appearance="underline"
+                placeholder="Enter a description"
+                accessibilityLabel="Description"
+                value={description}
+                onChangeText={describe}
+                maxLength={200}
+                style={styles.description}
+                testID="expense-description"
+              />
+            </View>
+          </Row>
+          {nameOnly ? null : (
+            <>
+              <Stack gap="xs" px="sm">
+                <CurrencyPicker
+                  label="Currency"
+                  value={expenseCurrency}
+                  onChange={setCurrency}
+                  testID="expense-currency"
+                  renderTrigger={open => (
+                    <AmountInput
+                      value={amount}
+                      currency={expenseCurrency}
+                      onChange={setAmount}
+                      onCurrencyPress={open}
+                      currencyTestID="expense-currency"
+                      testID="expense-amount"
                     />
+                  )}
+                />
+                <ConvertedAmount
+                  minor={amount}
+                  currency={expenseCurrency}
+                  into={profile?.default_currency}
+                />
+              </Stack>
+              {people.length > 0 ? (
+                <>
+                  <Row gap="sm" wrap justify="center">
+                    <Text>Paid by</Text>
+                    <SelectField
+                      label="Paid by"
+                      value={payer.mode === 'single' ? payer.id : MULTIPLE}
+                      options={[
+                        ...people.map(p => ({ value: p.id, label: p.name })),
+                        { value: MULTIPLE, label: 'Multiple people' },
+                      ]}
+                      onChange={choosePayer}
+                      testID="expense-paid-by"
+                      renderTrigger={({ open, selected }) => (
+                        <PillTrigger
+                          label="Paid by"
+                          text={
+                            payer.mode === 'single' && payer.id === userId
+                              ? 'you'
+                              : selected?.label ?? 'choose'
+                          }
+                          onPress={open}
+                          testID="expense-paid-by"
+                        />
+                      )}
+                    />
+                    <Text>and split</Text>
+                    <SelectField
+                      label="Split"
+                      value={split.type}
+                      options={SPLIT_OPTIONS}
+                      onChange={setSplitType}
+                      testID="expense-split-type"
+                      renderTrigger={({ open }) => (
+                        <PillTrigger
+                          label="Split"
+                          text={SPLIT_PHRASE[split.type]}
+                          onPress={open}
+                          testID="expense-split-type"
+                        />
+                      )}
+                    />
+                  </Row>
+                  {payer.mode === 'multiple' ? (
+                    <Stack gap="sm">
+                      {people.map(p => (
+                        <PersonAmountRow
+                          key={p.id}
+                          name={p.name}
+                          prefix={symbol}
+                          value={payer.values[p.id] ?? ''}
+                          onChange={text =>
+                            setPayer({
+                              mode: 'multiple',
+                              values: { ...payer.values, [p.id]: text },
+                            })
+                          }
+                          testID={`expense-paid-${p.id}`}
+                        />
+                      ))}
+                      {amount > 0 &&
+                      payerResult.error &&
+                      payerResult.error !== formError ? (
+                        <Text
+                          variant="caption"
+                          color="textSecondary"
+                          testID="expense-paid-status"
+                        >
+                          {payerResult.error}
+                        </Text>
+                      ) : null}
+                    </Stack>
                   ) : null}
-                  {split.type === 'adjustment' && !splitResult.error ? (
-                    <Text variant="caption" color="textSecondary">
-                      Add or take off an amount for someone; the rest is split
-                      equally.
-                    </Text>
-                  ) : null}
-                </Stack>
-              </>
-            ) : null}
-          </>
-        )}
-        <Button
-          title="Save"
-          size="lg"
-          fullWidth
-          loading={
-            createExpense.isPending ||
-            updateExpense.isPending ||
-            renameExpense.isPending
-          }
-          onPress={save}
-          testID="expense-save"
-        />
-      </Stack>
-    </Screen>
+                  <Appear key={split.type}>
+                    <Stack gap="sm">
+                      {split.type === 'itemized' ? (
+                        <ItemizedSplit
+                          draft={split}
+                          people={people}
+                          symbol={symbol}
+                          onChange={setSplit}
+                          owedText={owedText}
+                        />
+                      ) : null}
+                      {people.map(p =>
+                        split.type === 'itemized' ? null : split.type ===
+                          'equal' ? (
+                          <Row key={p.id} gap="md" justify="space-between">
+                            <Checkbox
+                              label={p.name}
+                              checked={!split.excluded.includes(p.id)}
+                              onChange={() => toggle(p.id)}
+                              testID={`expense-include-${p.id}`}
+                            />
+                            <Text
+                              color="textSecondary"
+                              testID={`expense-owed-${p.id}`}
+                            >
+                              {owedText(p.id)}
+                            </Text>
+                          </Row>
+                        ) : (
+                          <PersonAmountRow
+                            key={p.id}
+                            name={p.name}
+                            prefix={
+                              split.type === 'exact' ||
+                              split.type === 'adjustment'
+                                ? split.type === 'adjustment'
+                                  ? `± ${symbol}`
+                                  : symbol
+                                : undefined
+                            }
+                            suffix={
+                              split.type === 'percent'
+                                ? '%'
+                                : split.type === 'shares'
+                                ? 'shares'
+                                : undefined
+                            }
+                            signed={split.type === 'adjustment'}
+                            value={split.values[split.type][p.id] ?? ''}
+                            onChange={text => setSplitValue(p.id, text)}
+                            result={
+                              split.type === 'exact'
+                                ? undefined
+                                : owedText(p.id)
+                            }
+                            testID={`expense-split-${p.id}`}
+                          />
+                        ),
+                      )}
+                      {amount > 0 &&
+                      splitResult.error &&
+                      splitResult.error !== formError ? (
+                        <Text
+                          variant="caption"
+                          color="textSecondary"
+                          testID="expense-split-status"
+                        >
+                          {splitResult.error}
+                        </Text>
+                      ) : null}
+                      {amount > 0 &&
+                      split.type === 'itemized' &&
+                      splitResult.error &&
+                      itemsSum !== null &&
+                      itemsSum > 0 &&
+                      itemsSum !== amount ? (
+                        <Button
+                          title={`Make the total ${money(itemsSum)}`}
+                          size="sm"
+                          variant="ghost"
+                          onPress={() => setAmount(itemsSum)}
+                          testID="item-use-total"
+                        />
+                      ) : null}
+                      {split.type === 'adjustment' && !splitResult.error ? (
+                        <Text variant="caption" color="textSecondary">
+                          Add or take off an amount for someone; the rest is
+                          split equally.
+                        </Text>
+                      ) : null}
+                    </Stack>
+                  </Appear>
+                </>
+              ) : null}
+              {notesOpen || notes ? (
+                <Appear>
+                  <TextField
+                    label="Notes (optional)"
+                    appearance="underline"
+                    placeholder="Anything to remember about this"
+                    value={notes}
+                    onChangeText={setNotes}
+                    maxLength={1000}
+                    multiline
+                    testID="expense-notes"
+                  />
+                </Appear>
+              ) : null}
+            </>
+          )}
+        </Stack>
+      </Screen>
+    </Appear>
   );
 }
+
+const SPLIT_HELP: Record<SplitType, string> = {
+  equal: 'The same for everyone you include',
+  exact: 'Type what each person owes',
+  percent: 'By percentage of the total',
+  shares: 'In shares, such as 2 for a couple',
+  adjustment: 'Equal, plus or minus an amount for someone',
+  itemized: 'Item by item, with tax and tip',
+};
+const SPLIT_OPTIONS = SPLIT_TYPES.map(option => ({
+  ...option,
+  description: SPLIT_HELP[option.value],
+}));
+
+/** The split, worded to finish "Paid by you and split …". */
+const SPLIT_PHRASE: Record<SplitType, string> = {
+  equal: 'equally',
+  exact: 'by exact amounts',
+  percent: 'by percentage',
+  shares: 'by shares',
+  adjustment: 'with adjustments',
+  itemized: 'by items',
+};
+
+const FORM_EDGES: Edge[] = ['top', 'bottom', 'left', 'right'];
+
+const createStyles = (t: Theme) =>
+  StyleSheet.create({
+    fill: { flex: 1 },
+    grow: { flex: 1 },
+    target: { flexShrink: 1 },
+    withRow: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: t.colors.border,
+    },
+    category: { width: 64, alignItems: 'center', gap: t.spacing.xxs },
+    description: { fontSize: 18, lineHeight: 24, minHeight: 50 },
+    toolbar: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: t.colors.border,
+    },
+  });

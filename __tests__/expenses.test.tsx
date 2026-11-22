@@ -259,8 +259,21 @@ describe('Add expense', () => {
 });
 
 describe('Split types', () => {
-  const chooseType = (label: string) =>
-    fireEvent.press(screen.getByRole('tab', { name: label }));
+  const SPLIT_VALUE: Record<string, string> = {
+    Equal: 'equal',
+    Exact: 'exact',
+    '%': 'percent',
+    Shares: 'shares',
+    '+/−': 'adjustment',
+  };
+  const chooseType = async (label: string) => {
+    await fireEvent.press(screen.getByTestId('expense-split-type'));
+    await fireEvent.press(
+      await screen.findByTestId(
+        `expense-split-type-option-${SPLIT_VALUE[label]}`,
+      ),
+    );
+  };
   const type = (id: string, text: string) =>
     fireEvent.changeText(screen.getByTestId(`expense-split-${id}`), text);
   const save = async () => {
@@ -432,7 +445,9 @@ describe('Split types', () => {
     );
     await screen.findByTestId('expense-description');
 
-    expect(screen.getByRole('tab', { name: '%' })).toBeSelected();
+    expect(screen.getByTestId('expense-split-type')).toHaveTextContent(
+      /by percentage/,
+    );
     expect(screen.getByTestId(`expense-split-${vik}`)).toHaveDisplayValue('50');
     expect(screen.getByTestId(`expense-paid-${asha}`)).toHaveDisplayValue(
       '450',
@@ -507,6 +522,7 @@ describe('Date and notes', () => {
     await openForm();
     await fill('Dinner', '90');
     expect(screen.getByTestId('expense-date')).toHaveTextContent(/Today/);
+    await fireEvent.press(screen.getByTestId('expense-notes-toggle'));
     await fireEvent.changeText(
       screen.getByTestId('expense-notes'),
       '  Birthday dinner  ',
@@ -1243,7 +1259,10 @@ describe('Default and itemized splits', () => {
     mockBackend({});
     await openForm();
     await fill('Dinner', '1000');
-    await fireEvent.press(screen.getByText('Items'));
+    await fireEvent.press(screen.getByTestId('expense-split-type'));
+    await fireEvent.press(
+      await screen.findByTestId('expense-split-type-option-itemized'),
+    );
     await fireEvent.press(screen.getByTestId('item-add'));
     await fireEvent.changeText(screen.getByTestId('item-amount-0'), '600');
     // Only I had the first item.

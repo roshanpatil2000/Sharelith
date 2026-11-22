@@ -43,6 +43,8 @@ import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
 import { GroupSettingsScreen } from '@/features/groups/screens/GroupSettingsScreen';
 import { AddGroupMembersScreen } from '@/features/groups/screens/AddGroupMembersScreen';
 import { WelcomeTourScreen } from '@/features/welcome/screens/WelcomeTourScreen';
+import { GetStartedScreen } from '@/features/welcome/screens/GetStartedScreen';
+import { AppearanceScreen } from '@/features/account/screens/AppearanceScreen';
 import { PushBridge } from '@/features/push/PushBridge';
 import { useAdPlacement } from '@/features/ads/ads';
 import { isAdBreak, maybeShowInterstitial } from '@/features/ads/interstitial';
@@ -60,6 +62,14 @@ const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const modalLayout = ({ children }: { children: React.ReactNode }) => (
   <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
 );
+/** Settings and other side screens cross-fade; drilling in slides. */
+const fade: NativeStackNavigationOptions = {
+  animation: 'fade',
+  animationDuration: 180,
+};
+/** Full-screen forms draw their own header: close, title and save. */
+const fullForm: NativeStackNavigationOptions = { headerShown: false };
+
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
 function stackOptions(theme: Theme): NativeStackNavigationOptions {
@@ -68,6 +78,8 @@ function stackOptions(theme: Theme): NativeStackNavigationOptions {
     headerTitleAlign: 'center',
     headerShadowVisible: false,
     headerBackButtonDisplayMode: 'minimal',
+    animation: 'slide_from_right',
+    animationDuration: 300,
     // Native-stack screens own the iOS status bar appearance.
     statusBarStyle: theme.scheme === 'dark' ? 'light' : 'dark',
   };
@@ -119,7 +131,16 @@ export function RootNavigator() {
   const welcomePending = useAuthStore(s => s.welcomePending);
   // The bridges ask permissions and open screens that only exist after the
   // welcome pages.
-  const inApp = status === 'signedIn' && !resetPending && !welcomePending;
+  const setupPending = useAuthStore(s => s.setupPending);
+  const startGroup = useAuthStore(s => s.startGroup);
+  const inApp =
+    status === 'signedIn' && !resetPending && !welcomePending && !setupPending;
+  useEffect(() => {
+    if (inApp && startGroup) {
+      useAuthStore.getState().clearStartGroup();
+      navigationRef.navigate('CreateGroup', { type: startGroup });
+    }
+  }, [inApp, startGroup]);
   const adsEnabled = useAdPlacement('interstitial');
   const lastRoute = useRef<string | undefined>(undefined);
 
@@ -132,6 +153,7 @@ export function RootNavigator() {
     if (
       status === 'signedIn' &&
       from !== 'WelcomeTour' &&
+      from !== 'GetStarted' &&
       isAdBreak(from, to)
     ) {
       maybeShowInterstitial(adsEnabled).catch(() => {});
@@ -181,6 +203,12 @@ export function RootNavigator() {
           <Root.Screen
             name="WelcomeTour"
             component={WelcomeTourScreen}
+            options={{ headerShown: false, animation: 'fade' }}
+          />
+        ) : status === 'signedIn' && setupPending ? (
+          <Root.Screen
+            name="GetStarted"
+            component={GetStartedScreen}
             options={{ headerShown: false }}
           />
         ) : status === 'signedIn' ? (
@@ -194,7 +222,7 @@ export function RootNavigator() {
               name="AddExpense"
               layout={modalLayout}
               component={AddExpenseScreen}
-              options={{ presentation: 'modal', title: 'Add expense' }}
+              options={{ ...fullForm, ...fade }}
             />
             <Root.Screen
               name="ExpenseDetail"
@@ -215,32 +243,32 @@ export function RootNavigator() {
             <Root.Screen
               name="EditProfile"
               component={EditProfileScreen}
-              options={{ title: 'Edit profile' }}
+              options={{ ...fade, title: 'Edit profile' }}
             />
             <Root.Screen
               name="ChangePassword"
               component={ChangePasswordScreen}
-              options={{ title: 'Change password' }}
+              options={{ ...fade, title: 'Change password' }}
             />
             <Root.Screen
               name="Notifications"
               component={NotificationsScreen}
-              options={{ title: 'Notifications' }}
+              options={{ ...fade, title: 'Notifications' }}
             />
             <Root.Screen
               name="Insights"
               component={InsightsScreen}
-              options={{ title: 'Insights' }}
+              options={{ ...fade, title: 'Insights' }}
             />
             <Root.Screen
               name="Pro"
               component={ProScreen}
-              options={{ title: 'Sharelith Pro' }}
+              options={{ ...fade, title: 'Sharelith Pro' }}
             />
             <Root.Screen
               name="DeleteAccount"
               component={DeleteAccountScreen}
-              options={{ title: 'Delete account' }}
+              options={{ ...fade, title: 'Delete account' }}
             />
             <Root.Screen
               name="AddFriend"
@@ -249,14 +277,19 @@ export function RootNavigator() {
               options={{ presentation: 'modal', title: 'Add friend' }}
             />
             <Root.Screen
+              name="Appearance"
+              component={AppearanceScreen}
+              options={{ ...fade, title: 'Appearance' }}
+            />
+            <Root.Screen
               name="RecentlyDeleted"
               component={RecentlyDeletedScreen}
-              options={{ title: 'Recently deleted' }}
+              options={{ ...fade, title: 'Recently deleted' }}
             />
             <Root.Screen
               name="Search"
               component={SearchScreen}
-              options={{ title: 'Search' }}
+              options={{ ...fade, title: 'Search' }}
             />
             <Root.Screen
               name="ChooseContact"
@@ -277,7 +310,7 @@ export function RootNavigator() {
               name="CreateGroup"
               layout={modalLayout}
               component={CreateGroupScreen}
-              options={{ presentation: 'modal', title: 'Create a group' }}
+              options={fullForm}
             />
             <Root.Screen
               name="GroupDetail"

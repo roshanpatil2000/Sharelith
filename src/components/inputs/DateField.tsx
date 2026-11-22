@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Platform } from 'react-native';
+import { Keyboard, Platform } from 'react-native';
 import DateTimePicker, {
   DateTimePickerAndroid,
   type DateTimePickerEvent,
@@ -26,19 +26,29 @@ type Props = {
   /** Latest day that can be picked. */
   maximum?: ISODate;
   testID?: string;
+  /** Draws what opens the picker, instead of a row. */
+  renderTrigger?: (open: () => void, day: string) => React.ReactNode;
 };
 
 /**
  * A row showing a day ("Today", "21 Nov 2026"); tapping it opens the system
  * date picker (a dialog on Android, a sheet on iOS).
  */
-export function DateField({ label, value, onChange, maximum, testID }: Props) {
+export function DateField({
+  label,
+  value,
+  onChange,
+  maximum,
+  testID,
+  renderTrigger,
+}: Props) {
   const theme = useTheme();
   const sheet = useRef<BottomSheetModal>(null);
   const [draft, setDraft] = useState(fromISODate(value));
   const maximumDate = maximum ? fromISODate(maximum) : undefined;
 
   const open = () => {
+    Keyboard.dismiss();
     if (Platform.OS === 'android') {
       DateTimePickerAndroid.open({
         value: fromISODate(value),
@@ -58,14 +68,18 @@ export function DateField({ label, value, onChange, maximum, testID }: Props) {
 
   return (
     <>
-      <ListRow
-        testID={testID}
-        title={label}
-        leading={<Icon icon={Calendar} color="textSecondary" />}
-        trailing={<Text color="textSecondary">{friendlyDate(value)}</Text>}
-        chevron
-        onPress={open}
-      />
+      {renderTrigger ? (
+        renderTrigger(open, friendlyDate(value))
+      ) : (
+        <ListRow
+          testID={testID}
+          title={label}
+          leading={<Icon icon={Calendar} color="textSecondary" />}
+          trailing={<Text color="textSecondary">{friendlyDate(value)}</Text>}
+          chevron
+          onPress={open}
+        />
+      )}
       {Platform.OS === 'ios' ? (
         <BottomSheet ref={sheet} header={<Text variant="title">{label}</Text>}>
           <DateTimePicker

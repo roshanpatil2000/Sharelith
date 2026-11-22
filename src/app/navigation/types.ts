@@ -22,6 +22,9 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList>;
   /** After a log in or sign up, before Main. */
   WelcomeTour: undefined;
+  /** After WelcomeTour: what to set up first. */
+  GetStarted: undefined;
+  Appearance: undefined;
   /** Starts with this group or friend chosen. */
   /** expenseId opens the form to edit that expense. */
   AddExpense:
@@ -48,7 +51,7 @@ export type RootStackParamList = {
   Invite: { groupId?: string } | undefined;
   FriendDetail: { friendId: string };
   /** addedFriendId: set by AddFriend so the picker selects them. */
-  CreateGroup: { addedFriendId?: string } | undefined;
+  CreateGroup: { addedFriendId?: string; type?: 'trip' | 'home' } | undefined;
   GroupDetail: { groupId: string };
   GroupSettings: { groupId: string };
   GroupTotals: { groupId: string };

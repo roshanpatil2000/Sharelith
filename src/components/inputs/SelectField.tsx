@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Keyboard, StyleSheet } from 'react-native';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Check, type LucideIcon } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
@@ -28,6 +28,11 @@ type Props<T extends string> = {
   /** Shown when nothing is chosen yet. */
   placeholder?: string;
   testID?: string;
+  /** Draws what opens the sheet, instead of a row. */
+  renderTrigger?: (trigger: {
+    open: () => void;
+    selected: SelectOption<T> | undefined;
+  }) => React.ReactNode;
 };
 
 /**
@@ -44,11 +49,18 @@ export function SelectField<T extends string>({
   disabled = false,
   placeholder,
   testID,
+  renderTrigger,
 }: Props<T>) {
   const styles = useStyles(createStyles);
   const sheet = useRef<BottomSheetModal>(null);
   const [query, setQuery] = useState('');
   const selected = options.find(o => o.value === value);
+
+  const open = () => {
+    // The keyboard would cover the options.
+    Keyboard.dismiss();
+    sheet.current?.present();
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -62,21 +74,27 @@ export function SelectField<T extends string>({
 
   return (
     <>
-      <ListRow
-        testID={testID}
-        title={label}
-        leading={icon ? <Icon icon={icon} color="textSecondary" /> : undefined}
-        trailing={
-          <Text
-            color={selected || value ? 'textSecondary' : 'primary'}
-            numberOfLines={1}
-          >
-            {selected?.label ?? (value || placeholder)}
-          </Text>
-        }
-        chevron
-        onPress={disabled ? undefined : () => sheet.current?.present()}
-      />
+      {renderTrigger ? (
+        renderTrigger({ open, selected })
+      ) : (
+        <ListRow
+          testID={testID}
+          title={label}
+          leading={
+            icon ? <Icon icon={icon} color="textSecondary" /> : undefined
+          }
+          trailing={
+            <Text
+              color={selected || value ? 'textSecondary' : 'primary'}
+              numberOfLines={1}
+            >
+              {selected?.label ?? (value || placeholder)}
+            </Text>
+          }
+          chevron
+          onPress={disabled ? undefined : open}
+        />
+      )}
       <BottomSheet
         ref={sheet}
         scrollable={options.length > 8}

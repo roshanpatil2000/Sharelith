@@ -16,6 +16,7 @@ import { useStyles, useTheme, type Theme } from '@/app/theme';
 import { Button, Text } from '@/components';
 import { useProfile } from '@/features/account/api';
 import { useAuthStore } from '@/features/auth/authStore';
+import { useInviteStore } from '@/features/invites/links';
 import { SettleArt, SplitArt, TogetherArt } from '../components/WelcomeArt';
 
 const PAGES = [
@@ -71,7 +72,9 @@ export function WelcomeTourScreen() {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const finish = useAuthStore(s => s.finishWelcome);
+  const finishWelcome = useAuthStore(s => s.finishWelcome);
+  // An invite link already says where to go, so skip asking.
+  const finish = () => finishWelcome(!useInviteStore.getState().pendingToken);
   // From the session first, so the greeting doesn't wait for the profile.
   const signedUpAs = useAuthStore(s => s.session?.user.user_metadata.full_name);
   const { data: profile } = useProfile();

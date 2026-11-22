@@ -12,8 +12,10 @@ import {
   Screen,
   SearchBar,
 } from '@/components';
+import { FriendsArt } from '@/components/display/EmptyArt';
 import {
   allowContacts,
+  hasContactsAccess,
   loadContactEmails,
   searchContacts,
   type ContactEmail,
@@ -23,6 +25,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ChooseContact'>;
 
 type State =
   | { status: 'loading' }
+  | { status: 'ask' }
   | { status: 'denied' }
   | { status: 'ready'; rows: ContactEmail[] };
 
@@ -33,13 +36,20 @@ type State =
 export function ChooseContactScreen({ navigation, route }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' });
   const [query, setQuery] = useState('');
+  const [asked, setAsked] = useState(false);
 
   useEffect(() => {
     let live = true;
     (async () => {
-      if (!(await allowContacts())) {
-        live && setState({ status: 'denied' });
-        return;
+      if (!(await hasContactsAccess())) {
+        if (!asked) {
+          live && setState({ status: 'ask' });
+          return;
+        }
+        if (!(await allowContacts())) {
+          live && setState({ status: 'denied' });
+          return;
+        }
       }
       const rows = await loadContactEmails().catch(() => []);
       live && setState({ status: 'ready', rows });
@@ -47,12 +57,30 @@ export function ChooseContactScreen({ navigation, route }: Props) {
     return () => {
       live = false;
     };
-  }, []);
+  }, [asked]);
 
   const visible = useMemo(
     () => (state.status === 'ready' ? searchContacts(state.rows, query) : []),
     [state, query],
   );
+
+  if (state.status === 'ask') {
+    return (
+      <Screen padded edges={['bottom', 'left', 'right']}>
+        <EmptyState
+          icon={Contact}
+          art={<FriendsArt />}
+          title="Find friends faster"
+          message="Next, your phone asks to share contacts. We never upload them: only the person you pick is sent to us."
+          actionLabel="Continue"
+          onAction={() => {
+            setState({ status: 'loading' });
+            setAsked(true);
+          }}
+        />
+      </Screen>
+    );
+  }
 
   if (state.status === 'denied') {
     return (

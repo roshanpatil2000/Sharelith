@@ -29,7 +29,8 @@ import {
 import { overallBalance, useFriendBalances } from '@/features/friends/balances';
 import { FriendBalanceText } from '@/features/friends/components/FriendBalanceText';
 import { ConvertedTotal } from '@/features/currency/ConvertedTotal';
-import { renderSearchButton } from '@/features/search/SearchHeaderButton';
+import { GroupsArt } from '@/components/display/EmptyArt';
+import { TabHeaderActions } from '@/features/search/SearchHeaderButton';
 import { useGroups, type GroupSummary } from '../api';
 import { useGroupBalances, useNonGroupBalance } from '../balances';
 import { memberCountLabel } from '../groupTypes';
@@ -49,7 +50,11 @@ function CreateGroupHeaderButton() {
 }
 
 // headerRight is called as a function: render the button as a component.
-const renderCreateGroupButton = () => <CreateGroupHeaderButton />;
+const renderCreateGroupButton = () => (
+  <TabHeaderActions>
+    <CreateGroupHeaderButton />
+  </TabHeaderActions>
+);
 
 export function GroupsScreen() {
   const navigation = useNavigation();
@@ -63,7 +68,6 @@ export function GroupsScreen() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerLeft: renderSearchButton,
       headerRight: renderCreateGroupButton,
     });
   }, [navigation]);
@@ -127,6 +131,8 @@ export function GroupsScreen() {
               title="No groups yet"
               message="Create a group for your trip, home or anything you share costs on."
               actionLabel="Start a new group"
+              art={<GroupsArt />}
+              actionIcon={Plus}
               onAction={() => navigation.navigate('CreateGroup')}
             />
           }

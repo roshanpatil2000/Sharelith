@@ -12,11 +12,18 @@ import { Text } from '../primitives/Text';
 import { Icon } from '../primitives/Icon';
 import { Row } from '../primitives/Box';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'link'
+  | 'ghost'
+  | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export type ButtonProps = {
   title: string;
+  accessibilityLabel?: string;
   onPress?: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -30,6 +37,7 @@ export type ButtonProps = {
 
 export function Button({
   title,
+  accessibilityLabel,
   onPress,
   variant = 'primary',
   size = 'md',
@@ -47,7 +55,7 @@ export function Button({
   const fg =
     variant === 'primary' || variant === 'danger'
       ? colors.textOnPrimary
-      : variant === 'secondary'
+      : variant === 'secondary' || variant === 'outline' || variant === 'link'
       ? colors.primaryText
       : colors.textPrimary;
 
@@ -56,7 +64,10 @@ export function Button({
       testID={testID}
       onPress={onPress}
       disabled={isDisabled}
-      accessibilityLabel={title}
+      accessibilityLabel={accessibilityLabel ?? title}
+      ripple={
+        variant === 'primary' ? colors.primaryPressed : colors.primaryTint
+      }
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={[
         styles.base,
@@ -107,6 +118,12 @@ const createStyles = (t: Theme) =>
       backgroundColor: t.colors.primarySoft,
       borderColor: t.colors.primary,
     },
+    outline: {
+      backgroundColor: 'transparent',
+      borderColor: t.colors.primary,
+      borderRadius: t.radius.pill,
+    },
+    link: { backgroundColor: 'transparent' },
     ghost: { backgroundColor: 'transparent' },
     danger: { backgroundColor: t.colors.danger },
     pressed: { opacity: 0.7 },

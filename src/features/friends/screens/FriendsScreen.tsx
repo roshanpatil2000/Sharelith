@@ -28,7 +28,8 @@ import {
   useRefreshExpensesOnFocus,
 } from '@/features/expenses/api';
 import { ConvertedTotal } from '@/features/currency/ConvertedTotal';
-import { renderSearchButton } from '@/features/search/SearchHeaderButton';
+import { FriendsArt } from '@/components/display/EmptyArt';
+import { TabHeaderActions } from '@/features/search/SearchHeaderButton';
 import { useFriends, type Friend } from '../api';
 import {
   filterFriends,
@@ -53,7 +54,11 @@ function AddFriendHeaderButton() {
 
 // headerRight is called as a function, so it must render the button as a
 // component rather than be the component (its hooks would run in the header).
-const renderAddFriendButton = () => <AddFriendHeaderButton />;
+const renderAddFriendButton = () => (
+  <TabHeaderActions>
+    <AddFriendHeaderButton />
+  </TabHeaderActions>
+);
 
 const filters = [
   { value: 'all', label: 'All' },
@@ -71,7 +76,6 @@ export function FriendsScreen() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerLeft: renderSearchButton,
       headerRight: renderAddFriendButton,
     });
   }, [navigation]);
@@ -137,6 +141,8 @@ export function FriendsScreen() {
                 title="No friends yet"
                 message="Add friends by email to split expenses outside of a group."
                 actionLabel="Add friends"
+                art={<FriendsArt />}
+                actionIcon={UserPlus}
                 onAction={() => navigation.navigate('AddFriend')}
               />
             )

@@ -22,6 +22,12 @@ export function toNavigationTheme(t: Theme): NavTheme {
   };
 }
 
+/** The tabs' large left-hand titles. */
+export function tabTitleStyle(t: Theme) {
+  const { fontFamily, fontWeight } = t.typography.display;
+  return { fontFamily, fontWeight, fontSize: 24 };
+}
+
 /** Header titles accept only family, size and weight. */
 export function headerTitleStyle(t: Theme) {
   const { fontFamily, fontSize, fontWeight } = t.typography.heading;

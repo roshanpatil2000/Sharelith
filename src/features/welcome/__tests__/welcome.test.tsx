@@ -9,6 +9,7 @@ import {
   queryBuilder,
   supabaseMock,
 } from '@/test/supabaseMock';
+import { useInviteStore } from '@/features/invites/links';
 import { useAuthStore } from '@/features/auth/authStore';
 
 beforeEach(() => {
@@ -40,6 +41,7 @@ describe('welcome pages', () => {
     expect(screen.getByText('Get started')).toBeOnTheScreen();
     expect(screen.queryByTestId('tour-skip')).toBeNull();
     await fireEvent.press(screen.getByTestId('tour-next'));
+    await fireEvent.press(await screen.findByTestId('setup-skip'));
     expect(await screen.findByText('No groups yet')).toBeOnTheScreen();
     expect(useAuthStore.getState().welcomePending).toBe(false);
   });
@@ -60,6 +62,7 @@ describe('welcome pages', () => {
   it('can be skipped', async () => {
     await logIn();
     await fireEvent.press(screen.getByTestId('tour-skip'));
+    await fireEvent.press(await screen.findByTestId('setup-skip'));
     expect(await screen.findByText('No groups yet')).toBeOnTheScreen();
   });
 
@@ -78,6 +81,7 @@ describe('welcome pages', () => {
   it('is not repeated by a token refresh', async () => {
     await logIn();
     await fireEvent.press(screen.getByTestId('tour-skip'));
+    await fireEvent.press(await screen.findByTestId('setup-skip'));
     await act(async () => emitAuth('TOKEN_REFRESHED', fakeSession()));
     expect(screen.queryByTestId('welcome-tour')).toBeNull();
   });
@@ -85,6 +89,7 @@ describe('welcome pages', () => {
   it('shows again on the next log in', async () => {
     await logIn();
     await fireEvent.press(screen.getByTestId('tour-skip'));
+    await fireEvent.press(await screen.findByTestId('setup-skip'));
     await act(async () => emitAuth('SIGNED_OUT', null));
     await screen.findByTestId('welcome-login');
     await act(async () => emitAuth('SIGNED_IN', fakeSession()));
@@ -102,5 +107,33 @@ describe('welcome pages', () => {
       useAuthStore.getState().setPasswordResetPending(false),
     );
     expect(await screen.findByTestId('welcome-tour')).toBeOnTheScreen();
+  });
+});
+
+describe('Get started', () => {
+  it.each([
+    ['trip', 'Trip'],
+    ['home', 'Home'],
+  ])('opens Create group as a %s', async (type, label) => {
+    await logIn();
+    await fireEvent.press(screen.getByTestId('tour-skip'));
+    await fireEvent.press(await screen.findByTestId(`setup-${type}`));
+    expect(await screen.findByTestId('group-create')).toBeOnTheScreen();
+    expect(screen.getByTestId(`group-type-${type}`)).toBeSelected();
+    expect(screen.getAllByText(label).length).toBeGreaterThan(0);
+  });
+
+  it('stays out of the way of an invite link', async () => {
+    useInviteStore.getState().setPendingToken('invite-token-1234567');
+    await logIn();
+    await fireEvent.press(screen.getByTestId('tour-skip'));
+    expect(screen.queryByTestId('get-started')).toBeNull();
+    useInviteStore.getState().setPendingToken(null);
+  });
+
+  it('comes back if the app closed on it', async () => {
+    useAuthStore.setState({ setupPending: true });
+    await reopenSignedIn();
+    expect(await screen.findByTestId('get-started')).toBeOnTheScreen();
   });
 });

@@ -65,8 +65,12 @@ type Props = {
    * pull's promise is pending, never for background reloads.
    */
   onRefresh?: () => unknown;
+  /** Pinned above the content, e.g. a full-screen form's own header. */
+  header?: React.ReactNode;
   /** Pinned below the content, e.g. a banner ad; overlays sit above it. */
   footer?: React.ReactNode;
+  /** Fills the safe areas too. */
+  background?: string;
   testID?: string;
 };
 
@@ -79,6 +83,8 @@ export function Screen({
   overlay,
   onRefresh,
   footer,
+  header,
+  background,
   testID,
 }: Props) {
   const styles = useStyles(createStyles);
@@ -118,7 +124,12 @@ export function Screen({
     </View>
   );
   return (
-    <SafeAreaView style={styles.root} edges={edges} testID={testID}>
+    <SafeAreaView
+      style={[styles.root, background ? { backgroundColor: background } : null]}
+      edges={edges}
+      testID={testID}
+    >
+      {header}
       <KeyboardAvoidingView
         style={[styles.flex, { paddingBottom: keyboardPadding }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

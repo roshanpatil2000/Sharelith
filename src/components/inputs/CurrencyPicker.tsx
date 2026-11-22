@@ -8,6 +8,8 @@ type Props = {
   onChange: (code: string) => void;
   label?: string;
   testID?: string;
+  /** Draws what opens the list, instead of a row. */
+  renderTrigger?: (open: () => void) => React.ReactNode;
 };
 
 /** Searchable currency chooser showing "INR" with "₹ Indian Rupee". */
@@ -16,6 +18,7 @@ export function CurrencyPicker({
   onChange,
   label = 'Default currency',
   testID,
+  renderTrigger,
 }: Props) {
   const options = useMemo<SelectOption<string>[]>(
     () =>
@@ -35,6 +38,9 @@ export function CurrencyPicker({
       icon={Coins}
       searchable
       testID={testID}
+      renderTrigger={
+        renderTrigger ? ({ open }) => renderTrigger(open) : undefined
+      }
     />
   );
 }
