@@ -1,0 +1,14 @@
+Sharelith 1.0.8
+
+New
+- A new bottom bar: it floats above the bottom of the screen, and the tab you pick rises in a circle.
+
+Changed
+- Screenshots and screen recording now work on Android. Please attach a screenshot when you report a problem.
+- Because of that, your balances and contacts can now show in the recent-apps preview, in recordings and when you share your screen. Take care before sharing.
+
+Fixed
+- If you were given Pro and had an older subscription that ended, the Pro screen no longer shows a renewal date in the past.
+
+Note
+- Please mention your app version (Account screen) when you report a problem.
