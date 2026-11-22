@@ -42,6 +42,7 @@ import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
 import { GroupDetailScreen } from '@/features/groups/screens/GroupDetailScreen';
 import { GroupSettingsScreen } from '@/features/groups/screens/GroupSettingsScreen';
 import { AddGroupMembersScreen } from '@/features/groups/screens/AddGroupMembersScreen';
+import { WelcomeTourScreen } from '@/features/welcome/screens/WelcomeTourScreen';
 import { PushBridge } from '@/features/push/PushBridge';
 import { useAdPlacement } from '@/features/ads/ads';
 import { isAdBreak, maybeShowInterstitial } from '@/features/ads/interstitial';
@@ -115,6 +116,10 @@ export function RootNavigator() {
   const navTheme = useMemo(() => toNavigationTheme(theme), [theme]);
   const status = useAuthStatus();
   const resetPending = useAuthStore(s => s.passwordResetPending);
+  const welcomePending = useAuthStore(s => s.welcomePending);
+  // The bridges ask permissions and open screens that only exist after the
+  // welcome pages.
+  const inApp = status === 'signedIn' && !resetPending && !welcomePending;
   const adsEnabled = useAdPlacement('interstitial');
   const lastRoute = useRef<string | undefined>(undefined);
 
@@ -124,7 +129,11 @@ export function RootNavigator() {
     const to = navigationRef.getCurrentRoute()?.name;
     const from = lastRoute.current;
     lastRoute.current = to;
-    if (status === 'signedIn' && isAdBreak(from, to)) {
+    if (
+      status === 'signedIn' &&
+      from !== 'WelcomeTour' &&
+      isAdBreak(from, to)
+    ) {
       maybeShowInterstitial(adsEnabled).catch(() => {});
     }
   }, [adsEnabled, status]);
@@ -149,13 +158,9 @@ export function RootNavigator() {
       }}
       onStateChange={onNavigationChange}
     >
-      {status === 'signedIn' && !resetPending ? (
-        <PushBridge navigation={navigationRef} />
-      ) : null}
+      {inApp ? <PushBridge navigation={navigationRef} /> : null}
       {status === 'signedIn' && !resetPending ? <TermsPrompt /> : null}
-      {status === 'signedIn' && !resetPending ? (
-        <InviteBridge navigation={navigationRef} />
-      ) : null}
+      {inApp ? <InviteBridge navigation={navigationRef} /> : null}
       <Root.Navigator screenOptions={stackOptions(theme)}>
         {status === 'signedIn' && resetPending ? (
           // Opened a reset or invite link: choose a password before anything
@@ -171,6 +176,12 @@ export function RootNavigator() {
                   : 'Set new password',
               headerBackVisible: false,
             }}
+          />
+        ) : status === 'signedIn' && welcomePending ? (
+          <Root.Screen
+            name="WelcomeTour"
+            component={WelcomeTourScreen}
+            options={{ headerShown: false }}
           />
         ) : status === 'signedIn' ? (
           <>

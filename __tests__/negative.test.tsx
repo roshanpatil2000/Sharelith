@@ -278,6 +278,7 @@ describe('Check your email: confirm with the code', () => {
       token: '123456',
       type: 'signup',
     });
+    await fireEvent.press(await screen.findByTestId('tour-skip'));
     expect(await screen.findByText('No groups yet')).toBeOnTheScreen();
   });
 });

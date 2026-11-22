@@ -39,6 +39,7 @@ describe('App auth flow', () => {
       email: 'asha@example.com',
       password: 'secret-pass',
     });
+    await fireEvent.press(await screen.findByTestId('tour-skip'));
     expect(await screen.findByText('No groups yet')).toBeOnTheScreen();
     // Unverified profile → nudge banner.
     expect(
@@ -105,6 +106,7 @@ describe('App auth flow', () => {
         }),
       },
     });
+    await fireEvent.press(await screen.findByTestId('tour-skip'));
     expect(await screen.findByText('No groups yet')).toBeOnTheScreen();
     // Wait for the profile to load (it drives the verify banner) so no
     // update lands after the test ends.

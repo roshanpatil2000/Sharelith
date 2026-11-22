@@ -100,7 +100,12 @@ jest.mock('react-native-image-picker', () => ({
 beforeEach(() => {
   // Each test starts signed out with an empty query cache.
   const { useAuthStore } = require('@/features/auth/authStore');
-  useAuthStore.setState({ session: null, ready: false, recovering: false });
+  useAuthStore.setState({
+    session: null,
+    ready: false,
+    recovering: false,
+    welcomePending: false,
+  });
   require('@/lib/queryClient').queryClient.clear();
 });
 

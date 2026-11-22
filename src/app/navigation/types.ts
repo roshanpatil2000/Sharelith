@@ -20,6 +20,8 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
+  /** After a log in or sign up, before Main. */
+  WelcomeTour: undefined;
   /** Starts with this group or friend chosen. */
   /** expenseId opens the form to edit that expense. */
   AddExpense:
