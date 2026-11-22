@@ -21,6 +21,8 @@ import { useLiveUpdates } from '@/features/activity/liveUpdates';
 import { initAds } from '@/features/ads/ads';
 import { preloadInterstitial } from '@/features/ads/interstitial';
 import { AccountScreen } from '@/features/account/screens/AccountScreen';
+import { TabBarSpaceContext } from '@/components/layout/TabBarSpace';
+import { FloatingTabBar, floatingTabBarSpace } from './FloatingTabBar';
 import { headerTitleStyle } from './navigationTheme';
 import { StripTabBar } from './StripTabBar';
 import type { MainTabParamList } from './types';
@@ -60,14 +62,17 @@ export function MainTabs() {
       ? 'left'
       : null;
   const sideRail = !strip && width >= SIDE_RAIL_MIN_WIDTH;
+  const floating = !strip && !sideRail;
   const renderTabBar = useCallback(
     (props: BottomTabBarProps) =>
       strip ? (
         <StripTabBar {...props} side={strip} />
-      ) : (
+      ) : sideRail ? (
         <BottomTabBar {...props} />
+      ) : (
+        <FloatingTabBar {...props} />
       ),
-    [strip],
+    [strip, sideRail],
   );
   // Signed in from here on: keep balances current as others change them.
   useLiveUpdates();
@@ -78,33 +83,37 @@ export function MainTabs() {
       .catch(() => {});
   }, []);
   return (
-    <Tab.Navigator
-      initialRouteName="Groups"
-      tabBar={renderTabBar}
-      screenOptions={({ route }) => ({
-        tabBarActiveTintColor: t.colors.primary,
-        tabBarInactiveTintColor: t.colors.textSecondary,
-        // No lineHeight here: the tab bar sizes the label itself, and a fixed
-        // line height clips descenders on Android.
-        tabBarLabelStyle: {
-          fontFamily: t.typography.label.fontFamily,
-          fontWeight: t.typography.label.fontWeight,
-          fontSize: 12,
-        },
-        headerTitleStyle: headerTitleStyle(t),
-        headerTitleAlign: 'center',
-        headerShadowVisible: false,
-        tabBarIcon: tabIcons[route.name],
-        tabBarPosition: sideRail ? 'left' : 'bottom',
-        // A compact rail: label under the icon, so it stays narrow.
-        tabBarVariant: sideRail ? 'material' : 'uikit',
-        tabBarLabelPosition: sideRail ? 'below-icon' : undefined,
-      })}
+    <TabBarSpaceContext.Provider
+      value={floating ? floatingTabBarSpace(insets.bottom) : 0}
     >
-      <Tab.Screen name="Groups" component={GroupsScreen} />
-      <Tab.Screen name="Friends" component={FriendsScreen} />
-      <Tab.Screen name="Activity" component={ActivityScreen} />
-      <Tab.Screen name="Account" component={AccountScreen} />
-    </Tab.Navigator>
+      <Tab.Navigator
+        initialRouteName="Groups"
+        tabBar={renderTabBar}
+        screenOptions={({ route }) => ({
+          tabBarActiveTintColor: t.colors.primary,
+          tabBarInactiveTintColor: t.colors.textSecondary,
+          // No lineHeight here: the tab bar sizes the label itself, and a fixed
+          // line height clips descenders on Android.
+          tabBarLabelStyle: {
+            fontFamily: t.typography.label.fontFamily,
+            fontWeight: t.typography.label.fontWeight,
+            fontSize: 12,
+          },
+          headerTitleStyle: headerTitleStyle(t),
+          headerTitleAlign: 'center',
+          headerShadowVisible: false,
+          tabBarIcon: tabIcons[route.name],
+          tabBarPosition: sideRail ? 'left' : 'bottom',
+          // A compact rail: label under the icon, so it stays narrow.
+          tabBarVariant: sideRail ? 'material' : 'uikit',
+          tabBarLabelPosition: sideRail ? 'below-icon' : undefined,
+        })}
+      >
+        <Tab.Screen name="Groups" component={GroupsScreen} />
+        <Tab.Screen name="Friends" component={FriendsScreen} />
+        <Tab.Screen name="Activity" component={ActivityScreen} />
+        <Tab.Screen name="Account" component={AccountScreen} />
+      </Tab.Navigator>
+    </TabBarSpaceContext.Provider>
   );
 }
