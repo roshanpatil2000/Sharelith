@@ -1,7 +1,7 @@
 import React from 'react';
 import * as RN from 'react-native';
 import * as SafeArea from 'react-native-safe-area-context';
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import App from '../App';
 import {
   fakeProfile,
@@ -33,6 +33,7 @@ it.each([
 ])('shows all four tabs at %s', async (_name, width, rail) => {
   await openAt(width);
   // The bottom bar and the rail both render buttons; the strip doesn't apply here.
+  expect(!!screen.queryByTestId('floating-tab-bar')).toBe(!rail);
   expect(screen.queryByTestId('strip-tab-Groups')).toBeNull();
   expect(RN.Dimensions.get('window').width >= 600).toBe(rail);
   for (const tab of ['Groups', 'Friends', 'Activity', 'Account']) {
@@ -57,6 +58,15 @@ it.each([
       expect(screen.getByTestId(`strip-tab-${tab}`)).toBeOnTheScreen();
     }
     expect(screen.getByTestId('strip-tab-Groups')).toBeSelected();
+    expect(screen.queryByTestId('floating-tab-bar')).toBeNull();
     hook.mockImplementation(original);
   },
 );
+
+it('switches tabs from the floating bar', async () => {
+  await openAt(390);
+  expect(screen.getByTestId('tab-Groups')).toBeSelected();
+  await fireEvent.press(screen.getByTestId('tab-Friends'));
+  expect(screen.getByTestId('tab-Friends')).toBeSelected();
+  expect(screen.getByTestId('tab-Groups')).not.toBeSelected();
+});

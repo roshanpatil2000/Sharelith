@@ -4,6 +4,10 @@ import { FlashList, type FlashListProps } from '@shopify/flash-list';
 import { useTheme } from '@/app/theme';
 import { ListRowSkeleton } from '../display/Skeleton';
 import { Divider } from '../primitives/Divider';
+import { useTabBarSpace } from './TabBarSpace';
+
+/** The Add expense button and its margins, above the tab bar on tab lists. */
+const FAB_ROOM = 80;
 
 type Props<T> = FlashListProps<T> & {
   loading?: boolean;
@@ -30,6 +34,7 @@ export function PullToRefreshList<T>({
   ...rest
 }: Props<T>) {
   const { colors } = useTheme();
+  const tabBarSpace = useTabBarSpace();
   // Only a pull shows the spinner. Following background reloads too left it
   // stuck on iOS when a reload finished while the tab was hidden.
   const [pulling, setPulling] = useState(false);
@@ -57,6 +62,10 @@ export function PullToRefreshList<T>({
       data={data}
       ItemSeparatorComponent={RowSeparator}
       ListEmptyComponent={empty}
+      // On a tab, let the last row scroll clear of the floating bar and FAB.
+      contentContainerStyle={
+        tabBarSpace ? { paddingBottom: tabBarSpace + FAB_ROOM } : undefined
+      }
       // Lists here grow at the top (new friends, groups, activity). Show new
       // rows when you're already at the top, rather than holding the old top
       // row in place and hiding them above the screen; scrolled further

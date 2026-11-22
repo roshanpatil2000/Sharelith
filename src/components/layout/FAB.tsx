@@ -5,12 +5,13 @@ import { useStyles, useTheme, type Theme } from '@/app/theme';
 import { Pressable } from '../primitives/Pressable';
 import { Icon } from '../primitives/Icon';
 import { Text } from '../primitives/Text';
+import { useTabBarSpace } from './TabBarSpace';
 
 type Props = {
   label?: string;
   icon?: LucideIcon;
   onPress: () => void;
-  /** Distance from the bottom edge, e.g. above the tab bar. */
+  /** Distance from the bottom edge, or from the floating tab bar on tabs. */
   bottom?: number;
   testID?: string;
 };
@@ -25,12 +26,13 @@ export function FAB({
 }: Props) {
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
+  const tabBarSpace = useTabBarSpace();
   return (
     <Pressable
       testID={testID}
       onPress={onPress}
       accessibilityLabel={label}
-      style={[styles.fab, { bottom }]}
+      style={[styles.fab, { bottom: bottom + tabBarSpace }]}
       pressedStyle={styles.pressed}
     >
       <Icon icon={icon} size={20} tint={colors.textOnPrimary} />

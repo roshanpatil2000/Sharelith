@@ -56,6 +56,10 @@ export type ColorTokens = {
   background: string;
   surface: string;
   surfaceRaised: string;
+  /** The floating tab bar: stands apart from both background and surface. */
+  tabBar: string;
+  /** One of the tab bar shadow's stacked layers, so very faint. */
+  tabBarShadow: string;
   border: string;
   textPrimary: string;
   textSecondary: string;
@@ -80,6 +84,8 @@ export const lightColors: ColorTokens = {
   background: '#F7FAFA',
   surface: '#FFFFFF',
   surfaceRaised: '#FFFFFF',
+  tabBar: '#DCEBEC',
+  tabBarShadow: 'rgba(15, 50, 53, 0.018)',
   border: '#D9E4E5',
   textPrimary: '#172B2D',
   textSecondary: '#5F7072',
@@ -113,6 +119,8 @@ export const darkColors: ColorTokens = {
   background: '#0B1516',
   surface: '#142224',
   surfaceRaised: '#142224',
+  tabBar: '#203639',
+  tabBarShadow: 'rgba(0, 0, 0, 0.07)',
   border: '#304345',
   textPrimary: '#F2F7F7',
   textSecondary: '#A6B8B9',

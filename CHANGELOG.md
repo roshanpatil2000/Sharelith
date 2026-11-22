@@ -4,6 +4,7 @@ Tester-facing notes for each build live in `release-notes/<version>.txt` and are
 
 ## Unreleased
 
+- **Navigation:** floating bottom bar with a notch that slides to the selected tab (icons only). The side rail and foldable strip are unchanged.
 - **Pro (server only):** manual Pro is now `pro_grants` (reason, dates, history) with `grant_pro` / `revoke_pro`, and `admin_pro_status` shows who has Pro and why. Replaces `profiles.pro_override`.
 - **Fixed (server only):** granted Pro no longer shows an expired subscription's renewal date.
 

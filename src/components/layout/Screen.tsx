@@ -17,6 +17,7 @@ import {
   type Edge,
 } from 'react-native-safe-area-context';
 import { useStyles, useTheme, type Theme } from '@/app/theme';
+import { useTabBarSpace } from './TabBarSpace';
 
 /**
  * Android with edge-to-edge: the window no longer shrinks for the keyboard
@@ -82,6 +83,7 @@ export function Screen({
 }: Props) {
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
+  const tabBarSpace = useTabBarSpace();
   const [pulling, setPulling] = useState(false);
   const keyboardPadding = useAndroidKeyboardPadding(edges.includes('bottom'));
   const pull = async () => {
@@ -108,6 +110,7 @@ export function Screen({
       }
     >
       {children}
+      {tabBarSpace ? <View style={{ height: tabBarSpace }} /> : null}
     </ScrollView>
   ) : (
     <View style={[styles.flex, padded && styles.padded, contentStyle]}>
