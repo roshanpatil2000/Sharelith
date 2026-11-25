@@ -42,7 +42,8 @@ export type RootStackParamList = {
         returnTo?:
           | { screen: 'CreateGroup' }
           | { screen: 'AddGroupMembers'; groupId: string };
-        contact?: { email: string; name: string };
+        /** Picked in ChooseContact: an email to add, or a number to text. */
+        contact?: { name: string; email?: string; phone?: string };
       }
     | undefined;
   /** Gets the AddFriend params back, plus the contact picked. */

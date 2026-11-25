@@ -2,6 +2,10 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## Unreleased
+
+- Invite by text: contacts with only a phone number can now be picked on Add friend. Sharelith texts them your invite link through Twilio (behind the `sms_invites_enabled` Remote Config switch, off by default), or you send it from your own Messages app. See `docs/SMS_INVITES.md`.
+
 ## 1.0.9
 
 - Remote Config switches `pro_enabled` and `insights_enabled` show or hide Sharelith Pro and Insights in Account. Pro members always see them.

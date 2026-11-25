@@ -78,6 +78,7 @@ Ads are controlled from Firebase Remote Config; changes reach open apps within s
 
 | Key                                       | Default | What it does                                                                                                                |
 | ----------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `sms_invites_enabled`                     | false   | Sharelith texts invites itself through Twilio (see `docs/SMS_INVITES.md`); off leaves only the Messages app option          |
 | `pro_enabled`                             | true    | Shows Sharelith Pro (banner and row) in Account; Pro members always see it                                                  |
 | `insights_enabled`                        | true    | Shows Insights in Account; Pro members always see it                                                                        |
 | `ads_enabled`                             | true    | Master switch: off hides every ad                                                                                           |

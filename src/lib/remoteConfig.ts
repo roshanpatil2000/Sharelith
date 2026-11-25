@@ -34,6 +34,8 @@ export const remoteDefaults = {
   pro_enabled: true,
   /** Show Insights in Account. Pro members always see it. */
   insights_enabled: true,
+  /** Sharelith texts invites itself (Twilio); off leaves only your own Messages app. */
+  sms_invites_enabled: false,
   /** Master switch: off hides every ad. */
   ads_enabled: true,
   /** Full-screen ad at natural breaks (navigation, saving an expense). */

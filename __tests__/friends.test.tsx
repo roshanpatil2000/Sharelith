@@ -1,7 +1,14 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { Linking } from 'react-native';
 import Contacts from 'react-native-contacts';
+import { remoteDefaults, useRemoteConfig } from '@/lib/remoteConfig';
 import App from '../App';
 import {
   fakeProfile,
@@ -236,6 +243,92 @@ describe('Contacts and invite links', () => {
     expect(
       await screen.findByText('Invited Neha — they’ll get an email'),
     ).toBeOnTheScreen();
+  });
+
+  describe('a contact with only a phone number', () => {
+    const pickRavi = async () => {
+      jest.mocked(Contacts.getAllWithoutPhotos).mockResolvedValueOnce([
+        {
+          recordID: '2',
+          displayName: 'Ravi Kumar',
+          emailAddresses: [],
+          phoneNumbers: [{ number: '+91 98765 43210' }],
+        },
+      ] as never);
+      await openAdd();
+      supabaseMock.rpc.mockImplementation(async (fn: string) =>
+        fn === 'create_invite_link'
+          ? { data: 'AbC-123_xyzQWERTYuiop', error: null }
+          : { data: [], error: null },
+      );
+      await fireEvent.press(screen.getByTestId('add-friend-contacts'));
+      await fireEvent.press(await screen.findByTestId('contact-+919876543210'));
+      expect(await screen.findByTestId('text-invite')).toBeOnTheScreen();
+    };
+
+    afterEach(() => useRemoteConfig.setState(remoteDefaults));
+
+    it('offers your Messages app while Sharelith texting is off', async () => {
+      const openURL = jest
+        .spyOn(Linking, 'openURL')
+        .mockResolvedValue(undefined as never);
+      await pickRavi();
+      expect(screen.getByText('Invite Ravi Kumar by text')).toBeOnTheScreen();
+      expect(screen.queryByTestId('text-invite-send')).toBeNull();
+      // Ready once the invite link has loaded.
+      await waitFor(() =>
+        expect(screen.getByTestId('text-invite-phone')).toBeEnabled(),
+      );
+      await fireEvent.press(screen.getByTestId('text-invite-phone'));
+      expect(openURL).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^sms:\+919876543210[?&]body=.*invite%2FAbC-123_xyzQWERTYuiop$/,
+        ),
+      );
+      expect(supabaseMock.functions.invoke).not.toHaveBeenCalled();
+    });
+
+    it('has Sharelith send the text when it is on', async () => {
+      useRemoteConfig.setState({ sms_invites_enabled: true });
+      await pickRavi();
+      supabaseMock.functions.invoke.mockResolvedValueOnce({
+        data: { status: 'sent', link: 'https://x' },
+        error: null,
+      } as never);
+      await fireEvent.press(screen.getByTestId('text-invite-send'));
+      expect(supabaseMock.functions.invoke).toHaveBeenCalledWith(
+        'invite-by-sms',
+        { body: { phone: '+919876543210' } },
+      );
+      expect(await screen.findByText('Invited Ravi by text')).toBeOnTheScreen();
+    });
+
+    it('falls back to your phone when sending fails', async () => {
+      useRemoteConfig.setState({ sms_invites_enabled: true });
+      await pickRavi();
+      supabaseMock.functions.invoke.mockResolvedValueOnce({
+        data: null,
+        error: new FunctionsHttpError(
+          new Response(
+            JSON.stringify({
+              error: {
+                code: 'unverified_number',
+                message: 'This number can’t get texts from Sharelith yet.',
+              },
+            }),
+            { status: 422 },
+          ),
+        ),
+      } as never);
+      await fireEvent.press(screen.getByTestId('text-invite-send'));
+      expect(
+        await screen.findByText(
+          'This number can’t get texts from Sharelith yet.',
+        ),
+      ).toBeOnTheScreen();
+      expect(screen.queryByTestId('text-invite-send')).toBeNull();
+      expect(screen.getByTestId('text-invite-phone')).toBeOnTheScreen();
+    });
   });
 
   it('shows a QR code and link to share', async () => {

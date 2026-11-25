@@ -430,6 +430,10 @@ verify_jwt = false
 [functions.add-friend]
 verify_jwt = true
 
+# Texts someone your invite link through Twilio.
+[functions.invite-by-sms]
+verify_jwt = true
+
 # Ends the signed-in user's other sessions right after they sign in.
 [functions.claim-session]
 verify_jwt = true

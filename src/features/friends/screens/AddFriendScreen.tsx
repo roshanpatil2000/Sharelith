@@ -17,6 +17,7 @@ import {
 import { toAppError } from '@/features/auth/errors';
 import { emailSchema, nameSchema } from '@/features/auth/schemas';
 import { useAddFriend } from '../api';
+import { TextInviteCard } from '@/features/invites/components/TextInviteCard';
 
 const schema = z.object({
   email: emailSchema,
@@ -40,8 +41,10 @@ export function AddFriendScreen({ route, navigation }: Props) {
 
   // Picked in ChooseContact: fill both fields, ready to add.
   const contact = route.params?.contact;
+  // A contact with only a number is invited by text, not by email.
+  const byText = !!contact?.phone && !contact.email;
   useEffect(() => {
-    if (contact) {
+    if (contact?.email) {
       setNeedsName(false);
       setFormError(null);
       setValue('email', contact.email, { shouldValidate: true });
@@ -61,7 +64,8 @@ export function AddFriendScreen({ route, navigation }: Props) {
     try {
       const result = await addFriend.mutateAsync({
         email,
-        name: needsName || contact ? name.trim() || undefined : undefined,
+        name:
+          needsName || contact?.email ? name.trim() || undefined : undefined,
       });
       if (result.status === 'needs_name') {
         setNeedsName(true);
@@ -96,43 +100,54 @@ export function AddFriendScreen({ route, navigation }: Props) {
   return (
     <Screen scroll padded edges={['bottom', 'left', 'right']}>
       <Stack gap="lg">
-        <Text color="textSecondary">
-          {needsName
-            ? 'They’re not on Sharelith yet. Add their name and we’ll email them an invite — you can split expenses with them right away.'
-            : 'Enter your friend’s email. If they’re on Sharelith they’re added straight away; if not, we’ll invite them.'}
-        </Text>
-        {formError ? <Banner tone="danger" message={formError} /> : null}
-        <FormTextField
-          control={control}
-          name="email"
-          label="Email address"
-          leadingIcon={Mail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="email"
-          editable={!needsName}
-          testID="add-friend-email"
-        />
-        {needsName ? (
-          <FormTextField
-            control={control}
-            name="name"
-            label="Their name"
-            leadingIcon={User}
-            autoComplete="name"
-            autoFocus
-            testID="add-friend-name"
+        {byText ? (
+          <TextInviteCard
+            name={contact!.name}
+            phone={contact!.phone!}
+            onSent={() => navigation.goBack()}
           />
         ) : null}
-        <Button
-          title={needsName ? 'Send invite' : 'Add friend'}
-          size="lg"
-          fullWidth
-          loading={formState.isSubmitting}
-          onPress={onSubmit}
-          testID="add-friend-submit"
-        />
+        {byText ? null : (
+          <>
+            <Text color="textSecondary">
+              {needsName
+                ? 'They’re not on Sharelith yet. Add their name and we’ll email them an invite — you can split expenses with them right away.'
+                : 'Enter your friend’s email. If they’re on Sharelith they’re added straight away; if not, we’ll invite them.'}
+            </Text>
+            {formError ? <Banner tone="danger" message={formError} /> : null}
+            <FormTextField
+              control={control}
+              name="email"
+              label="Email address"
+              leadingIcon={Mail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              editable={!needsName}
+              testID="add-friend-email"
+            />
+            {needsName ? (
+              <FormTextField
+                control={control}
+                name="name"
+                label="Their name"
+                leadingIcon={User}
+                autoComplete="name"
+                autoFocus
+                testID="add-friend-name"
+              />
+            ) : null}
+            <Button
+              title={needsName ? 'Send invite' : 'Add friend'}
+              size="lg"
+              fullWidth
+              loading={formState.isSubmitting}
+              onPress={onSubmit}
+              testID="add-friend-submit"
+            />
+          </>
+        )}
         {needsName ? null : (
           <>
             <Button

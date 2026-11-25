@@ -16,9 +16,9 @@ import { FriendsArt } from '@/components/display/EmptyArt';
 import {
   allowContacts,
   hasContactsAccess,
-  loadContactEmails,
+  loadContacts,
   searchContacts,
-  type ContactEmail,
+  type ContactEntry,
 } from '../contacts';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ChooseContact'>;
@@ -27,11 +27,12 @@ type State =
   | { status: 'loading' }
   | { status: 'ask' }
   | { status: 'denied' }
-  | { status: 'ready'; rows: ContactEmail[] };
+  | { status: 'ready'; rows: ContactEntry[] };
 
 /**
- * Pick someone from the phone's contacts (those with an email). Their name
- * and email go back to Add friend; nothing leaves the phone until then.
+ * Pick someone from the phone's contacts (with an email or a phone number).
+ * Their name and email or number go back to Add friend; nothing leaves the
+ * phone until then.
  */
 export function ChooseContactScreen({ navigation, route }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' });
@@ -51,7 +52,7 @@ export function ChooseContactScreen({ navigation, route }: Props) {
           return;
         }
       }
-      const rows = await loadContactEmails().catch(() => []);
+      const rows = await loadContacts().catch(() => []);
       live && setState({ status: 'ready', rows });
     })();
     return () => {
@@ -120,26 +121,28 @@ export function ChooseContactScreen({ navigation, route }: Props) {
           renderItem={({ item }) => (
             <ListRow
               title={item.name}
-              subtitle={item.email}
+              subtitle={item.email ?? item.phone}
               leading={<Avatar name={item.name} size="md" />}
               onPress={() =>
                 navigation.popTo(
                   'AddFriend',
                   {
                     ...route.params,
-                    contact: { email: item.email, name: item.name },
+                    contact: item.email
+                      ? { email: item.email, name: item.name }
+                      : { phone: item.phone, name: item.name },
                   },
                   { merge: true },
                 )
               }
-              testID={`contact-${item.email}`}
+              testID={`contact-${item.email ?? item.phone}`}
             />
           )}
           ListEmptyComponent={
             <EmptyState
               icon={Contact}
-              title={query ? 'No matches' : 'No contacts with an email'}
-              message="Only contacts with an email address can be added."
+              title={query ? 'No matches' : 'No contacts to add'}
+              message="Contacts with an email address or a phone number show here."
             />
           }
         />
