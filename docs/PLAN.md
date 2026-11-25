@@ -40,6 +40,8 @@ Phases 0-7 are built for Android, plus most of the beta essentials from Phase 10
 - Phase 8: offline queue, translations.
 - Phase 9 (Pro): receipt scanning, charts, currency conversion, CSV export, templates. Analytics and ads: name the providers in the privacy policy first.
 - Social: Google/Apple sign-in, contacts import, invite link/QR, default split per group.
+- Invite tracking: `redeem_invite_link` doesn't record who invited a new user (only email invites set `profiles.invited_by`). Set `invited_by` on first redemption when it is empty and the account is newer than the link, and log each use in an `invite_redemptions` table (token, inviter, invitee, group, time) written only by the function. Add pgTAP tests.
+- Invite links once the app is in the stores: fill in `PLAY_URL` / `APP_STORE_URL` in the website's `invite.html`, then test the Play install referrer end to end (install from an invite link → friends right after sign-up).
 
 ## Tech stack
 | Concern | Choice |

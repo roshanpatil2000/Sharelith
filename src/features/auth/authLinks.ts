@@ -5,6 +5,7 @@ import { queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
 import { profileKey, type Profile } from '@/features/account/api';
 import { captureInviteLink } from '@/features/invites/links';
+import { captureInstallReferrer } from '@/features/invites/installReferrer';
 import { useAuthStore } from './authStore';
 import { toAppError } from './errors';
 
@@ -215,6 +216,9 @@ export function startAuthLinkListener(): () => void {
     captureInviteLink(url) ? undefined : handleAuthLink(url);
   Linking.getInitialURL()
     .then(url => (url ? open(url) : undefined))
+    .catch(() => {})
+    // Installed from an invite's Play Store link: keep that invite too.
+    .then(() => captureInstallReferrer())
     .catch(() => {});
   const sub = Linking.addEventListener('url', ({ url }) => {
     open(url);
