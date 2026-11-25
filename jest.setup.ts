@@ -105,6 +105,8 @@ beforeEach(() => {
     ready: false,
     recovering: false,
     welcomePending: false,
+    setupPending: false,
+    startGroup: null,
   });
   require('@/lib/queryClient').queryClient.clear();
 });
@@ -201,6 +203,7 @@ jest.mock('react-native-contacts', () => ({
   __esModule: true,
   default: {
     requestPermission: jest.fn(async () => 'authorized'),
+    checkPermission: jest.fn(async () => 'authorized'),
     getAllWithoutPhotos: jest.fn(async () => []),
   },
 }));

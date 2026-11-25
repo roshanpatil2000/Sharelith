@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { useStyles, type Theme } from '@/app/theme';
+import { useStyles, useTheme, type Theme } from '@/app/theme';
 import { Pressable } from '../primitives/Pressable';
 import { Text } from '../primitives/Text';
 import { Icon } from '../primitives/Icon';
@@ -43,6 +43,7 @@ export function ListRow({
       : undefined,
   };
   const styles = useStyles(createStyles);
+  const { colors } = useTheme();
   const content = (
     <>
       {leading ? <View style={styles.leading}>{leading}</View> : null}
@@ -76,6 +77,7 @@ export function ListRow({
       onPress={onPress}
       style={styles.row}
       pressedStyle={styles.pressed}
+      ripple={colors.primaryTint}
       accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
       {...a11y}
     >

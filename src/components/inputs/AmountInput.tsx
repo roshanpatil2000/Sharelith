@@ -17,6 +17,7 @@ type Props = {
   onChange: (minor: number) => void;
   onCurrencyPress?: () => void;
   autoFocus?: boolean;
+  currencyTestID?: string;
   testID?: string;
 };
 
@@ -30,6 +31,7 @@ export function AmountInput({
   onChange,
   onCurrencyPress,
   autoFocus,
+  currencyTestID,
   testID,
 }: Props) {
   const styles = useStyles(createStyles);
@@ -52,6 +54,7 @@ export function AmountInput({
     <View style={styles.row}>
       <Pressable
         onPress={onCurrencyPress}
+        testID={currencyTestID}
         disabled={!onCurrencyPress}
         accessibilityLabel={`Currency ${currency}`}
         style={styles.currency}
@@ -95,11 +98,12 @@ const createStyles = (t: Theme) =>
       paddingVertical: t.spacing.xs,
     },
     currency: {
-      minWidth: t.hitTarget,
-      height: t.hitTarget,
+      minWidth: 52,
+      height: 52,
       borderRadius: t.radius.md,
       borderWidth: 1,
       borderColor: t.colors.border,
+      backgroundColor: t.colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: t.spacing.sm,

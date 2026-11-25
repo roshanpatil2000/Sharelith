@@ -10,6 +10,8 @@ export type TextFieldProps = TextInputProps & {
   helper?: string;
   error?: string;
   leadingIcon?: LucideIcon;
+  /** underline: just a line under the text, for full-screen forms. */
+  appearance?: 'box' | 'underline';
   trailing?: React.ReactNode;
   ref?: React.Ref<React.ComponentRef<typeof TextInput>>;
 };
@@ -19,6 +21,7 @@ export function TextField({
   helper,
   error,
   leadingIcon,
+  appearance = 'box',
   trailing,
   style,
   onFocus,
@@ -40,6 +43,7 @@ export function TextField({
       <View
         style={[
           styles.field,
+          appearance === 'underline' && styles.underline,
           focused && styles.focused,
           !!error && styles.errored,
         ]}
@@ -91,6 +95,13 @@ const createStyles = (t: Theme) =>
       borderWidth: 1,
       borderColor: t.colors.border,
       backgroundColor: t.colors.surface,
+    },
+    underline: {
+      paddingHorizontal: 0,
+      borderRadius: 0,
+      borderWidth: 0,
+      borderBottomWidth: 2,
+      backgroundColor: 'transparent',
     },
     focused: { borderColor: t.colors.primary },
     errored: { borderColor: t.colors.danger },

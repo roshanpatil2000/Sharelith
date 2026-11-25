@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Search } from 'lucide-react-native';
-import { IconButton } from '@/components';
+import { IconButton, Row } from '@/components';
 
 function SearchHeaderButton() {
   const navigation = useNavigation();
@@ -16,5 +16,15 @@ function SearchHeaderButton() {
   );
 }
 
-// headerLeft is called as a function: render the button as a component.
+/** Search, then the tab's own action. */
+export function TabHeaderActions({ children }: { children: React.ReactNode }) {
+  return (
+    <Row>
+      <SearchHeaderButton />
+      {children}
+    </Row>
+  );
+}
+
+// headerRight is called as a function: render the button as a component.
 export const renderSearchButton = () => <SearchHeaderButton />;

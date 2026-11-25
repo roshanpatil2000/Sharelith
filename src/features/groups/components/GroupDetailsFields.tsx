@@ -3,24 +3,12 @@ import { StyleSheet, View } from 'react-native';
 import type { Control } from 'react-hook-form';
 import { z } from 'zod';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { Camera, Users } from 'lucide-react-native';
+import { Camera } from 'lucide-react-native';
+import { GroupTypeTiles } from './GroupTypeTiles';
 import { useStyles, type Theme } from '@/app/theme';
-import {
-  Chip,
-  ChipGroup,
-  FormTextField,
-  Icon,
-  Pressable,
-  Stack,
-  Text,
-} from '@/components';
+import { FormTextField, Icon, Pressable, Stack, Text } from '@/components';
 import type { PickedImage } from '@/features/account/api';
-import {
-  GROUP_TYPES,
-  groupTypeIcon,
-  groupTypeLabel,
-  type GroupType,
-} from '../groupTypes';
+import type { GroupType } from '../groupTypes';
 import { GroupCover } from './GroupCover';
 
 export const groupDetailsSchema = z.object({
@@ -73,7 +61,7 @@ export function GroupDetailsFields({
   const styles = useStyles(createStyles);
   return (
     <Stack gap="lg">
-      <View style={styles.coverWrap}>
+      <View style={styles.identity}>
         <Pressable
           onPress={onPickCover}
           disabled={coverBusy}
@@ -83,43 +71,33 @@ export function GroupDetailsFields({
           }
           testID="group-cover"
         >
-          <GroupCover type={type} uri={coverUri} size="xl" />
+          <GroupCover type={type} uri={coverUri} size="lg" />
           <View style={styles.cameraBadge}>
             <Icon icon={Camera} size={16} color="textOnPrimary" />
           </View>
         </Pressable>
+        <View style={styles.name}>
+          <FormTextField
+            control={control}
+            name="name"
+            label="Group name"
+            appearance="underline"
+            maxLength={100}
+            testID="group-name"
+          />
+        </View>
       </View>
-      <FormTextField
-        control={control}
-        name="name"
-        label="Group name"
-        leadingIcon={Users}
-        maxLength={100}
-        testID="group-name"
-      />
       <Stack gap="sm">
         <Text variant="label" color="textSecondary">
           Type
         </Text>
-        <ChipGroup>
-          {GROUP_TYPES.map(t => (
-            <Chip
-              key={t}
-              label={groupTypeLabel(t)}
-              leading={
-                <Icon icon={groupTypeIcon(t)} size={16} color="primary" />
-              }
-              selected={type === t}
-              onPress={() => onTypeChange(t)}
-              testID={`group-type-${t}`}
-            />
-          ))}
-        </ChipGroup>
+        <GroupTypeTiles value={type} onChange={onTypeChange} />
       </Stack>
       <FormTextField
         control={control}
         name="description"
         label="Description (optional)"
+        appearance="underline"
         multiline
         maxLength={500}
         testID="group-description"
@@ -130,7 +108,12 @@ export function GroupDetailsFields({
 
 const createStyles = (t: Theme) =>
   StyleSheet.create({
-    coverWrap: { alignItems: 'center', paddingTop: t.spacing.sm },
+    identity: {
+      flexDirection: 'row',
+      gap: t.spacing.xl,
+      paddingTop: t.spacing.sm,
+    },
+    name: { flex: 1 },
     cameraBadge: {
       position: 'absolute',
       right: -6,

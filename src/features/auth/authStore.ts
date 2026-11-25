@@ -33,7 +33,14 @@ type AuthState = {
    * part-way brings them back.
    */
   welcomePending: boolean;
-  finishWelcome: () => void;
+  /** Moves on to "Get started", unless there's somewhere to be already. */
+  finishWelcome: (thenSetUp?: boolean) => void;
+  /** Set by finishing the welcome pages: asks what to set up first. */
+  setupPending: boolean;
+  /** The kind of group picked there, to open Create group with. */
+  startGroup: 'trip' | 'home' | null;
+  finishSetup: (startGroup: 'trip' | 'home' | null) => void;
+  clearStartGroup: () => void;
   setSession: (session: Session | null) => void;
   setRecovering: (recovering: boolean) => void;
   setPasswordResetPending: (pending: false | 'reset' | 'invite') => void;
@@ -47,13 +54,20 @@ export const useAuthStore = create<AuthState>()(
       recovering: false,
       passwordResetPending: false,
       welcomePending: false,
-      finishWelcome: () => set({ welcomePending: false }),
+      finishWelcome: (thenSetUp = true) =>
+        set({ welcomePending: false, setupPending: thenSetUp }),
+      setupPending: false,
+      startGroup: null,
+      finishSetup: startGroup => set({ setupPending: false, startGroup }),
+      clearStartGroup: () => set({ startGroup: null }),
       setSession: session =>
         set(s => ({
           session,
           ready: true,
           passwordResetPending: session ? s.passwordResetPending : false,
           // Until `ready`, a session is the saved one being read, not a login.
+          setupPending: !!session && s.setupPending,
+          startGroup: session ? s.startGroup : null,
           welcomePending:
             !!session && (s.welcomePending || (s.ready && !s.session)),
         })),
@@ -67,6 +81,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: s => ({
         passwordResetPending: s.passwordResetPending,
         welcomePending: s.welcomePending,
+        setupPending: s.setupPending,
       }),
     },
   ),

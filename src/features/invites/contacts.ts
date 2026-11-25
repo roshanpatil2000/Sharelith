@@ -4,6 +4,17 @@ import Contacts from 'react-native-contacts';
 /** One email of one contact: what Add friend needs. */
 export type ContactEmail = { key: string; name: string; email: string };
 
+/** Whether contacts can be read already, without asking. */
+export async function hasContactsAccess(): Promise<boolean> {
+  if (Platform.OS === 'android') {
+    return PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+    );
+  }
+  const result = await Contacts.checkPermission();
+  return result === 'authorized' || result === 'limited';
+}
+
 /** Asks for contacts access; true if allowed (fully or in part). */
 export async function allowContacts(): Promise<boolean> {
   if (Platform.OS === 'android') {

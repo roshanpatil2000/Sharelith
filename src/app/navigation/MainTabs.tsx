@@ -23,7 +23,8 @@ import { preloadInterstitial } from '@/features/ads/interstitial';
 import { AccountScreen } from '@/features/account/screens/AccountScreen';
 import { TabBarSpaceContext } from '@/components/layout/TabBarSpace';
 import { FloatingTabBar, floatingTabBarSpace } from './FloatingTabBar';
-import { headerTitleStyle } from './navigationTheme';
+import { renderSearchButton } from '@/features/search/SearchHeaderButton';
+import { tabTitleStyle } from './navigationTheme';
 import { StripTabBar } from './StripTabBar';
 import type { MainTabParamList } from './types';
 
@@ -99,8 +100,9 @@ export function MainTabs() {
             fontWeight: t.typography.label.fontWeight,
             fontSize: 12,
           },
-          headerTitleStyle: headerTitleStyle(t),
-          headerTitleAlign: 'center',
+          headerTitleStyle: tabTitleStyle(t),
+          headerRight: renderSearchButton,
+          headerTitleAlign: 'left',
           headerShadowVisible: false,
           tabBarIcon: tabIcons[route.name],
           tabBarPosition: sideRail ? 'left' : 'bottom',

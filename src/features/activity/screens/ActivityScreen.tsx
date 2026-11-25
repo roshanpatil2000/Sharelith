@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Inbox } from 'lucide-react-native';
 import {
-  EmptyState,
+  Appear,
+  Box,
   ErrorView,
   FAB,
   PullToRefreshList,
   Screen,
+  Text,
 } from '@/components';
 import { useUserId } from '@/features/auth/authStore';
 import { useAdPlacement } from '@/features/ads/ads';
@@ -82,11 +83,16 @@ export function ActivityScreen() {
         }}
         onEndReachedThreshold={0.5}
         empty={
-          <EmptyState
-            icon={Inbox}
-            title="No activity yet"
-            message="Expenses, payments and group changes will show up here."
-          />
+          <Appear>
+            <Box m="lg" p="xxl" gap="xs" radius="lg" bg="primarySoft">
+              <Text variant="bodyStrong" align="center">
+                No activity yet
+              </Text>
+              <Text color="textSecondary" align="center">
+                Expenses, payments and group changes will show up here.
+              </Text>
+            </Box>
+          </Appear>
         }
         testID="activity-list"
       />
