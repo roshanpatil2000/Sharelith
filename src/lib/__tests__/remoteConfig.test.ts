@@ -35,6 +35,10 @@ describe('loadRemoteConfig on Android', () => {
     interstitial_skip_first: 5,
     pro_enabled: false,
     insights_enabled: true,
+    native_feed_first: 4,
+    native_feed_every: 8,
+    native_list_first: 1,
+    native_list_every: 4,
     pro_monthly_sku: 'pro_monthly',
     pro_yearly_sku: 'pro_yearly',
   };

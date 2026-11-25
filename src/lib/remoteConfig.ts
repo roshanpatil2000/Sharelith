@@ -45,9 +45,15 @@ export const remoteDefaults = {
   /** Native ad rows in the Friends list. */
   native_friends_enabled: true,
   /** Minutes between full-screen ads. */
-  interstitial_min_minutes: 3,
+  interstitial_min_minutes: 2,
   /** Ad breaks (navigation, saved expenses) before the first full-screen ad. */
-  interstitial_skip_first: 3,
+  interstitial_skip_first: 1,
+  /** Activity feed: first ad after this many items, then every `every`. */
+  native_feed_first: 5,
+  native_feed_every: 6,
+  /** Groups and Friends lists: first ad after this many items, then every `every`. */
+  native_list_first: 2,
+  native_list_every: 5,
   /** Google Play subscription IDs for Sharelith Pro. */
   pro_monthly_sku: 'pro_monthly',
   pro_yearly_sku: 'pro_yearly',

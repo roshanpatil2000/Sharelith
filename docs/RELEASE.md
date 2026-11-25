@@ -31,7 +31,7 @@ The build number is the **build time in epoch seconds** (Unix time), for example
 
 ## Android: upload key (once)
 
-Google Play signs the published app; you sign uploads with your own *upload key*. Keep the key and its passwords out of the repo, and back them up: losing them means asking Google to reset the upload key.
+Google Play signs the published app; you sign uploads with your own _upload key_. Keep the key and its passwords out of the repo, and back them up: losing them means asking Google to reset the upload key.
 
 1. Create the key, outside the project. `keytool` asks for the passwords; choose your own.
 
@@ -76,17 +76,19 @@ Real AdMob IDs are set: the app ID in `app.json`, the ad unit IDs in `src/lib/en
 
 Ads are controlled from Firebase Remote Config; changes reach open apps within seconds (real-time updates), no new build needed:
 
-| Key | Default | What it does |
-|---|---|---|
-| `pro_enabled` | true | Shows Sharelith Pro (banner and row) in Account; Pro members always see it |
-| `insights_enabled` | true | Shows Insights in Account; Pro members always see it |
-| `ads_enabled` | true | Master switch: off hides every ad |
-| `interstitial_enabled` | true | Full-screen ad at natural breaks (moving between tabs, opening or leaving a group, friend or expense, saving a new expense) |
-| `native_activity_enabled` | true | Native ad rows in Activity |
-| `native_groups_enabled` | true | Native ad rows in Groups |
-| `native_friends_enabled` | true | Native ad rows in Friends |
-| `interstitial_min_minutes` | 3 | Minutes between full-screen ads |
-| `interstitial_skip_first` | 3 | Breaks before the first full-screen ad |
+| Key                                       | Default | What it does                                                                                                                |
+| ----------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `pro_enabled`                             | true    | Shows Sharelith Pro (banner and row) in Account; Pro members always see it                                                  |
+| `insights_enabled`                        | true    | Shows Insights in Account; Pro members always see it                                                                        |
+| `ads_enabled`                             | true    | Master switch: off hides every ad                                                                                           |
+| `interstitial_enabled`                    | true    | Full-screen ad at natural breaks (moving between tabs, opening or leaving a group, friend or expense, saving a new expense) |
+| `native_activity_enabled`                 | true    | Native ad rows in Activity                                                                                                  |
+| `native_groups_enabled`                   | true    | Native ad rows in Groups                                                                                                    |
+| `native_friends_enabled`                  | true    | Native ad rows in Friends                                                                                                   |
+| `interstitial_min_minutes`                | 2       | Minutes between full-screen ads                                                                                             |
+| `interstitial_skip_first`                 | 1       | Breaks before the first full-screen ad                                                                                      |
+| `native_feed_first` / `native_feed_every` | 5 / 6   | Activity: first ad after this many items, then every this many                                                              |
+| `native_list_first` / `native_list_every` | 2 / 5   | Groups and Friends: the same                                                                                                |
 
 ## Android: build
 
@@ -101,8 +103,8 @@ Release builds run R8, which shrinks the code and can break libraries that rely 
 ## iOS: build
 
 1. Open `ios/Sharelith.xcworkspace` in Xcode.
-2. Under *Signing & Capabilities*, choose your Apple Developer team.
-3. Choose *Product → Archive*, then *Distribute App → TestFlight*.
+2. Under _Signing & Capabilities_, choose your Apple Developer team.
+3. Choose _Product → Archive_, then _Distribute App → TestFlight_.
 
 ## Store listings need
 
