@@ -5,43 +5,44 @@ Goal: build a React Native CLI app that reproduces Splitwise's feature set (free
 
 **Decisions:** TypeScript · Zustand (UI/session state) + TanStack Query (server state) · Supabase (Postgres, Auth, Realtime, Storage, Edge Functions) · iOS + Android from day one · Core + Pro scope.
 
-## Status (18 Nov 2026)
-Phases 0-7 are built for Android, plus most of the beta essentials from Phase 10. Next: build a signed release APK and share it with 2-3 testers.
+## Status (25 Nov 2026)
+Version 1.0.9 is with Android testers. Phases 0-7 are built, along with most of Phase 9 (Pro) and the beta essentials from Phase 10. Next: publish on the Play Store. That lifts AdMob's limited ad serving, makes Play Billing work and gives invite links a store URL.
 
 **Built**
 - Phases 0-3: foundation, auth, friends, groups (month-grouped lists included).
-- Phase 4: expenses with equal, exact, percent, shares and adjustment splits; several payers; add, edit, delete, restore; detail screen. The server checks that shares and payments add up.
-- Phase 5: record payments, simplify debts, payment reminders (once a day per friend).
+- Phase 4: expenses with equal, exact, percent, shares, adjustment and itemized splits; several payers; date and notes; comments (live, with activity and push); receipt photos (Pro); recurring expenses (daily pg_cron job); add, edit, delete, restore, and Recently deleted. The server checks that shares and payments add up.
+- Phase 5: record payments, simplify debts, payment reminders (once a day per friend), group Totals.
 - Phase 6: group-wide activity feed with realtime updates.
-- Phase 7: Android push for activity that concerns you (`docs/PUSH.md`).
-- Phase 10 (part): Crashlytics on Android, privacy policy and Terms on the website with consent at sign-up, Android App Links for auth emails, R8, release builds that refuse the debug key.
-- Hardening: the 2 Nov review items, soft-leave (`left_at`), "Deleted user" anonymisation, settled-balance checks, FLAG_SECURE (since removed so screenshots work), Storage-only photo URLs.
+- Phase 7: Android push for activity that concerns you (`docs/PUSH.md`), and notification settings.
+- Phase 9 (Pro, `docs/PRO.md`): Play Billing (`verify-purchase`, `play-notifications`), manual grants (`pro_grants`), insights and charts, CSV/PDF export, currency conversion (ECB rates via Frankfurter), search, default split per group. Remote Config `pro_enabled` and `insights_enabled` show or hide Pro and Insights.
+- Social: add friends from contacts, invite links and QR codes, SMS and WhatsApp invites that survive the install (Play install referrer).
+- Account: appearance, app lock (biometrics), one signed-in device per account.
+- Ads (Android, not in the original plan): AdMob native ads and interstitials with Google's consent form, with spacing tuned from Remote Config. Pro hides ads.
+- UI: Splitwise-style screens and motion, a floating tab bar, a welcome tour.
+- Phase 10 (part): Crashlytics on Android, privacy policy and Terms with consent at sign-up (plus a one-time prompt for older accounts), Android App Links, R8, release builds that refuse the debug key, Firebase App Distribution.
+- Hardening: the 2 Nov review items, soft-leave (`left_at`), "Deleted user" anonymisation, settled-balance checks, Storage-only photo URLs, an offline cache encrypted with AES-256.
 - CI runs typecheck, lint, Jest and pgTAP on every PR.
 
 **Changes from the original plan**
 - No Storybook or in-app component gallery; components are covered by Jest tests.
 - Instant friends stay, Splitwise-style. Friends and group members can read only `id`, `full_name`, `email`, `avatar_url` and `joined_at`; the rest comes from `get_my_profile()`.
 - Crashlytics instead of Sentry, since Firebase was already in for push.
-- Pro (Phase 9) moves after the first release. Beta means Phases 4-7 plus the release essentials from Phase 10.
+- Invites by phone open the phone's SMS app or WhatsApp; no SMS provider.
 
 **Before public launch**
-- Encrypt the persisted query cache (names, emails, balances). Auth tokens are in the Keychain already.
-- Notification settings in the app (the privacy policy promises them).
+- Play Console account, store listing and Fastlane. Then fill in `PLAY_URL` / `APP_STORE_URL` in the website's `invite.html` and test the install referrer end to end (install from an invite link → friends right after sign-up).
+- A way for users to reach the Pro paywall, once billing works from Play.
 - One Maestro end-to-end flow: sign up → friend → expense → balance.
-- A one-time consent prompt for accounts created before 18 Nov 2026.
 - A staging Supabase project and confirmed backups.
-- Play Console account, store listing, Fastlane.
-- iOS push, Crashlytics and universal links (need the Apple developer account).
+- iOS push, Crashlytics and universal links (these need the Apple developer account).
 
 **Still open from the plan**
-- Phase 4: itemized split, comments, receipt photos, recurring expenses.
-- Phase 5: UPI pay links, Balances and Totals screens.
-- Phase 7: email reminders and weekly summary.
-- Phase 8: offline queue, translations.
-- Phase 9 (Pro): receipt scanning, charts, currency conversion, CSV export, templates. Analytics and ads: name the providers in the privacy policy first.
-- Social: Google/Apple sign-in, contacts import, invite link/QR, default split per group.
+- Phase 4: edit history on expenses.
+- Phase 5: UPI and PayPal pay links; a separate Balances screen.
+- Phase 7: email reminders and a weekly summary.
+- Phase 8: an offline mutation queue, translations.
+- Social: Google and Apple sign-in.
 - Invite tracking: `redeem_invite_link` doesn't record who invited a new user (only email invites set `profiles.invited_by`). Set `invited_by` on first redemption when it is empty and the account is newer than the link, and log each use in an `invite_redemptions` table (token, inviter, invitee, group, time) written only by the function. Add pgTAP tests.
-- Invite links once the app is in the stores: fill in `PLAY_URL` / `APP_STORE_URL` in the website's `invite.html`, then test the Play install referrer end to end (install from an invite link → friends right after sign-up).
 
 ## Tech stack
 | Concern | Choice |
