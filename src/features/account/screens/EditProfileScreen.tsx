@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { Camera, Mail, Phone, User } from 'lucide-react-native';
+import { Camera, Mail, Phone, User, Wallet } from 'lucide-react-native';
 import { useStyles, type Theme } from '@/app/theme';
 import {
   Avatar,
@@ -21,13 +21,16 @@ import {
 } from '@/components';
 import { toAppError } from '@/features/auth/errors';
 import { nameSchema, phoneSchema } from '@/features/auth/schemas';
+import { paypalSchema, upiSchema } from '@/features/expenses/pay';
 import { useProfile, useUpdateProfile, useUploadAvatar } from '../api';
 
 const editProfileSchema = z.object({
   fullName: nameSchema,
   phone: phoneSchema,
+  upiId: upiSchema,
+  paypal: paypalSchema,
 });
-type EditProfileValues = z.infer<typeof editProfileSchema>;
+type EditProfileValues = z.input<typeof editProfileSchema>;
 
 export function EditProfileScreen() {
   const styles = useStyles(createStyles);
@@ -44,7 +47,12 @@ export function EditProfileScreen() {
 
   useEffect(() => {
     if (profile) {
-      reset({ fullName: profile.full_name, phone: profile.phone ?? '' });
+      reset({
+        fullName: profile.full_name,
+        phone: profile.phone ?? '',
+        upiId: profile.upi_id ?? '',
+        paypal: profile.paypal_username ?? '',
+      });
     }
   }, [profile, reset]);
 
@@ -70,12 +78,14 @@ export function EditProfileScreen() {
     );
   };
 
-  const onSubmit = handleSubmit(async ({ fullName, phone }) => {
+  const onSubmit = handleSubmit(async ({ fullName, phone, upiId, paypal }) => {
     setFormError(null);
     try {
       await updateProfile.mutateAsync({
         full_name: fullName,
         phone: phone || null,
+        upi_id: upiId || null,
+        paypal_username: paypal || null,
       });
       toast.show('Profile saved', 'success');
       navigation.goBack();
@@ -132,6 +142,25 @@ export function EditProfileScreen() {
           keyboardType="phone-pad"
           autoComplete="tel"
           testID="edit-phone"
+        />
+        <FormTextField
+          control={control}
+          name="upiId"
+          label="UPI ID (optional)"
+          leadingIcon={Wallet}
+          autoCapitalize="none"
+          autoCorrect={false}
+          helper="Friends can pay you from Settle up."
+          testID="edit-upi"
+        />
+        <FormTextField
+          control={control}
+          name="paypal"
+          label="PayPal.me username (optional)"
+          leadingIcon={Wallet}
+          autoCapitalize="none"
+          autoCorrect={false}
+          testID="edit-paypal"
         />
         <Button
           title="Save"
