@@ -65,6 +65,10 @@ export type ColorTokens = {
   textSecondary: string;
   textOnPrimary: string;
   overlay: string;
+  /** The three welcome pages' backgrounds. */
+  welcomeTogether: string;
+  welcomeSplit: string;
+  welcomeSettle: string;
   category: Record<CategoryKey, string>;
 };
 
@@ -91,6 +95,9 @@ export const lightColors: ColorTokens = {
   textSecondary: '#5F7072',
   textOnPrimary: '#FFFFFF',
   overlay: 'rgba(15, 18, 20, 0.45)',
+  welcomeTogether: '#D5EEEE',
+  welcomeSplit: '#FBE9D7',
+  welcomeSettle: '#E3E3F7',
   category: {
     food: '#E8642C',
     home: '#3B82C4',
@@ -126,6 +133,9 @@ export const darkColors: ColorTokens = {
   textSecondary: '#A6B8B9',
   textOnPrimary: '#0B1516',
   overlay: 'rgba(0, 0, 0, 0.6)',
+  welcomeTogether: '#0E2E30',
+  welcomeSplit: '#33251C',
+  welcomeSettle: '#22233A',
   category: {
     food: '#FF9A66',
     home: '#6AAAE3',

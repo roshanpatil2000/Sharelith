@@ -27,6 +27,13 @@ type AuthState = {
    * can't skip that step.
    */
   passwordResetPending: false | 'reset' | 'invite';
+  /**
+   * Set by logging in or signing up (not by reopening the app signed in):
+   * the welcome pages show until finished. Persisted, so closing the app
+   * part-way brings them back.
+   */
+  welcomePending: boolean;
+  finishWelcome: () => void;
   setSession: (session: Session | null) => void;
   setRecovering: (recovering: boolean) => void;
   setPasswordResetPending: (pending: false | 'reset' | 'invite') => void;
@@ -39,11 +46,16 @@ export const useAuthStore = create<AuthState>()(
       ready: false,
       recovering: false,
       passwordResetPending: false,
+      welcomePending: false,
+      finishWelcome: () => set({ welcomePending: false }),
       setSession: session =>
         set(s => ({
           session,
           ready: true,
           passwordResetPending: session ? s.passwordResetPending : false,
+          // Until `ready`, a session is the saved one being read, not a login.
+          welcomePending:
+            !!session && (s.welcomePending || (s.ready && !s.session)),
         })),
       setRecovering: recovering => set({ recovering }),
       setPasswordResetPending: passwordResetPending =>
@@ -52,7 +64,10 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-flow',
       storage: createJSONStorage(() => zustandStorage),
-      partialize: s => ({ passwordResetPending: s.passwordResetPending }),
+      partialize: s => ({
+        passwordResetPending: s.passwordResetPending,
+        welcomePending: s.welcomePending,
+      }),
     },
   ),
 );

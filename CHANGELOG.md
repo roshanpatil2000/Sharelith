@@ -2,6 +2,10 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## Unreleased
+
+- **Welcome:** three swipeable pages after each log in or sign up (not when reopening signed in), with Skip. Permission prompts and ads wait until they're done.
+
 ## 1.0.8
 
 - **Navigation:** floating bottom bar with a notch that slides to the selected tab (icons only). The side rail and foldable strip are unchanged.
