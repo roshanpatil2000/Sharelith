@@ -9,6 +9,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   BarChart3,
+  Scale,
   HandCoins,
   Receipt,
   Settings,
@@ -162,6 +163,16 @@ export function GroupDetailScreen({ route }: Props) {
             testID="group-settle-up"
           />
         ) : null}
+        <Button
+          title="Balances"
+          icon={Scale}
+          size="sm"
+          style={styles.action}
+          variant="outline"
+          accessibilityLabel="Group balances"
+          onPress={() => navigation.navigate('GroupBalances', { groupId })}
+          testID="group-balances"
+        />
         <Button
           title="Totals"
           icon={BarChart3}

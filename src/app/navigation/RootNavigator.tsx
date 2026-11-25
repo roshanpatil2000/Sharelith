@@ -37,6 +37,7 @@ import { InviteScreen } from '@/features/invites/screens/InviteScreen';
 import { SearchScreen } from '@/features/search/screens/SearchScreen';
 import { RecentlyDeletedScreen } from '@/features/expenses/screens/RecentlyDeletedScreen';
 import { GroupTotalsScreen } from '@/features/groups/screens/GroupTotalsScreen';
+import { GroupBalancesScreen } from '@/features/groups/screens/GroupBalancesScreen';
 import { DefaultSplitScreen } from '@/features/groups/screens/DefaultSplitScreen';
 import { FriendDetailScreen } from '@/features/friends/screens/FriendDetailScreen';
 import { CreateGroupScreen } from '@/features/groups/screens/CreateGroupScreen';
@@ -332,6 +333,11 @@ export function RootNavigator() {
               name="GroupTotals"
               component={GroupTotalsScreen}
               options={{ title: 'Group totals' }}
+            />
+            <Root.Screen
+              name="GroupBalances"
+              component={GroupBalancesScreen}
+              options={{ title: 'Balances' }}
             />
             <Root.Screen
               name="GroupSettings"

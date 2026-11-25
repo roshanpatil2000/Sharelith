@@ -16,6 +16,8 @@ export type ProfileUpdate = Pick<
   | 'notify_payments'
   | 'notify_groups'
   | 'notify_reminders'
+  | 'upi_id'
+  | 'paypal_username'
 >;
 
 export const profileKey = (userId: string | null) =>

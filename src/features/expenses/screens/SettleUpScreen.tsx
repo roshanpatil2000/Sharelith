@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, Linking } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HandCoins } from 'lucide-react-native';
 import {
@@ -25,6 +26,7 @@ import {
   settlementKey,
   type Settlement,
 } from '../settle';
+import { paypalPayUrl, upiPayUrl, usePayHandles } from '../pay';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SettleUp'>;
 
@@ -62,6 +64,9 @@ export function SettleUpScreen({ route, navigation }: Props) {
   const selected =
     settlements.find(s => settlementKey(s) === chosen) ?? settlements[0];
 
+  const paying = !!selected && selected.from === userId;
+  const { data: handles } = usePayHandles(paying ? selected?.to : undefined);
+
   // Start with the full amount owed, and again after choosing another.
   const selectedKey = selected ? settlementKey(selected) : null;
   useEffect(() => {
@@ -90,6 +95,31 @@ export function SettleUpScreen({ route, navigation }: Props) {
           group?.name ??
           'a group'
         }`;
+
+  /**
+   * Opens the payee's UPI or PayPal page. Nothing moves through Sharelith, so
+   * the payment is recorded only once you say it went through.
+   */
+  const payWith = async (url: string, app: string) => {
+    if (!selected || amount <= 0) {
+      setFormError('Enter an amount.');
+      return;
+    }
+    try {
+      await Linking.openURL(url);
+    } catch {
+      toast.show(`Couldn’t open ${app} on this phone`, 'error');
+      return;
+    }
+    Alert.alert(
+      `Did you pay ${firstName(selected.to)}?`,
+      `${formatMoney(amount, selected.currency)} with ${app}`,
+      [
+        { text: 'Not yet', style: 'cancel' },
+        { text: 'Yes, record it', onPress: () => save() },
+      ],
+    );
+  };
 
   const save = async () => {
     setFormError(null);
@@ -170,10 +200,52 @@ export function SettleUpScreen({ route, navigation }: Props) {
             be owed.
           </Text>
         ) : null}
+        {paying && handles?.upi_id && selected.currency === 'INR' ? (
+          <Button
+            title="Pay with UPI"
+            size="lg"
+            fullWidth
+            onPress={() =>
+              payWith(
+                upiPayUrl({
+                  upiId: handles.upi_id!,
+                  name: nameOf(selected.to),
+                  minor: amount,
+                }),
+                'UPI',
+              )
+            }
+            testID="settle-pay-upi"
+          />
+        ) : null}
+        {paying && handles?.paypal_username ? (
+          <Button
+            title="Pay with PayPal"
+            size="lg"
+            fullWidth
+            variant="outline"
+            onPress={() =>
+              payWith(
+                paypalPayUrl({
+                  username: handles.paypal_username!,
+                  minor: amount,
+                  currency: selected.currency,
+                }),
+                'PayPal',
+              )
+            }
+            testID="settle-pay-paypal"
+          />
+        ) : null}
         <Button
           title="Record payment"
           size="lg"
           fullWidth
+          variant={
+            paying && (handles?.upi_id || handles?.paypal_username)
+              ? 'outline'
+              : undefined
+          }
           loading={recordPayment.isPending}
           onPress={save}
           testID="settle-save"

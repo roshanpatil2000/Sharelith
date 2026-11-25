@@ -57,6 +57,7 @@ export type RootStackParamList = {
   GroupDetail: { groupId: string };
   GroupSettings: { groupId: string };
   GroupTotals: { groupId: string };
+  GroupBalances: { groupId: string };
   DefaultSplit: { groupId: string };
   AddGroupMembers: { groupId: string; addedFriendId?: string };
   VerifyEmail: undefined;

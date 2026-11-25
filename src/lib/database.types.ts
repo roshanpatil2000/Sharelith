@@ -598,6 +598,8 @@ export type Database = {
           notify_groups: boolean;
           notify_payments: boolean;
           notify_reminders: boolean;
+          paypal_username: string | null;
+          upi_id: string | null;
           phone: string | null;
           timezone: string;
           updated_at: string;
@@ -618,6 +620,8 @@ export type Database = {
           notify_groups?: boolean;
           notify_payments?: boolean;
           notify_reminders?: boolean;
+          paypal_username?: string | null;
+          upi_id?: string | null;
           phone?: string | null;
           timezone?: string;
           updated_at?: string;
@@ -638,6 +642,8 @@ export type Database = {
           notify_groups?: boolean;
           notify_payments?: boolean;
           notify_reminders?: boolean;
+          paypal_username?: string | null;
+          upi_id?: string | null;
           phone?: string | null;
           timezone?: string;
           updated_at?: string;
@@ -844,6 +850,13 @@ export type Database = {
       delete_account: { Args: never; Returns: undefined };
       delete_group: { Args: { gid: string }; Returns: undefined };
       expense_people: { Args: { eid: string }; Returns: string[] };
+      get_pay_handles: {
+        Args: { uid: string };
+        Returns: {
+          paypal_username: string | null;
+          upi_id: string | null;
+        }[];
+      };
       get_my_profile: {
         Args: never;
         Returns: {
@@ -862,6 +875,8 @@ export type Database = {
           notify_groups: boolean;
           notify_payments: boolean;
           notify_reminders: boolean;
+          paypal_username: string | null;
+          upi_id: string | null;
           phone: string | null;
           timezone: string;
           updated_at: string;

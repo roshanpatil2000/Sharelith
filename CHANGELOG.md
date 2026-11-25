@@ -4,6 +4,8 @@ Tester-facing notes for each build live in `release-notes/<version>.txt` and are
 
 ## Unreleased
 
+- **Pay links:** add a UPI ID and a PayPal.me username in Edit profile (`profiles.upi_id`, `paypal_username`, private; friends and group members read them with `get_pay_handles`). Settle up offers Pay with UPI (INR) and Pay with PayPal when you're the one paying, opens the app, and records the payment only after you confirm.
+- **Groups:** a Balances screen (Group → Balances) with each member's balance and the fewest payments that settle the group, with Settle and Remind on the ones you're in.
 - **Expenses:** edit history. Each save with a real change keeps a before-and-after snapshot (`expense_revisions`, written by `update_expense`), listed newest first under History on the expense (`list_expense_revisions`). Anyone who can see the expense can read it.
 
 ## 1.0.9

@@ -5,6 +5,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react-native';
+import { Alert, Linking } from 'react-native';
 import App from '../App';
 import { remoteDefaults, useRemoteConfig } from '@/lib/remoteConfig';
 import {
@@ -74,6 +75,7 @@ type Backend = {
   groupBalances?: unknown[];
   expenses?: unknown[];
   simplify?: boolean;
+  handles?: unknown;
 };
 
 function mockBackend({
@@ -81,6 +83,7 @@ function mockBackend({
   groupBalances = [],
   expenses = [],
   simplify = true,
+  handles = null,
 }: Backend) {
   supabaseMock.from.mockImplementation((() => {
     const builder = queryBuilder<unknown>({
@@ -120,6 +123,8 @@ function mockBackend({
         return { data: groupBalances, error: null };
       case 'record_payment':
         return { data: 'p-new', error: null };
+      case 'get_pay_handles':
+        return { data: handles ? [handles] : [], error: null };
       default:
         return { data: [], error: null };
     }
@@ -248,6 +253,88 @@ describe('Settle up in a group', () => {
     await openGroup();
     await screen.findByText('You are all settled up');
     expect(screen.queryByTestId('group-settle-up')).toBeNull();
+  });
+});
+
+const simplified = {
+  balances: [
+    { friend_id: vik, group_id: 'g-goa', currency: 'INR', net_minor: -30000 },
+  ],
+  groupBalances: [
+    { user_id: me, currency: 'INR', net_minor: -30000 },
+    { user_id: asha, currency: 'INR', net_minor: 50000 },
+    { user_id: vik, currency: 'INR', net_minor: -20000 },
+  ],
+};
+
+describe('Pay links', () => {
+  it('opens UPI for the payee and records once you confirm', async () => {
+    const open = jest
+      .spyOn(Linking, 'openURL')
+      .mockResolvedValue(undefined as never);
+    const alert = jest.spyOn(Alert, 'alert');
+    mockBackend({
+      ...simplified,
+      handles: { upi_id: 'asha@okaxis', paypal_username: null },
+    });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('group-settle-up'));
+    await fireEvent.press(await screen.findByTestId('settle-pay-upi'));
+
+    await waitFor(() =>
+      expect(open).toHaveBeenCalledWith(
+        'upi://pay?pa=asha%40okaxis&pn=Asha%20Rao&am=300.00&cu=INR&tn=Sharelith',
+      ),
+    );
+    expect(screen.queryByTestId('settle-pay-paypal')).toBeNull();
+    expect(paymentCall()).toBeUndefined();
+
+    const buttons = alert.mock.calls[0]![2]!;
+    await buttons.find(b => b.text === 'Yes, record it')!.onPress!();
+    await waitFor(() => expect(paymentCall()).toMatchObject({ payee: asha }));
+    open.mockRestore();
+    alert.mockRestore();
+  });
+
+  it('has no pay buttons when the payee added none', async () => {
+    mockBackend(simplified);
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('group-settle-up'));
+    await screen.findByText('You pay Asha');
+    expect(screen.queryByTestId('settle-pay-upi')).toBeNull();
+    expect(screen.queryByTestId('settle-pay-paypal')).toBeNull();
+  });
+});
+
+describe('Group balances', () => {
+  it('lists everyone and the payments that settle the group', async () => {
+    mockBackend(simplified);
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('group-balances'));
+
+    expect(
+      await screen.findByTestId(`balances-member-${asha}`),
+    ).toHaveTextContent(/gets back ₹500\.00/);
+    expect(screen.getByTestId(`balances-member-${me}`)).toHaveTextContent(
+      /owes ₹300\.00/,
+    );
+    expect(screen.getByText('You pay Asha')).toBeOnTheScreen();
+    expect(screen.getByText('Vikram pays Asha')).toBeOnTheScreen();
+    // Only payments you're in get buttons.
+    expect(
+      screen.getByTestId(`balances-settle-${me}-${asha}`),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId(`balances-settle-${vik}-${asha}`)).toBeNull();
+
+    await fireEvent.press(screen.getByTestId(`balances-settle-${me}-${asha}`));
+    expect(await screen.findByText('You pay Asha')).toBeOnTheScreen();
+  });
+
+  it('says when everyone is settled', async () => {
+    mockBackend({});
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('group-balances'));
+    expect(await screen.findByText('Everyone’s settled up')).toBeOnTheScreen();
   });
 });
 

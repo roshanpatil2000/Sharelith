@@ -35,6 +35,8 @@ export function fakeProfile(overrides: Partial<Profile> = {}): Profile {
     full_name: 'Asha Rao',
     email: 'asha@example.com',
     phone: null,
+    upi_id: null,
+    paypal_username: null,
     avatar_url: null,
     default_currency: 'INR',
     timezone: 'Asia/Kolkata',
