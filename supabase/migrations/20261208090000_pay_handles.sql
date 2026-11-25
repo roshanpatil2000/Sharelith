@@ -4,7 +4,7 @@
 
 alter table public.profiles
   add column upi_id text
-    check (upi_id is null or upi_id ~ '^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9]{1,63}$'),
+    check (upi_id is null or upi_id ~ '^[A-Za-z0-9._-]{2,255}@[A-Za-z][A-Za-z0-9]{1,63}$'),
   add column paypal_username text
     check (paypal_username is null or paypal_username ~ '^[A-Za-z0-9]{1,20}$');
 

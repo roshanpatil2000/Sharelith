@@ -5,7 +5,7 @@ import { toAppError } from '@/features/auth/errors';
 import { useUserId } from '@/features/auth/authStore';
 
 /** Same rules as the profiles.upi_id check. */
-export const UPI_ID = /^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9]{1,63}$/;
+export const UPI_ID = /^[A-Za-z0-9._-]{2,255}@[A-Za-z][A-Za-z0-9]{1,63}$/;
 export const PAYPAL_USERNAME = /^[A-Za-z0-9]{1,20}$/;
 
 export const upiSchema = z
