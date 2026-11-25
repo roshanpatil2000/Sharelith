@@ -157,6 +157,7 @@ export function GroupDetailScreen({ route }: Props) {
             title="Settle up"
             icon={HandCoins}
             size="sm"
+            style={styles.action}
             onPress={() => navigation.navigate('SettleUp', { groupId })}
             testID="group-settle-up"
           />
@@ -165,6 +166,7 @@ export function GroupDetailScreen({ route }: Props) {
           title="Totals"
           icon={BarChart3}
           size="sm"
+          style={styles.action}
           variant="outline"
           accessibilityLabel="Group totals"
           onPress={() => navigation.navigate('GroupTotals', { groupId })}
@@ -174,6 +176,7 @@ export function GroupDetailScreen({ route }: Props) {
           title="Add people"
           icon={UserPlus}
           size="sm"
+          style={styles.action}
           variant="outline"
           onPress={() => navigation.navigate('AddGroupMembers', { groupId })}
           testID="group-add-people"
@@ -203,6 +206,8 @@ const createStyles = (t: Theme) =>
       backgroundColor: t.colors.surface,
     },
     actions: { flexGrow: 0, backgroundColor: t.colors.surface },
+    // Full touch height, and the same shape for the filled and outlined ones.
+    action: { minHeight: t.hitTarget, borderRadius: t.radius.pill },
     actionsContent: {
       gap: t.spacing.sm,
       paddingHorizontal: t.spacing.lg,
