@@ -28,6 +28,7 @@ import { myNet, shareNote, splitTitle } from '../detail';
 import { ReceiptSection } from '@/features/pro/components/ReceiptSection';
 import { CommentBox, CommentsSection } from '../components/CommentsSection';
 import { RepeatRow } from '../components/RepeatRow';
+import { HistorySection } from '../components/HistorySection';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseDetail'>;
 
@@ -208,6 +209,8 @@ export function ExpenseDetailScreen({ route, navigation }: Props) {
       {expense.is_payment ? null : (
         <ReceiptSection expenseId={expense.id} path={expense.receipt_path} />
       )}
+
+      <HistorySection expenseId={expense.id} />
 
       <CommentsSection expenseId={expense.id} />
 
