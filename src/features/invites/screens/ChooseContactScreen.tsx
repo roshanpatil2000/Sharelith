@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Linking } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Contact } from 'lucide-react-native';
+import { Contact, Mail, MessageSquare } from 'lucide-react-native';
 import type { RootStackParamList } from '@/app/navigation/types';
+import { useTheme } from '@/app/theme';
 import {
   Avatar,
   Box,
@@ -16,9 +17,9 @@ import { FriendsArt } from '@/components/display/EmptyArt';
 import {
   allowContacts,
   hasContactsAccess,
-  loadContactEmails,
+  loadContactRows,
   searchContacts,
-  type ContactEmail,
+  type ContactRow,
 } from '../contacts';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ChooseContact'>;
@@ -27,16 +28,18 @@ type State =
   | { status: 'loading' }
   | { status: 'ask' }
   | { status: 'denied' }
-  | { status: 'ready'; rows: ContactEmail[] };
+  | { status: 'ready'; rows: ContactRow[] };
 
 /**
- * Pick someone from the phone's contacts (those with an email). Their name
- * and email go back to Add friend; nothing leaves the phone until then.
+ * Pick someone from the phone's contacts. An email goes back to Add friend;
+ * a phone number opens an SMS or WhatsApp invite. Nothing leaves the phone
+ * until then.
  */
 export function ChooseContactScreen({ navigation, route }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' });
   const [query, setQuery] = useState('');
   const [asked, setAsked] = useState(false);
+  const theme = useTheme();
 
   useEffect(() => {
     let live = true;
@@ -51,7 +54,7 @@ export function ChooseContactScreen({ navigation, route }: Props) {
           return;
         }
       }
-      const rows = await loadContactEmails().catch(() => []);
+      const rows = await loadContactRows().catch(() => []);
       live && setState({ status: 'ready', rows });
     })();
     return () => {
@@ -117,29 +120,48 @@ export function ChooseContactScreen({ navigation, route }: Props) {
           data={visible}
           keyExtractor={r => r.key}
           keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => (
-            <ListRow
-              title={item.name}
-              subtitle={item.email}
-              leading={<Avatar name={item.name} size="md" />}
-              onPress={() =>
-                navigation.popTo(
-                  'AddFriend',
-                  {
-                    ...route.params,
-                    contact: { email: item.email, name: item.name },
-                  },
-                  { merge: true },
-                )
-              }
-              testID={`contact-${item.email}`}
-            />
-          )}
+          renderItem={({ item }) =>
+            'email' in item ? (
+              <ListRow
+                title={item.name}
+                subtitle={item.email}
+                leading={<Avatar name={item.name} size="md" />}
+                trailing={<Mail size={18} color={theme.colors.textSecondary} />}
+                onPress={() =>
+                  navigation.popTo(
+                    'AddFriend',
+                    {
+                      ...route.params,
+                      contact: { email: item.email, name: item.name },
+                    },
+                    { merge: true },
+                  )
+                }
+                testID={`contact-${item.email}`}
+              />
+            ) : (
+              <ListRow
+                title={item.name}
+                subtitle={item.phone}
+                leading={<Avatar name={item.name} size="md" />}
+                trailing={
+                  <MessageSquare size={18} color={theme.colors.textSecondary} />
+                }
+                onPress={() =>
+                  navigation.navigate('InviteByPhone', {
+                    name: item.name,
+                    phone: item.phone,
+                  })
+                }
+                testID={`contact-${item.phone}`}
+              />
+            )
+          }
           ListEmptyComponent={
             <EmptyState
               icon={Contact}
-              title={query ? 'No matches' : 'No contacts with an email'}
-              message="Only contacts with an email address can be added."
+              title={query ? 'No matches' : 'No contacts to show'}
+              message="Contacts need an email address or a phone number."
             />
           }
         />

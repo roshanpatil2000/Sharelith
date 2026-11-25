@@ -4,7 +4,13 @@ import type { RootStackParamList } from '@/app/navigation/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Contact, Mail, QrCode, User } from 'lucide-react-native';
+import {
+  Contact,
+  Mail,
+  MessageSquare,
+  QrCode,
+  User,
+} from 'lucide-react-native';
 import {
   Banner,
   Button,
@@ -99,7 +105,7 @@ export function AddFriendScreen({ route, navigation }: Props) {
         <Text color="textSecondary">
           {needsName
             ? 'They’re not on Sharelith yet. Add their name and we’ll email them an invite — you can split expenses with them right away.'
-            : 'Enter your friend’s email. If they’re on Sharelith they’re added straight away; if not, we’ll invite them.'}
+            : 'Enter your friend’s email. If they’re on Sharelith they’re added straight away; if not, we’ll invite them. No email? Invite them by phone.'}
         </Text>
         {formError ? <Banner tone="danger" message={formError} /> : null}
         <FormTextField
@@ -142,6 +148,14 @@ export function AddFriendScreen({ route, navigation }: Props) {
               fullWidth
               onPress={() => navigation.navigate('ChooseContact', { returnTo })}
               testID="add-friend-contacts"
+            />
+            <Button
+              title="Invite by phone number"
+              icon={MessageSquare}
+              variant="secondary"
+              fullWidth
+              onPress={() => navigation.navigate('InviteByPhone')}
+              testID="add-friend-phone"
             />
             <Button
               title="Invite with a link or QR code"

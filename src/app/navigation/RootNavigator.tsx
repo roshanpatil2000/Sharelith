@@ -32,6 +32,7 @@ import { ExpenseDetailScreen } from '@/features/expenses/screens/ExpenseDetailSc
 import { AddFriendScreen } from '@/features/friends/screens/AddFriendScreen';
 import { InviteBridge } from '@/features/invites/InviteBridge';
 import { ChooseContactScreen } from '@/features/invites/screens/ChooseContactScreen';
+import { InviteByPhoneScreen } from '@/features/invites/screens/InviteByPhoneScreen';
 import { InviteScreen } from '@/features/invites/screens/InviteScreen';
 import { SearchScreen } from '@/features/search/screens/SearchScreen';
 import { RecentlyDeletedScreen } from '@/features/expenses/screens/RecentlyDeletedScreen';
@@ -300,6 +301,11 @@ export function RootNavigator() {
               name="Invite"
               component={InviteScreen}
               options={{ title: 'Invite with a link' }}
+            />
+            <Root.Screen
+              name="InviteByPhone"
+              component={InviteByPhoneScreen}
+              options={{ title: 'Invite by phone' }}
             />
             <Root.Screen
               name="FriendDetail"

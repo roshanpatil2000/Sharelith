@@ -49,6 +49,8 @@ export type RootStackParamList = {
   ChooseContact: RootStackParamList['AddFriend'];
   /** A QR code and link: befriends you, or joins this group too. */
   Invite: { groupId?: string } | undefined;
+  /** An SMS or WhatsApp invite; name and phone come from a picked contact. */
+  InviteByPhone: { name?: string; phone?: string } | undefined;
   FriendDetail: { friendId: string };
   /** addedFriendId: set by AddFriend so the picker selects them. */
   CreateGroup: { addedFriendId?: string; type?: 'trip' | 'home' } | undefined;

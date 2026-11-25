@@ -17,6 +17,7 @@ import {
 } from '@/components';
 import { useGroup } from '@/features/groups/api';
 import { useInviteLink } from '../api';
+import { inviteMessage } from '../sms';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Invite'>;
 
@@ -31,9 +32,10 @@ export function InviteScreen({ route }: Props) {
     return <ErrorView onRetry={refetch} />;
   }
 
-  const message = groupId
-    ? `Join ${group?.name ?? 'my group'} on Sharelith to split expenses: ${url}`
-    : `Add me on Sharelith so we can split expenses: ${url}`;
+  const message = inviteMessage(
+    url ?? '',
+    groupId ? group?.name ?? '' : undefined,
+  );
 
   return (
     <Screen scroll padded edges={['bottom', 'left', 'right']}>
