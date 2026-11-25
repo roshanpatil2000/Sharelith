@@ -1,6 +1,6 @@
 import React from 'react';
 import { Linking } from 'react-native';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import App from '../App';
 import {
   emitAuth,
@@ -11,6 +11,7 @@ import {
   supabaseMock,
 } from '@/test/supabaseMock';
 import { useAuthStore } from '@/features/auth/authStore';
+import { remoteDefaults, useRemoteConfig } from '@/lib/remoteConfig';
 
 beforeEach(() => {
   mockProfiles(queryBuilder({ data: fakeProfile(), error: null }));
@@ -226,6 +227,29 @@ describe('App auth flow', () => {
     const logOutButtons = screen.getAllByRole('button', { name: 'Log out' });
     await fireEvent.press(logOutButtons[logOutButtons.length - 1]!);
     expect(await screen.findByTestId('welcome-login')).toBeOnTheScreen();
+  });
+
+  it('hides Sharelith Pro and Insights when Remote Config turns them off', async () => {
+    supabaseMock.auth.getSession.mockResolvedValueOnce({
+      data: { session: fakeSession() },
+      error: null,
+    });
+    await render(<App />);
+    await fireEvent.press(
+      await screen.findByRole('button', { name: /Account/ }),
+    );
+    expect(await screen.findByTestId('account-pro')).toBeOnTheScreen();
+    expect(screen.getByTestId('account-pro-banner')).toBeOnTheScreen();
+    expect(screen.getByTestId('account-insights')).toBeOnTheScreen();
+
+    await act(() =>
+      useRemoteConfig.setState({ pro_enabled: false, insights_enabled: false }),
+    );
+    expect(screen.queryByTestId('account-pro')).toBeNull();
+    expect(screen.queryByTestId('account-pro-banner')).toBeNull();
+    expect(screen.queryByTestId('account-insights')).toBeNull();
+    expect(screen.getByTestId('account-logout')).toBeOnTheScreen();
+    useRemoteConfig.setState(remoteDefaults);
   });
 
   it.each(['invite', 'reset'] as const)(

@@ -33,6 +33,8 @@ describe('loadRemoteConfig on Android', () => {
     native_friends_enabled: true,
     interstitial_min_minutes: 10,
     interstitial_skip_first: 5,
+    pro_enabled: false,
+    insights_enabled: true,
     native_feed_first: 4,
     native_feed_every: 8,
     native_list_first: 1,
