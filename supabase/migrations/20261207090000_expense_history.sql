@@ -81,6 +81,7 @@ begin
     raise exception 'Payments can’t be edited. Delete it and record it again.'
       using errcode = 'P0001', hint = 'is_payment';
   end if;
+  perform public.assert_expense_changeable(eid);
   before := public.expense_people(eid);
   snap_before := public.expense_snapshot(eid);
 
