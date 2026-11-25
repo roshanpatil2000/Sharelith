@@ -1,0 +1,21 @@
+Sharelith 1.0.9
+
+New
+- After you log in or sign up: three short welcome pages, then a choice to plan a trip, share a home, or look around first.
+- Add expense is now a full screen: pick who it's with, then "Paid by you and split equally" reads as a sentence. Date and notes sit at the bottom.
+- Create group: choose a type (trip, home, couple or other) with one tap.
+- An Appearance screen in Account for light, dark or your phone's setting.
+
+Changed
+- Fresh layouts for group and expense details, with Edit and Delete at the top of an expense.
+- Larger titles on the main tabs, and illustrations when a list is empty.
+- Each way to split now explains itself (equal, exact, percentage, shares, plus or minus, items).
+- Before asking for your contacts, Sharelith explains why.
+- Smoother movement between screens.
+- Ads appear a little more often in the free version.
+
+Fixed
+- Choosing who paid, how to split, a category, currency or date no longer leaves the keyboard covering the options.
+
+Note
+- Please mention your app version (Account screen) when you report a problem.

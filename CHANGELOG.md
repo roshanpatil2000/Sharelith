@@ -2,7 +2,7 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
-## Unreleased
+## 1.0.9
 
 - Remote Config switches `pro_enabled` and `insights_enabled` show or hide Sharelith Pro and Insights in Account. Pro members always see them.
 - Ads show more often: Activity after 5 items then every 6, Groups and Friends after 2 then every 5, full-screen ads up to every 2 minutes. Spacing can be tuned from Remote Config.
