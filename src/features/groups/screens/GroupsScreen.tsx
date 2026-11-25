@@ -17,7 +17,7 @@ import {
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
 import { useAdPlacement } from '@/features/ads/ads';
 import {
-  LIST_AD_SPACING,
+  useAdSpacing,
   NativeAdRow,
   withAdSlots,
   type FeedEntry,
@@ -73,6 +73,8 @@ export function GroupsScreen() {
   }, [navigation]);
 
   const adsEnabled = useAdPlacement('groups');
+
+  const listSpacing = useAdSpacing('list');
   const renderEntry = ({ item: entry }: { item: FeedEntry<GroupSummary> }) =>
     entry.type === 'ad' ? <NativeAdRow /> : renderItem({ item: entry.item });
 
@@ -104,7 +106,7 @@ export function GroupsScreen() {
         <ErrorView onRetry={refetch} />
       ) : (
         <PullToRefreshList
-          data={withAdSlots(groups ?? [], adsEnabled, LIST_AD_SPACING)}
+          data={withAdSlots(groups ?? [], adsEnabled, listSpacing)}
           keyExtractor={e => (e.type === 'ad' ? e.key : e.item.id)}
           renderItem={renderEntry}
           loading={isLoading}

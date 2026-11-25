@@ -18,7 +18,7 @@ import {
 import { VerifyEmailBanner } from '@/features/account/components/VerifyEmailBanner';
 import { useAdPlacement } from '@/features/ads/ads';
 import {
-  LIST_AD_SPACING,
+  useAdSpacing,
   NativeAdRow,
   withAdSlots,
   type FeedEntry,
@@ -86,6 +86,8 @@ export function FriendsScreen() {
   );
 
   const adsEnabled = useAdPlacement('friends');
+
+  const listSpacing = useAdSpacing('list');
   const renderEntry = ({ item: entry }: { item: FeedEntry<Friend> }) =>
     entry.type === 'ad' ? <NativeAdRow /> : renderItem({ item: entry.item });
 
@@ -120,7 +122,7 @@ export function FriendsScreen() {
         <ErrorView onRetry={refetch} />
       ) : (
         <PullToRefreshList
-          data={withAdSlots(visible, adsEnabled, LIST_AD_SPACING)}
+          data={withAdSlots(visible, adsEnabled, listSpacing)}
           keyExtractor={e => (e.type === 'ad' ? e.key : e.item.id)}
           renderItem={renderEntry}
           loading={isLoading}

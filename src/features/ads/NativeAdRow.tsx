@@ -3,6 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import type { NativeAd } from 'react-native-google-mobile-ads';
 import { useStyles, type Theme } from '@/app/theme';
 import { Badge, Stack, Text } from '@/components';
+import { useRemoteConfig } from '@/lib/remoteConfig';
 import { adRequestOptions, adsModule, adUnitId, useAdsEnabled } from './ads';
 
 /**
@@ -16,21 +17,43 @@ export type AdSpacing = {
   endIfShort?: boolean;
 };
 
-/** Activity feed: after the 10th item, then every 10; none under 5 items. */
-export const FEED_AD_SPACING: AdSpacing = { first: 10, every: 10, minItems: 5 };
 /**
- * Groups and Friends: short lists, so after the 3rd item, then every 8; a
- * list of one or two gets the ad at the end.
+ * Activity feed: after the 5th item, then every 6. A feed of 3 or 4 items
+ * gets one at the end.
+ */
+export const FEED_AD_SPACING: AdSpacing = {
+  first: 5,
+  every: 6,
+  minItems: 3,
+  endIfShort: true,
+};
+/**
+ * Groups and Friends: short lists, so after the 2nd item, then every 5; a
+ * list of one gets the ad at the end.
  */
 export const LIST_AD_SPACING: AdSpacing = {
-  first: 3,
-  every: 8,
+  first: 2,
+  every: 5,
   minItems: 1,
   endIfShort: true,
 };
 
-/** Activity feed: an ad after every this many items. */
-export const NATIVE_AD_EVERY = FEED_AD_SPACING.every;
+/** A list's spacing, with Remote Config able to tune where ads go. */
+export function useAdSpacing(list: 'feed' | 'list'): AdSpacing {
+  const first = useRemoteConfig(s =>
+    list === 'feed' ? s.native_feed_first : s.native_list_first,
+  );
+  const every = useRemoteConfig(s =>
+    list === 'feed' ? s.native_feed_every : s.native_list_every,
+  );
+  const base = list === 'feed' ? FEED_AD_SPACING : LIST_AD_SPACING;
+  // Bad values from the console fall back to the defaults.
+  return {
+    ...base,
+    first: first >= 1 ? Math.floor(first) : base.first,
+    every: every >= 2 ? Math.floor(every) : base.every,
+  };
+}
 
 export type FeedEntry<T> =
   | { type: 'item'; item: T }
