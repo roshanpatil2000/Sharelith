@@ -2,6 +2,10 @@
 
 Tester-facing notes for each build live in `release-notes/<version>.txt` and are sent with `npm run distribute:android`.
 
+## Unreleased
+
+- **Expenses:** edit history. Each save with a real change keeps a before-and-after snapshot (`expense_revisions`, written by `update_expense`), listed newest first under History on the expense (`list_expense_revisions`). Anyone who can see the expense can read it.
+
 ## 1.0.9
 
 - Remote Config switches `pro_enabled` and `insights_enabled` show or hide Sharelith Pro and Insights in Account. Pro members always see them.

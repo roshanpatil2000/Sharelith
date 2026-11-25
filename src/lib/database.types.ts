@@ -704,6 +704,18 @@ export type Database = {
           total_minor: number;
         }[];
       };
+      list_expense_revisions: {
+        Args: { eid: string };
+        Returns: {
+          after: Json;
+          before: Json;
+          edited_at: string;
+          editor_id: string | null;
+          editor_name: string;
+          id: string;
+          names: Json;
+        }[];
+      };
       list_deleted_expenses: {
         Args: never;
         Returns: {

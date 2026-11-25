@@ -69,6 +69,7 @@ type Backend = {
   repeat?: unknown;
   deleted?: unknown[];
   defaultSplit?: unknown;
+  revisions?: unknown[];
 };
 
 function mockBackend({
@@ -80,6 +81,7 @@ function mockBackend({
   repeat = null,
   deleted = [],
   defaultSplit = null,
+  revisions = [],
 }: Backend) {
   supabaseMock.from.mockImplementation(((table: string) => {
     if (table === 'expenses') {
@@ -123,6 +125,8 @@ function mockBackend({
         return { data: deleted, error: null };
       case 'list_my_balances':
         return { data: balances, error: null };
+      case 'list_expense_revisions':
+        return { data: revisions, error: null };
       case 'create_expense':
         return createError
           ? { data: null, error: createError }
@@ -1130,6 +1134,50 @@ describe('Comments', () => {
     await waitFor(() =>
       expect(screen.getByTestId('comment-input')).toHaveDisplayValue(''),
     );
+  });
+});
+
+describe('History', () => {
+  it('lists edits under the expense', async () => {
+    const snap = {
+      description: 'Dinner',
+      amount_minor: 50000,
+      currency: 'INR',
+      category: 'food',
+      expense_date: '2026-11-20',
+      notes: null,
+      payers: [{ user_id: asha, paid_minor: 50000 }],
+      shares: [{ user_id: asha, owed_minor: 50000 }],
+    };
+    mockBackend({
+      expenses: [dinner],
+      detail: dinnerDetail,
+      revisions: [
+        {
+          id: 'r-1',
+          edited_at: '2026-11-21T10:00:00Z',
+          editor_id: asha,
+          editor_name: 'Asha Rao',
+          before: snap,
+          after: { ...snap, amount_minor: 60000 },
+          names: {},
+        },
+      ],
+    });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    expect(
+      await screen.findByText('Asha Rao changed amount ₹500.00 → ₹600.00'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('History')).toBeOnTheScreen();
+  });
+
+  it('hides the section when nothing was edited', async () => {
+    mockBackend({ expenses: [dinner], detail: dinnerDetail });
+    await openGroup();
+    await fireEvent.press(await screen.findByTestId('expense-e-1'));
+    await screen.findByTestId('detail-description');
+    expect(screen.queryByText('History')).toBeNull();
   });
 });
 
