@@ -11,7 +11,7 @@ import {
   useAdsStore,
 } from '../ads';
 import { interstitialDue, isAdBreak } from '../interstitial';
-import { LIST_AD_SPACING, NATIVE_AD_EVERY, withAdSlots } from '../NativeAdRow';
+import { FEED_AD_SPACING, LIST_AD_SPACING, withAdSlots } from '../NativeAdRow';
 
 const mockIsPro = jest.fn(() => false);
 jest.mock('@/features/pro/pro', () => ({ useIsPro: () => mockIsPro() }));
@@ -55,34 +55,39 @@ describe('interstitialDue', () => {
 describe('withAdSlots', () => {
   const items = Array.from({ length: 25 }, (_, i) => i);
 
-  it('adds an ad after every tenth item', () => {
-    const entries = withAdSlots(items, true);
-    const adPositions = entries
+  const adsAt = (n: number, spacing = FEED_AD_SPACING) =>
+    withAdSlots(
+      Array.from({ length: n }, (_, i) => i),
+      true,
+      spacing,
+    )
       .map((e, i) => (e.type === 'ad' ? i : -1))
       .filter(i => i >= 0);
-    expect(adPositions).toEqual([NATIVE_AD_EVERY, NATIVE_AD_EVERY * 2 + 1]);
+
+  it('puts one after the 5th activity item, then every 6', () => {
+    const entries = withAdSlots(items, true, FEED_AD_SPACING);
     expect(entries.filter(e => e.type === 'item')).toHaveLength(25);
+    // After items 5, 11, 17 and 23 (each earlier ad shifts the index by one).
+    expect(adsAt(25)).toEqual([5, 12, 19, 26]);
   });
 
-  it('puts one after the 3rd group or friend, then every 8, or at the end of a short list', () => {
-    const adsAt = (n: number) =>
-      withAdSlots(
-        Array.from({ length: n }, (_, i) => i),
-        true,
-        LIST_AD_SPACING,
-      )
-        .map((e, i) => (e.type === 'ad' ? i : -1))
-        .filter(i => i >= 0);
-    expect(adsAt(0)).toEqual([]);
-    expect(adsAt(1)).toEqual([1]);
-    expect(adsAt(2)).toEqual([2]);
+  it('gives a short feed one ad at the end, and none under 3 items', () => {
+    expect(adsAt(2)).toEqual([]);
     expect(adsAt(3)).toEqual([3]);
-    expect(adsAt(12)).toEqual([3, 12]);
+    expect(adsAt(4)).toEqual([4]);
   });
 
-  it('adds none when ads are off or the feed is short', () => {
-    expect(withAdSlots(items, false).some(e => e.type === 'ad')).toBe(false);
-    expect(withAdSlots([1, 2, 3], true).some(e => e.type === 'ad')).toBe(false);
+  it('puts one after the 2nd group or friend, then every 5, or at the end of a list of one', () => {
+    expect(adsAt(0, LIST_AD_SPACING)).toEqual([]);
+    expect(adsAt(1, LIST_AD_SPACING)).toEqual([1]);
+    expect(adsAt(2, LIST_AD_SPACING)).toEqual([2]);
+    expect(adsAt(8, LIST_AD_SPACING)).toEqual([2, 8]);
+  });
+
+  it('adds none when ads are off', () => {
+    expect(
+      withAdSlots(items, false, FEED_AD_SPACING).some(e => e.type === 'ad'),
+    ).toBe(false);
   });
 });
 

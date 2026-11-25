@@ -11,7 +11,11 @@ import {
 } from '@/components';
 import { useUserId } from '@/features/auth/authStore';
 import { useAdPlacement } from '@/features/ads/ads';
-import { NativeAdRow, withAdSlots } from '@/features/ads/NativeAdRow';
+import {
+  NativeAdRow,
+  useAdSpacing,
+  withAdSlots,
+} from '@/features/ads/NativeAdRow';
 import { useActivity } from '../api';
 import { ActivityRow } from '../components/ActivityRow';
 
@@ -29,7 +33,8 @@ export function ActivityScreen() {
   } = useActivity();
   const items = data?.pages.flat() ?? [];
   const adsEnabled = useAdPlacement('activity');
-  const entries = withAdSlots(items, adsEnabled);
+  const spacing = useAdSpacing('feed');
+  const entries = withAdSlots(items, adsEnabled, spacing);
 
   if (isError && items.length === 0) {
     return (
