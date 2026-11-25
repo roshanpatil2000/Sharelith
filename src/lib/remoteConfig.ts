@@ -30,6 +30,10 @@ export const remoteDefaults = {
   reminders_enabled: true,
   /** Ask for notification permission and register for push. */
   push_prompt_enabled: true,
+  /** Show Sharelith Pro (banner and row) in Account. Pro members always see it. */
+  pro_enabled: true,
+  /** Show Insights in Account. Pro members always see it. */
+  insights_enabled: true,
   /** Master switch: off hides every ad. */
   ads_enabled: true,
   /** Full-screen ad at natural breaks (navigation, saving an expense). */

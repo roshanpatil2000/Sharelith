@@ -45,6 +45,7 @@ import { useAppLockToggle } from '@/features/lock/useAppLockToggle';
 import { useSettingsStore } from '@/lib/settingsStore';
 import { useProfile, useUpdateProfile } from '../api';
 import { useIsPro } from '@/features/pro/pro';
+import { useRemoteConfig } from '@/lib/remoteConfig';
 import { VerifyEmailBanner } from '../components/VerifyEmailBanner';
 
 const themeName = { system: 'System', light: 'Light', dark: 'Dark' } as const;
@@ -103,6 +104,9 @@ export function AccountScreen() {
   const themePreference = useSettingsStore(s => s.themePreference);
   const appLock = useAppLockToggle();
   const isPro = useIsPro();
+  // Hidden from Remote Config while there's no way to buy Pro. Members keep them.
+  const showPro = useRemoteConfig(s => s.pro_enabled) || isPro;
+  const showInsights = useRemoteConfig(s => s.insights_enabled) || isPro;
   const build = installedBuildNumber();
   const [confirmLogout, setConfirmLogout] = useState(false);
   // Shown where the law requires a way to change ad consent (EU/UK).
@@ -138,7 +142,7 @@ export function AccountScreen() {
     <Screen scroll>
       <ProfileHeader />
       <VerifyEmailBanner />
-      {isPro ? null : (
+      {isPro || !showPro ? null : (
         <Box m="lg" p="xl" gap="md" radius="lg" bg="primarySoft" align="center">
           <Icon icon={Crown} color="primary" size={40} />
           <Text align="center">
@@ -154,26 +158,34 @@ export function AccountScreen() {
         </Box>
       )}
 
-      <ListRow
-        title="Sharelith Pro"
-        subtitle={
-          isPro ? 'You have Pro' : 'No ads, receipts, export and insights'
-        }
-        leading={<Icon icon={Crown} color="primary" />}
-        chevron
-        onPress={() => navigation.navigate('Pro')}
-        testID="account-pro"
-      />
-      <Divider inset={52} />
-      <ListRow
-        title="Insights"
-        subtitle="Your spending by month and category"
-        leading={<Icon icon={BarChart3} color="textSecondary" />}
-        chevron
-        onPress={() => navigation.navigate('Insights')}
-        testID="account-insights"
-      />
-      <Divider inset={52} />
+      {showPro ? (
+        <>
+          <ListRow
+            title="Sharelith Pro"
+            subtitle={
+              isPro ? 'You have Pro' : 'No ads, receipts, export and insights'
+            }
+            leading={<Icon icon={Crown} color="primary" />}
+            chevron
+            onPress={() => navigation.navigate('Pro')}
+            testID="account-pro"
+          />
+          <Divider inset={52} />
+        </>
+      ) : null}
+      {showInsights ? (
+        <>
+          <ListRow
+            title="Insights"
+            subtitle="Your spending by month and category"
+            leading={<Icon icon={BarChart3} color="textSecondary" />}
+            chevron
+            onPress={() => navigation.navigate('Insights')}
+            testID="account-insights"
+          />
+          <Divider inset={52} />
+        </>
+      ) : null}
       <ListRow
         title="Recently deleted"
         subtitle="Bring back expenses and payments you deleted"

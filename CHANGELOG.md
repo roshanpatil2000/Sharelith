@@ -4,6 +4,8 @@ Tester-facing notes for each build live in `release-notes/<version>.txt` and are
 
 ## Unreleased
 
+- Remote Config switches `pro_enabled` and `insights_enabled` show or hide Sharelith Pro and Insights in Account. Pro members always see them.
+
 - **Screens and motion:** Get started after the welcome pages; full-screen Create group and Add expense forms (who paid and how it's split read as a sentence); illustrated empty states; large tab titles; Appearance screen; a Pro banner on Account; an explanation before the contacts permission. Side screens fade, drilling in slides, Add expense grows from its button. The tab bar is unchanged.
 - **Welcome:** three swipeable pages after each log in or sign up (not when reopening signed in), with Skip. Permission prompts and ads wait until they're done.
 

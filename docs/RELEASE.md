@@ -78,6 +78,8 @@ Ads are controlled from Firebase Remote Config; changes reach open apps within s
 
 | Key | Default | What it does |
 |---|---|---|
+| `pro_enabled` | true | Shows Sharelith Pro (banner and row) in Account; Pro members always see it |
+| `insights_enabled` | true | Shows Insights in Account; Pro members always see it |
 | `ads_enabled` | true | Master switch: off hides every ad |
 | `interstitial_enabled` | true | Full-screen ad at natural breaks (moving between tabs, opening or leaving a group, friend or expense, saving a new expense) |
 | `native_activity_enabled` | true | Native ad rows in Activity |
